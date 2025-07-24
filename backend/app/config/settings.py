@@ -30,11 +30,18 @@ class Settings(BaseSettings):
     job_timeout_seconds: int = 3600  # 1 hour
     max_concurrent_jobs: int = 5
     
-    # Redis settings (optional, for future use)
+    # Redis settings (optional, for future local use only)
+    # If Redis is used, it must be local: redis://localhost:6379/0
     redis_url: Optional[str] = None
     
-    # CORS settings
-    cors_allowed_origins: list[str] = ["http://localhost:5173"]
+    # CORS settings - Allow both localhost and Docker internal network access
+    cors_allowed_origins: list[str] = [
+        "http://localhost:5173",  # Direct local access
+        "http://localhost:3000",  # Alternative frontend port
+        "http://frontend:5173",   # Docker internal network
+        "http://127.0.0.1:5173",  # Localhost alternative
+        "http://127.0.0.1:3000"   # Alternative localhost port
+    ]
     
     model_config = SettingsConfigDict(
         env_file=".env",
