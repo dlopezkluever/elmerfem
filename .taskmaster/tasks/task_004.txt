@@ -1,0 +1,19 @@
+# Task ID: 4
+# Title: SIF Generation Engine
+# Status: pending
+# Dependencies: 3
+# Priority: medium
+# Description: Convert user parameters or templates into valid Elmer SIF files using Jinja2 templates.
+# Details:
+• Create Jinja2 templates per physics (heat, linear elasticity).
+• render_sif(params,path):
+     context = {...map DTO fields...}
+     txt = env.get_template(f"{params.physics}.sif.j2").render(**context)
+     path.write_text(txt)
+• Include sections: Header, Simulation, Constants, Body, Material, Equation, Solver, Boundary.
+• Unit conversions helper.
+• Version all templates under backend/sif_templates/.
+
+
+# Test Strategy:
+pytest parametrized test loads fixture params and compares generated SIF against approved snapshot (pytest-approvals). Run `ElmerGrid 14 2 case.sif` inside elmer container to verify parser accepts file (exit 0).

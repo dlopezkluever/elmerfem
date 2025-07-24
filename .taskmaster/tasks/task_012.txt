@@ -1,0 +1,20 @@
+# Task ID: 12
+# Title: Automated Test & CI Pipeline
+# Status: pending
+# Dependencies: 1, 3, 4, 5, 6, 7, 8, 9, 10, 11
+# Priority: medium
+# Description: Add full test suite, code quality gates, and artifacts to GitHub Actions.
+# Details:
+• Extend workflow: matrix (ubuntu-latest, windows-latest) steps →
+   – Checkout
+   – Set up Node and Python
+   – pnpm install, pnpm test:coverage
+   – poetry install, pytest --cov
+   – docker compose build --parallel
+   – Run backend integration test: post minimal job, await completion ≤60s.
+• Upload coverage to Codecov; require >80%.
+• On main merge, push multi-arch elmer image to GHCR.
+
+
+# Test Strategy:
+Create failing test, ensure CI turns red; fix test, CI green. Simulated PR gating confirms pipeline executes all steps within 10 minutes.

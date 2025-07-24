@@ -1,0 +1,29 @@
+{
+  "simulation_type": "heat_transfer",
+  "geometry": {
+    "type": "rectangle",
+    "width": 1.0,
+    "height": 1.0
+  },
+  "material_properties": {
+    "k": 50,
+    "rho": 7850,
+    "C": 460
+  },
+  "boundary_conditions": [
+    {
+      "surface_id": 1,
+      "type": "temperature",
+      "value": 300,
+      "location": "left",
+      "name": "Hot surface"
+    },
+    {
+      "surface_id": 2,
+      "type": "heat_flux", 
+      "value": 1000,
+      "location": "right",
+      "name": "Heat input"
+    }
+  ]
+} 

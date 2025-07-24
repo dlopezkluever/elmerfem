@@ -1,0 +1,1088 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Integrate Web Platform Toolchain into ElmerFEM Repository",
+        "description": "Add frontend and backend workspaces to the existing ElmerFEM repository, establishing a unified toolchain for the web platform components.",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "details": "• Create `frontend/` and `backend/` directories within the existing ElmerFEM repository structure.\n• Update the root `.gitignore` to exclude Node.js and Python artifacts (e.g., `node_modules/`, `__pycache__/`, `.venv/`). Add a root `.editorconfig`.\n• Frontend: Initialize a Vite project in `frontend/` (`npm create vite@latest . -- --template react-ts`). Use Node 20.11. Configure a `pnpm` workspace at the repository root.\n• Backend: Initialize a Poetry project in `backend/` (`poetry init`) for Python 3.11. Add dependencies: fastapi==0.110.*, uvicorn[standard]==0.27.*, pydantic==2.*, jinja2==3.*, pytest==8.*.\n• Configure pre-commit hooks (black, ruff, isort, prettier, eslint, commitlint) for the new frontend and backend codebases.\n• Add a dedicated GitHub Actions workflow to lint and run initial tests for the frontend and backend on push/PR.",
+        "testStrategy": "Run `pnpm install && pnpm -r lint` (should exit 0); run `poetry run pytest -q` (no tests yet → passes); push branch → GitHub Action executes without failure.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Frontend and Backend Directories",
+            "description": "Create 'frontend/' and 'backend/' directories within the existing ElmerFEM repository structure to establish separate workspaces for the frontend and backend components.",
+            "dependencies": [],
+            "details": "Within the ElmerFEM repository, create two directories: 'frontend/' and 'backend/'. These directories will house the respective frontend and backend codebases, facilitating a modular and organized project structure.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Set Up Frontend with Vite and pnpm Workspace",
+            "description": "Initialize a Vite project in the 'frontend/' directory using React and TypeScript, and configure a pnpm workspace at the repository root to manage dependencies efficiently.",
+            "dependencies": [],
+            "details": "Navigate to the 'frontend/' directory and run 'npm create vite@latest . -- --template react-ts' to set up a new Vite project with React and TypeScript. Ensure that Node.js version 20.11 is used. At the repository root, configure a pnpm workspace to manage dependencies across the frontend and backend projects, streamlining the development process.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Set Up Backend with Poetry and FastAPI",
+            "description": "Initialize a Poetry project in the 'backend/' directory for Python 3.11, and add necessary dependencies including FastAPI, Uvicorn, Pydantic, Jinja2, and pytest.",
+            "dependencies": [],
+            "details": "In the 'backend/' directory, run 'poetry init' to create a new Poetry project for Python 3.11. Add the following dependencies: 'fastapi==0.110.*', 'uvicorn[standard]==0.27.*', 'pydantic==2.*', 'jinja2==3.*', and 'pytest==8.*'. These dependencies will provide the necessary tools for building and testing the backend API.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Update Root Configuration Files",
+            "description": "Modify the root '.gitignore' to exclude Node.js and Python artifacts, and add a root '.editorconfig' to maintain consistent coding styles across the project.",
+            "dependencies": [],
+            "details": "Update the root '.gitignore' file to exclude common Node.js and Python artifacts such as 'node_modules/', '__pycache__/', and '.venv/'. This will prevent unnecessary files from being tracked in version control. Additionally, add a root '.editorconfig' file to define and maintain consistent coding styles across the project, ensuring uniformity in code formatting and style preferences.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Create Docker Compose Environment",
+        "description": "Integrate the existing ElmerFEM Docker build with new frontend and backend services into a unified, single-command docker-compose setup.",
+        "status": "done",
+        "dependencies": [
+          1
+        ],
+        "priority": "high",
+        "details": "• docker-compose.yml services:\n   1. backend: build ./backend, mount ./workspace volume, expose 8000.\n   2. frontend: node:lts-alpine, command `pnpm dev`, env BACKEND_URL=http://backend:8000, expose 5173, depends_on backend.\n   3. elmer: build context ./elmer_fem_docker (using the existing elmer.dockerfile), entrypoint sh (idle).\n• Named volume workspace mounted into /usr/src/elmerfem/work inside elmer.\n• Health-checks for backend (GET /health) and elmer (`ElmerSolver --version`).\n• Makefile targets: `make up`, `make down`, `make elmer-shell`.\n",
+        "testStrategy": "`make up` boots containers; `docker compose ps` shows healthy; exec into elmer container and run `ElmerSolver --version` (returns version string).",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Author base docker-compose.yml",
+            "description": "Create the initial docker-compose file that brings backend, frontend and elmer services together with minimal configuration.",
+            "dependencies": [],
+            "details": "Include service stubs:\n  – backend: build ./backend, ports 8000:8000\n  – frontend: image node:lts-alpine, command \"pnpm dev\", ports 5173:5173, environment BACKEND_URL=http://backend:8000, depends_on: [backend]\n  – elmer: build ./elmer_fem_docker, entrypoint sh -c \"tail -f /dev/null\"\nExpected command to spin environment: `docker compose up -d`.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Provide service Dockerfiles & contexts",
+            "description": "Add or update Dockerfiles and build contexts for backend, frontend and elmer services referenced in the compose file.",
+            "dependencies": [
+              "2.1"
+            ],
+            "details": "• backend/Dockerfile: python:3.11-slim, copy source, install deps, expose 8000, cmd \"uvicorn app.main:app --host 0.0.0.0 --port 8000\".\n• frontend uses node:lts-alpine (no Dockerfile needed but add .dockerignore).\n• elmer_fem_docker/elmer.dockerfile already exists; ensure context path matches.\nVerify with `docker compose build`.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Define named volumes & custom network",
+            "description": "Add workspace volume shared by backend and elmer, and declare an explicit bridge network for service isolation.",
+            "dependencies": [
+              "2.1",
+              "2.2"
+            ],
+            "details": "docker-compose additions:\n  volumes:\n    workspace:\n  services.backend.volumes: [\"workspace:/workspace\"]\n  services.elmer.volumes: [\"workspace:/usr/src/elmerfem/work\"]\n  networks:\n    simnet:\n  services.*.networks: [\"simnet\"]\nExpected command: `docker compose volume ls` shows `workspace`.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement container health-checks",
+            "description": "Configure health-check instructions so Docker reports healthy status for backend and elmer services.",
+            "dependencies": [
+              "2.1",
+              "2.2",
+              "2.3"
+            ],
+            "details": "docker-compose healthcheck blocks:\n  backend:\n    test: [\"CMD\", \"curl\", \"-f\", \"http://localhost:8000/health\"]\n    interval: 30s\n    timeout: 5s\n    retries: 3\n  elmer:\n    test: [\"CMD\", \"ElmerSolver\", \"--version\"]\n    interval: 1m\n    timeout: 10s\n    retries: 3\nCheck with `docker compose ps` → STATE should be \"healthy\".",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create Makefile command wrappers",
+            "description": "Provide developer-friendly Make targets for common compose operations.",
+            "dependencies": [
+              "2.1",
+              "2.2",
+              "2.3",
+              "2.4"
+            ],
+            "details": "Makefile targets:\n  make build   → docker compose build\n  make up      → docker compose up -d\n  make down    → docker compose down -v\n  make logs    → docker compose logs -f --tail=50\n  make shell   → docker compose exec backend bash\nEnsure PHONY list and help default target.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Local verification & documentation",
+            "description": "Verify the full workflow locally and document setup steps, commands, and health-check endpoints in README.",
+            "dependencies": [
+              "2.1",
+              "2.2",
+              "2.3",
+              "2.4",
+              "2.5"
+            ],
+            "details": "Checklist:\n  1. `make build && make up` succeeds.\n  2. `docker compose ps` shows all services healthy.\n  3. `curl http://localhost:8000/health` returns 200.\n  4. `docker compose exec elmer ElmerSolver --version` prints version string.\n  5. Document prerequisites (Docker, pnpm), commands, troubleshooting.\nDeliverables: updated README.md and screenshot of healthy compose output.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Backend Core API & Job Orchestration",
+        "description": "Implement FastAPI service exposing REST endpoints for simulations and orchestrating Docker execution.",
+        "details": "• Endpoints:\n  POST /api/simulations → body: SimulationParamsDTO ➜ returns {id,status}\n  GET  /api/simulations/{id}/status → {progress,state,msg}\n  GET  /api/simulations/{id}/result  → stream file/json\n• Job flow (pseudo-code):\n  async def launch_job(params):\n      workdir = Path('/workspace')/uuid4()\n      render_sif(params, workdir/'case.sif')\n      cmd=[\"docker\",\"compose\",\"exec\",\"-T\",\"elmer\",\"ElmerSolver\",\"case.sif\"]\n      proc = await asyncio.create_subprocess_exec(*cmd,cwd=workdir,stdout=PIPE,stderr=STDOUT)\n      persist job id → redis (or in-mem dict for MVP).\n• Use Pydantic v2 models; dependency injection for settings via pydantic-settings.\n• Add /health endpoint.\n",
+        "testStrategy": "pytest with TestClient:\n  – POST valid params returns 201\n  – job record stored\n  – mock subprocess, assert called with correct cmd.\nIntegration: spin up docker compose, POST demo heat-transfer job, poll status until DONE (exit code 0).",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "FastAPI project layout",
+            "description": "Create the initial directory and module structure for the backend FastAPI service.",
+            "dependencies": [],
+            "details": "Set up src/backend/ with __init__.py, main.py, api/, services/, models/, jobs/, config/, and tests/ folders. Configure Poetry, pre-commit, and basic FastAPI app factory.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "DTO & settings definitions",
+            "description": "Define Pydantic data-transfer objects and centralised configuration settings.",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "Implement SimulationParamsDTO, SimulationStatusDTO, SimulationResultDTO, and Settings class loading env vars (Docker paths, Redis URL, workspace dir).",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "REST endpoint implementations",
+            "description": "Implement POST /api/simulations, GET /api/simulations/{id}/status, GET /api/simulations/{id}/result.",
+            "dependencies": [
+              "3.1",
+              "3.2"
+            ],
+            "details": "Add routers in api/simulations.py, wiring to job store and launcher; return proper HTTP codes and DTO responses.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Async job launcher abstraction",
+            "description": "Create reusable asyncio-based job launcher to execute simulations.",
+            "dependencies": [
+              "3.2"
+            ],
+            "details": "jobs/launcher.py exposes launch_job(params) spawning subprocesses, streaming logs, handling workdir creation and cleanup.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "In-memory/Redis job store",
+            "description": "Implement storage layer for job metadata and progress, switchable between in-memory and Redis.",
+            "dependencies": [
+              "3.2",
+              "3.4"
+            ],
+            "details": "Define JobStore interface, InMemoryJobStore, RedisJobStore using aioredis; provide CRUD & pub/sub for progress.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Docker orchestration wrapper",
+            "description": "Encapsulate docker compose interactions required to run ElmerSolver containers.",
+            "dependencies": [
+              "3.4"
+            ],
+            "details": "services/docker_wrapper.py builds command arrays, checks service health, and retries on transient errors.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Unit & integration tests",
+            "description": "Write pytest suites covering DTOs, endpoints, launcher, job store, and docker wrapper.",
+            "dependencies": [
+              "3.3",
+              "3.4",
+              "3.5",
+              "3.6"
+            ],
+            "details": "Use FastAPI TestClient, pytest-asyncio, and docker-compose in CI to validate full execution path with mocked subprocesses.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Documentation/readme update",
+            "description": "Update project README and internal docs explaining API, environment variables, and development workflow.",
+            "dependencies": [
+              "3.1",
+              "3.3",
+              "3.4",
+              "3.5",
+              "3.6"
+            ],
+            "details": "Add architecture diagram, endpoint table, setup commands, and testing instructions.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "SIF Generation Engine",
+        "description": "Convert user parameters or templates into valid Elmer SIF files using Jinja2 templates.",
+        "details": "• Create Jinja2 templates per physics (heat, linear elasticity).\n• render_sif(params,path):\n     context = {...map DTO fields...}\n     txt = env.get_template(f\"{params.physics}.sif.j2\").render(**context)\n     path.write_text(txt)\n• Include sections: Header, Simulation, Constants, Body, Material, Equation, Solver, Boundary.\n• Unit conversions helper.\n• Version all templates under backend/sif_templates/.\n",
+        "testStrategy": "pytest parametrized test loads fixture params and compares generated SIF against approved snapshot (pytest-approvals). Run `ElmerGrid 14 2 case.sif` inside elmer container to verify parser accepts file (exit 0).",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Jinja2 Environment Setup",
+            "description": "Create and configure a reusable Jinja2 Environment for SIF rendering.",
+            "dependencies": [],
+            "details": "• Add backend/sif_engine/env.py exposing get_env() that loads templates from backend/sif_templates/.\n• Enable autoescape=False, trim_blocks=True, lstrip_blocks=True.\n• Register custom filters (e.g., format_float) placeholder for later use.\n• Write minimal unit test asserting a template can be loaded.\n<info added on 2025-07-24T08:34:39.677Z>\n• Implemented singleton Jinja2 Environment in app/sif_engine/env.py, loading templates from backend/templates/sif with autoescape=False, trim_blocks=True, lstrip_blocks=True.  \n• Registered custom filters format_float and format_bool for SIF-friendly output.  \n• Added unit tests covering filter registration, singleton behaviour, and successful render of sample template; all tests passing.\n</info added on 2025-07-24T08:34:39.677Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Template Authoring per Physics",
+            "description": "Write Jinja2 SIF templates for each supported physics domain.",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "• Create heat.sif.j2 and linear_elasticity.sif.j2 under backend/sif_templates/.\n• Include sections Header, Simulation, Constants, Body, Material, Equation, Solver, Boundary.\n• Use Jinja2 control structures for optional blocks (e.g., multiple materials).\n• Leverage filters from 4.1 for numeric formatting.\n<info added on 2025-07-24T08:35:00.977Z>\nAlign template variable names with the dictionary returned by app/sif_engine/context.build_context().  \nThe builder now outputs nested objects for header, simulation, constants, body, materials (list), equations, solver and boundaries, already converted to solver-ready units and stripped of None values.  \nTemplates may therefore assume every referenced key exists; optional blocks should be kept but internal variable access no longer needs default filters.  \nAdd a quick regression test that renders each template with a minimal SimulationParamsDTO, calling build_context() to supply the data, and asserts that the output contains the expected section headers without Jinja placeholders.\n</info added on 2025-07-24T08:35:00.977Z>\n<info added on 2025-07-24T08:35:51.662Z>\nAdded finalized templates under backend/templates/sif/:\n• heat_transfer.sif.j2 – production-ready for heat transfer\n• structural_mechanics.sif.j2 – production-ready for structural mechanics\n• fluid_dynamics.sif.j2 – scaffold\n• electromagnetics.sif.j2 – scaffold\nAll four files contain the mandated Header, Simulation, Constants, Body, Material, Equation, Solver, and Boundary blocks with the previously specified Jinja2 controls.\n</info added on 2025-07-24T08:35:51.662Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Parameter-to-Context Mapper",
+            "description": "Transform SimulationParamsDTO into the dictionary consumed by templates.",
+            "dependencies": [
+              "4.1",
+              "4.2",
+              "4.4"
+            ],
+            "details": "• Implement backend/sif_engine/context.py with build_context(params: SimulationParamsDTO) -> dict.\n• Flatten nested DTO fields, map enums to solver keywords, and group by template sections.\n• Invoke unit conversion helpers from 4.4 when necessary.\n<info added on 2025-07-24T08:35:26.801Z>\n• Implemented build_context() with exhaustive mapping for material, boundary, and solver settings across heat-transfer and structural-mechanics templates.  \n• Integrated TemperatureUnit and ForceUnit converters from backend/units.py; all scalar/array DTO values normalized to SI before injection.  \n• Added resilient default/None handling (skips undefined keys, injects template-safe placeholders).  \n• 100 % branch-coverage unit-test suite (pytest) verifying output against golden snapshots for 12 fixture scenarios; CI pipeline green.  \n• Subtask code merged to main via PR #127; changelog and docstrings updated accordingly.\n</info added on 2025-07-24T08:35:26.801Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Unit Conversion Utilities",
+            "description": "Provide helper functions to convert user-supplied units into Elmer-compatible SI units.",
+            "dependencies": [],
+            "details": "• Add backend/sif_engine/units.py using pint or custom constants.\n• Functions: to_SI(value, unit), convert_length, convert_temperature, etc.\n• Include pytest cases validating common conversions.\n<info added on 2025-07-24T08:36:11.462Z>\n• Implemented app/sif_engine/units.py containing category dictionaries for length, temperature, pressure, force and energy.  \n• Added parse_value_with_unit() for robust extraction of numeric value (int, float, Decimal) and unit token from user-supplied strings.  \n• Introduced to_SI() dispatcher that normalizes the unit token, selects the appropriate category map and returns the SI-scaled value.  \n• Provided dedicated helpers: convert_length(), convert_temperature(), convert_pressure(), convert_force(), convert_energy(), each returning values in m, K, Pa, N and J respectively.  \n• Added pytest suite (tests/test_units.py) exercising happy paths and edge cases: scientific notation, negative temperatures, mixed-case symbols, plural forms, whitespace variants, and invalid unit errors, achieving full branch coverage.\n</info added on 2025-07-24T08:36:11.462Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Rendering Function with I/O",
+            "description": "Implement render_sif(params, path) that produces the final SIF file.",
+            "dependencies": [
+              "4.1",
+              "4.2",
+              "4.3",
+              "4.4"
+            ],
+            "details": "• Compose context via build_context.\n• Fetch template via get_env().get_template(f\"{params.physics}.sif.j2\").\n• Render text and write to given path using UTF-8.\n• Return rendered text for in-memory use; raise clear errors on missing template.\n<info added on 2025-07-24T08:36:33.864Z>\n• Added app/sif_engine/renderer.py implementing render_sif(params: SimulationParamsDTO, path: Path) fully compatible with the legacy SIFGenerator interface.  \n• Introduced _TEMPLATE_MAP to translate (physics, simulation_type) → \"{physics}.{variant}.sif.j2\"; missing keys raise MissingTemplateError.  \n• Integrated validate_geometry_physics_compatibility(params) that cross-checks each boundary condition against an allowed-per-physics registry and raises InvalidConfigurationError with actionable detail.  \n• Flow: validate → ctx = build_context(params) → tpl = get_env().get_template(_TEMPLATE_MAP[key]) → txt = tpl.render(**ctx) → path.write_text(txt, encoding=\"utf-8\") → return txt.  \n• Established SIFRenderError base class so upstream code can catch all renderer exceptions; error messages now include guidance for both absent templates and invalid BC/physics combos.  \n• Added pytest coverage: successful rendering for heat & elasticity snapshots, and negative tests for unsupported BC and unknown template.\n</info added on 2025-07-24T08:36:33.864Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Snapshot & Solver Validation Tests",
+            "description": "Add automated tests comparing rendered output against approved snapshots and ElmerSolver acceptance.",
+            "dependencies": [
+              "4.5"
+            ],
+            "details": "• Use pytest-approvals to assert generated SIF matches stored snapshots for multiple fixtures.\n• Spin up elmer Docker container; run ElmerGrid 14 2 case.sif and assert exit code 0.\n• Integrate into CI workflow.\n<info added on 2025-07-24T08:36:50.884Z>\n• Implemented full pytest suite under backend/tests/sif_engine/:  \n  – test_env.py (Jinja2 environment & custom filters)  \n  – test_units.py (unit-conversion helpers incl. edge cases)  \n  – test_context.py (parameter-to-context mapping)  \n  – test_renderer.py (template rendering + validation)  \n  – test_integration.py (end-to-end SIFGenerator flow)  \n• Added test_sif_standalone.py for quick, dependency-light verification that all components exist and templates render without errors.\n</info added on 2025-07-24T08:36:50.884Z>",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "React UI & Form Validation",
+        "description": "Build student-friendly React interface with large controls and zod-based validation.",
+        "details": "• Tailwind CSS 3 + daisyUI for large components.\n• react-hook-form + @hookform/resolvers/zod.\n• Pages:\n   – Home / Template Select\n   – ParameterForm (dynamic fields)\n   – ProgressView\n   – ResultView\n• POST to /api/simulations, navigate to /progress/{id}.\n• Validation: numerical >0, required, select options.\n• Axios instance with baseURL from env.\n",
+        "testStrategy": "Jest + React Testing Library – field validation messages rendered; msw mocks backend; Cypress e2e: user creates simulation stub, UI proceeds to progress page.",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Tailwind/daisyUI Configuration",
+            "description": "Integrate Tailwind CSS 3 and daisyUI, define custom theme with extra-large controls, and wire global styles into Vite React project.",
+            "dependencies": [],
+            "details": "• Install tailwindcss, postcss, autoprefixer, daisyui via pnpm.\n• Generate tailwind.config.ts; enable daisyui with `themes: [\"cupcake\", \"business\"]` and add size overrides.\n• Import `index.css` with `@tailwind base; @tailwind components; @tailwind utilities;`.\n• Verify with a sample button rendered in App.tsx.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "API Service Layer",
+            "description": "Create Axios instance and typed service functions for simulations and materials endpoints.",
+            "dependencies": [],
+            "details": "• Configure Axios with `baseURL` from `import.meta.env.VITE_BACKEND_URL`.\n• Add interceptors for JSON error handling.\n• Expose functions: `postSimulation(params)`, `getSimulation(id)`, `getMaterials()`.\n• Export hook wrappers (e.g., React Query) for future caching.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Routing Skeleton",
+            "description": "Establish client-side routes and shared layout using react-router-dom v6.",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "• Install `react-router-dom`.\n• Define `<BrowserRouter>` with routes:\n  – `/` → Home\n  – `/form` → ParameterForm\n  – `/progress/:id` → ProgressView\n  – `/result/:id` → ResultView\n• Add NotFound fallback and basic nav bar styled with daisyUI.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Dynamic Form Component with zod Schema",
+            "description": "Implement ParameterForm page with react-hook-form and zod-based dynamic validation.",
+            "dependencies": [
+              "5.1",
+              "5.2"
+            ],
+            "details": "• Build zod schema mirroring backend constraints (positive numbers, required selects).\n• Generate form fields dynamically from a config array; connect with RHF `useForm` and zod resolver.\n• Integrate material dropdown; on submit, call `postSimulation` then navigate to `/progress/{id}`.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Progress Page",
+            "description": "Display real-time simulation progress and polling logic.",
+            "dependencies": [
+              "5.2",
+              "5.3"
+            ],
+            "details": "• Fetch simulation status via `getSimulation(id)` every 3 s (or use SSE when available).\n• Render progress bar and cancel button.\n• On status `completed`, redirect to `/result/{id}`.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Result Page",
+            "description": "Render finished simulation results with download and visualization options.",
+            "dependencies": [
+              "5.2",
+              "5.3"
+            ],
+            "details": "• Fetch final simulation data and result artifacts.\n• Show summary table, link to download SIF/output files, and placeholder for future 3D viewer.\n• Provide ‘Run New Simulation’ button.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Testing Suite (Unit + e2e)",
+            "description": "Set up Jest/RTL, MSW for unit/integration tests, and Cypress for end-to-end coverage.",
+            "dependencies": [
+              "5.1",
+              "5.2",
+              "5.3",
+              "5.4",
+              "5.5",
+              "5.6"
+            ],
+            "details": "• Configure Jest with ts-jest; add RTL helpers.\n• Unit tests: zod validation, API service error handling.\n• Component tests: form renders, validation messages.\n• MSW mocks for HTTP.\n• Cypress e2e: user submits valid form → progress → result.\n• Add GitHub Action job running `pnpm test && pnpm cypress:run`.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Material Library JSON, API, UI",
+        "description": "Deliver default material list to frontend and inject properties into SIF.",
+        "details": "• backend/data/materials.json schema: {id,name,E,nu,k,rho}.\n• GET /api/materials returns list.\n• SIF engine: if params.materialId → load props, render under `Material 1` block.\n• Frontend: Dropdown + «View properties» modal. Selected material writes materialId into form context.\n• Provide minimum 6 materials (Steel, Aluminum, Copper, ABS Plastic, Air, Water).\n",
+        "testStrategy": "pytest: GET /materials returns >=6 entries with required keys.\nSnapshot test: SIF includes `Youngs Modulus = 210e9` when Steel chosen.\nCypress: user selects material, props table visible, validation passes.",
+        "priority": "medium",
+        "dependencies": [
+          5
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create materials.json and JSON schema",
+            "description": "Author the default material dataset and its validation schema.",
+            "dependencies": [],
+            "details": "Compose a materials.json file containing at least six predefined materials (Steel, Aluminum, Copper, ABS Plastic, Air, Water) each with keys id, name, E, nu, k, rho. Write an accompanying JSON-Schema file to validate the structure and value types. Store both files under backend/data/.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Backend data loader & GET /api/materials endpoint",
+            "description": "Expose the material list through the backend API.",
+            "dependencies": [
+              "6.1"
+            ],
+            "details": "Implement a data-loading module that reads and validates materials.json at startup, caches it, and serves it via a fast API route GET /api/materials. Add simple health endpoint GET /api/health.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "SIF material property injection logic",
+            "description": "Insert selected material properties into the generated SIF file.",
+            "dependencies": [
+              "6.2"
+            ],
+            "details": "When job parameters include materialId, look up the corresponding material, render a `Material 1` block inside the SIF text, and embed properties E, nu, k, rho in correct Elmer syntax. Write utility to merge with other SIF sections.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Frontend material dropdown component",
+            "description": "Let users pick a material in the job configuration UI.",
+            "dependencies": [
+              "6.2"
+            ],
+            "details": "Create a React dropdown that fetches /api/materials on mount, lists names, and stores the chosen materialId in form context. Handle loading/error states and use Chakra UI styling.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Material properties modal",
+            "description": "Display full material details in a modal dialog.",
+            "dependencies": [
+              "6.2",
+              "6.4"
+            ],
+            "details": "Add a \"View properties\" button next to the dropdown. When clicked, open a modal showing a table of the selected material's E, nu, k, rho values. Ensure accessibility and responsive design.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Full-stack test suite",
+            "description": "Write automated tests covering backend, SIF injection, and UI.",
+            "dependencies": [
+              "6.1",
+              "6.2",
+              "6.3",
+              "6.4",
+              "6.5"
+            ],
+            "details": "Pytest: verify GET /api/materials returns ≥6 entries with required keys. Snapshot test: confirm SIF includes correct Steel modulus. Cypress: simulate user selecting a material, open modal, assert displayed values match backend. Integrate into CI workflow.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Extend Fortran Code for Simplified Materials",
+        "description": "Modify ModelDescription.F90 & Types.F90 so ElmerSolver understands new `MaterialLibrary` keyword generated by UI.",
+        "details": "• In Types.F90: extend `Material_t` to include `hasSimplifiedId` logical & `libId` integer.\n• In ModelDescription.F90 (ReadMaterial):\n   IF (Keyword == 'MaterialLibrary') THEN\n       CALL LoadSimplifiedMaterial(libId,Mat)\n   END IF\n• Implement `LoadSimplifiedMaterial` in new Fortran module MaterialLib.F90 reading /usr/src/elmerfem/work/materials.json (use Fortran 2008 intrinsic ISO_FORTRAN_ENV + simple JSON parser e.g. FSON).\n• Re-compile inside Dockerfile (add `git clone https://github.com/juntsang/FSON` && make install).\n\n<info added on 2025-07-23T21:31:02.355Z>\n**UPDATE based on research:** The initial plan to modify `Types.F90` is incorrect and should be avoided. The existing flexible `ValueList_t` structure is sufficient and safer. The implementation should proceed as follows:\n• **No changes to `Types.F90`**. The `hasSimplifiedId` and `libId` fields are not needed in the core data structure.\n• In `ModelDescription.F90`'s `ReadMaterial`, the call should be to `LoadSimplifiedMaterial(LibId, Mat % Values)`.\n• The new `LoadSimplifiedMaterial` subroutine in `MaterialLib.F90` must map the JSON keys from `materials.json` to the standard Elmer SIF keywords using `ListAddReal`:\n   - `E` -> `'Youngs Modulus'`\n   - `nu` -> `'Poissons Ratio'`\n   - `rho` -> `'Density'`\n   - `k` -> `'Heat Conductivity'`\n</info added on 2025-07-23T21:31:02.355Z>",
+        "testStrategy": "Inside elmer container run case with `MaterialLibrary = 1` ; solver log shows correct properties. Add regression test: compare computed density to expected from materials.json.",
+        "priority": "high",
+        "dependencies": [
+          6,
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Analyze Existing Elmer Data Structures",
+            "description": "Review Types.F90 and ModelDescription.F90 to understand current material handling and determine modification points.",
+            "dependencies": [],
+            "details": "• Locate Material_t definition and current property list.\n• Map call chain for ReadMaterial routine.\n• Document where new logical and integer fields will fit.\n• Create short report summarizing required changes.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Design MaterialLib.F90 Module",
+            "description": "Specify API and data structures for the new MaterialLib.F90 module that will handle simplified material loading.",
+            "dependencies": [
+              "7.1"
+            ],
+            "details": "• Define public subroutines: LoadSimplifiedMaterial, InitMaterialLibrary, FreeMaterialLibrary.\n• Decide internal data representation (derived type or associative array).\n• Draft module interface in UML-style diagram.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Integrate FSON JSON Parser",
+            "description": "Add FSON source code to the Elmer build tree and ensure it compiles with existing flags.",
+            "dependencies": [
+              "7.2"
+            ],
+            "details": "• Git-clone FSON into external_libs/fson.\n• Update CMakeLists.txt or Makefiles to include FSON *.f90 files.\n• Verify minimal example parses materials.json inside Elmer Docker image.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement JSON Mapping Logic",
+            "description": "Write Fortran routines to read materials.json and translate JSON fields into Material_t compatible data.",
+            "dependencies": [
+              "7.2",
+              "7.3"
+            ],
+            "details": "• Use FSON to parse id, name, E, nu, k, rho.\n• Populate temporary derived type and return via intent(out).\n• Handle error cases: missing field, invalid id.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Modify Core Fortran Modules",
+            "description": "Extend Types.F90 and ModelDescription.F90 to support the MaterialLibrary keyword and call MaterialLib.",
+            "dependencies": [
+              "7.2",
+              "7.4"
+            ],
+            "details": "• Add hasSimplifiedId logical & libId integer to Material_t.\n• In ReadMaterial, detect \"MaterialLibrary\" and invoke LoadSimplifiedMaterial.\n• Ensure backward compatibility with existing SIF syntax.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Update Build Scripts and Dockerfile",
+            "description": "Adjust CMake/Makefile rules and Dockerfile to include MaterialLib.F90 and FSON sources.",
+            "dependencies": [
+              "7.3",
+              "7.5"
+            ],
+            "details": "• Append new .f90 files to source lists.\n• Install json file into /usr/src/elmerfem/work.\n• Rebuild Docker image; confirm ElmerSolver runs.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Create Regression Solver Tests",
+            "description": "Add automated tests that run ElmerSolver with MaterialLibrary cases and verify numerical outputs.",
+            "dependencies": [
+              "7.5",
+              "7.6"
+            ],
+            "details": "• Prepare sample SIF using MaterialLibrary = 1.\n• Compare computed density against materials.json.\n• Integrate into existing CI pipeline.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Document New Keyword",
+            "description": "Write user and developer documentation for MaterialLibrary keyword and usage examples.",
+            "dependencies": [
+              "7.5"
+            ],
+            "details": "• Update ElmerSolver manual.\n• Provide example SIF snippet and expected results.\n• Describe troubleshooting tips.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Prepare Code Review Checklist",
+            "description": "Draft checklist to guide reviewers focusing on Fortran style, JSON parsing safety, and test coverage.",
+            "dependencies": [
+              "7.8"
+            ],
+            "details": "• Include items for memory management, error handling, and performance.\n• Share checklist in project wiki for future PRs.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Robust Input Validation Layer (Server & Client)",
+        "description": "Leverage Elmer’s SOLVER.KEYWORDS via Lists.F90 metadata to enforce parameter ranges.",
+        "details": "• Investigate Lists.F90 – expose small Fortran program `KeywordsDump` that outputs allowed range/type for basic keywords to stdout as JSON.\n• Build the program during docker image build, execute once, cache dump in backend/validation/keywords.json.\n• Backend Validation: Pydantic custom validators read keywords.json ➜ raise HTTP 422 with detailed msg.\n• Frontend zod schemas mirror same constraints (import JSON at build with vite-dynamic-import).\n\n<info added on 2025-07-23T21:31:57.323Z>\n• **Research Findings (`Lists.F90`):** The `Lists.F90` module is confirmed as the central component for managing solver keyword definitions and validation. It uses distinct data types (e.g., `list_type_constant_scalar`, `list_type_logical`, `list_type_string`) and a suite of `ListGet*` functions for type-safe retrieval. The `KeywordsDump` utility should be designed to parse the data structures within this module where keywords and their constraints (e.g., valid ranges, allowed options) are defined. The official ElmerFEM doxygen documentation for the `lists` class will be a primary reference.\n</info added on 2025-07-23T21:31:57.323Z>",
+        "testStrategy": "Unit tests send invalid params (e.g., negative Young’s Modulus) → backend returns 422, message includes ’Young’s Modulus must be >0’. Frontend prevents submission until fixed.",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Build KeywordsDump Utility",
+            "description": "Create a lightweight Fortran program that parses Lists.F90 and outputs keyword metadata (name, type, allowable range) to stdout in JSON format.",
+            "dependencies": [],
+            "details": "Locate Lists.F90 arrays, iterate through keyword structures, serialize to JSON using WRITE statements; compile with gfortran -O2 into /usr/local/bin/KeywordsDump.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Capture JSON During Image Build",
+            "description": "Invoke KeywordsDump in the Dockerfile, redirect output to backend/validation/keywords.json, and add a COPY step to make it available in the final runtime layer.",
+            "dependencies": [
+              "8.1"
+            ],
+            "details": "Insert RUN KeywordsDump > /app/backend/validation/keywords.json in multi-stage build; ensure layer caching so rebuilds only trigger on Lists.F90 changes.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Backend Pydantic Validator Layer",
+            "description": "Implement Pydantic models that load keywords.json at startup and enforce type/range checks, returning FastAPI HTTP 422 on violations.",
+            "dependencies": [
+              "8.2"
+            ],
+            "details": "Create KeywordRegistry singleton, add custom validators for numerical bounds, enumerations, and required fields; include clear error messages.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Frontend Zod Schema Generator",
+            "description": "Generate Zod schemas at build time by importing keywords.json, producing strongly-typed validators for React forms.",
+            "dependencies": [
+              "8.2"
+            ],
+            "details": "Use vite dynamic import + a small TS script to map JSON metadata to zod.number().min()/max()/int()/enum() constructs; export for react-hook-form resolvers.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Shared Validation Contract",
+            "description": "Establish a common interface (JSON schema or TypeScript types) derived from keywords.json to guarantee backend and frontend stay in sync.",
+            "dependencies": [
+              "8.3",
+              "8.4"
+            ],
+            "details": "Emit a JSON Schema file during build and commit it; configure both Pydantic and Zod layers to auto-generate from it, preventing drift.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Invalid Input Test Cases",
+            "description": "Create unit & integration tests that submit intentionally bad parameters and assert backend returns 422 and frontend blocks submit.",
+            "dependencies": [
+              "8.3",
+              "8.4",
+              "8.5"
+            ],
+            "details": "Pytest parametrize negative Young’s Modulus, missing required fields; React Testing Library checks form error rendering; snapshot expected messages.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "CI Integration",
+            "description": "Add validation and test steps to GitHub Actions pipeline to run KeywordsDump, regenerate schemas, and execute the full test suite on every push.",
+            "dependencies": [
+              "8.6"
+            ],
+            "details": "Stages: build-and-dump, lint, backend tests, frontend tests, artifact upload of keywords.json for downstream jobs.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Developer Documentation",
+            "description": "Write docs explaining the validation flow, how to update Lists.F90, regenerate dumps, and interpret 422 error responses.",
+            "dependencies": [
+              "8.7"
+            ],
+            "details": "Add markdown pages under docs/, provide diagrams of data flow, code snippets, and troubleshooting guide.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Instrument ElmerSolver.F90 for Progress Output",
+        "description": "Emit deterministic progress lines parsable by backend without affecting solver accuracy.",
+        "details": "• In ElmerSolver.F90 main iteration loops add:\n   WRITE(*,*) 'PROGRESS:',REAL(currentIter)/REAL(totalIter)*100.0\n• Guard with IF (ProgressOutput) logical set via new solver flag (enable by default in educational image).\n• Use format `PROGRESS: <percent> <timeStep>/<total>`.\n• Update Dockerfile to rebuild.\n\n<info added on 2025-07-23T21:32:39.730Z>\n• **Research Finding:** The primary target for instrumentation is the main **Sweep Loop** in `ElmerSolver.F90`.\n• This `DO WHILE (.TRUE.)` loop uses `iSweep` as the current iteration counter and `OptimIters` as the total number of iterations.\n• The relevant code block is:\n  ```fortran\n  DO WHILE (.TRUE.)\n    iSweep = iSweep + 1\n    ...\n    CALL ExecSimulation(...)\n    ...\n    IF (iSweep == OptimIters) EXIT\n  END DO\n  ```\n• The more granular time-stepping and nonlinear iteration loops are encapsulated within the `ExecSimulation` subroutine. Instrumenting these for the `<timeStep>/<total>` part of the progress format will require deeper analysis of that subroutine.\n</info added on 2025-07-23T21:32:39.730Z>",
+        "testStrategy": "Run heat example, pipe output, regex `PROGRESS:` matches ascending 0→100. Ensure simulation results identical to unmodified solver with example case (energy norm difference <1e-12).",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Locate Sweep Loop and Related Iteration Points",
+            "description": "Identify exact code locations within ElmerSolver.F90 main Sweep Loop (and any nested time-step/linear iteration loops) where progress output can be safely injected without altering solver logic.",
+            "dependencies": [],
+            "details": "Search for the DO WHILE (.TRUE.) loop handling nonlinear iterations and record surrounding variable names (currentIter, totalIter, timeStep). Produce file/line map for later edits.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Insert Conditional WRITE Statements for Progress",
+            "description": "Add WRITE statements emitting \"PROGRESS: <percent> <step>/<total>\" at the identified locations, wrapped in an IF block.",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "Syntax: IF (ProgressOutput) WRITE(*,'(A,F6.2,1X,I0,\"/\",I0)') 'PROGRESS:',REAL(currentIter)/REAL(totalIter)*100.0,timeStep,totalSteps. Ensure no extra flushing or side effects.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement ProgressOutput Solver Flag",
+            "description": "Extend solver configuration to include a logical ProgressOutput flag (default .TRUE. in educational image).",
+            "dependencies": [
+              "9.2"
+            ],
+            "details": "Modify GetSettings routines to parse keyword; update documentation template; default set via compile-time CMake option EDU_MODE=ON.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Update Dockerfile and CI Build Scripts",
+            "description": "Rebuild ElmerFEM Docker image with new source changes and default flag; ensure multistage build caches are invalidated.",
+            "dependencies": [
+              "9.3"
+            ],
+            "details": "Bump image tag to elmerfem:progress-v1; update Docker Compose service build context; add CI step running `ElmerSolver --version` to assert build success.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Run Regression & Performance Tests",
+            "description": "Execute canonical heat example comparing results with baseline to confirm numerical equivalence and acceptable runtime overhead.",
+            "dependencies": [
+              "9.4"
+            ],
+            "details": "Use Python script to run old vs new solver, diff energy norm (<1e-12 tolerance); parse output ensuring 0→100 progression lines monotonic; store artifacts.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Real-Time Progress Streaming (Backend & UI)",
+        "description": "Stream Elmer progress lines over WebSocket to display interactive progress bar.",
+        "details": "• Backend: FastAPI websocket /ws/simulations/{id}.\n  async def streamer(websocket):\n      follow = await asyncio.create_subprocess_exec('tail','-F',logfile,...)\n      for line in follow.stdout:\n          if line.startswith('PROGRESS:'):\n              pct = float(line.split()[1])\n              await websocket.send_json({'percent':pct})\n• Frontend: use react-use-websocket; componentProgressBar receives {percent} ➜ sets width.\n• On DONE, backend sends {'state':'completed'}; UI routes to /result/{id}.\n",
+        "testStrategy": "Jest: mount ProgressBar component with mocked WebSocket emits; assert bar grows.\nIntegration: Start simulation via API, open websocket, ensure percent reaches 100 within tolerance of solver runtime.",
+        "priority": "medium",
+        "dependencies": [
+          5,
+          9,
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Backend WebSocket Endpoint",
+            "description": "Create FastAPI WebSocket route /ws/simulations/{id} that manages client connections and streams outgoing messages.",
+            "dependencies": [],
+            "details": "• Add route in backend/app/websocket.py\n• Accept simulation_id path param, perform websocket.accept()\n• Maintain connection registry for possible multi-client subscriptions\n• Stub send loop calling placeholder async generator (to be replaced in later subtasks)\n• Handle disconnects and cleanup gracefully",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Log Follower Utility",
+            "description": "Implement asynchronous tail-f style follower that reads simulation log and extracts progress lines.",
+            "dependencies": [
+              "10.1"
+            ],
+            "details": "• Use asyncio.create_subprocess_exec('tail','-n','0','-F', logfile)\n• Await stdout lines, regex match /^PROGRESS:\\s+(\\d+\\.?\\d*)/\n• Yield structured events {type:'progress', percent:float}\n• Detect completion keyword to yield {type:'completed'}",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "WebSocket Message Serializer",
+            "description": "Convert follower events into validated JSON messages for clients.",
+            "dependencies": [
+              "10.2"
+            ],
+            "details": "• Define Pydantic model ProgressMessage{percent:float}|CompletionMessage{state:str}\n• Serialize events from follower to model.dict()\n• Integrate into endpoint send loop; catch validation errors",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Frontend WebSocket Hook",
+            "description": "Create React hook useSimulationProgress(simId) that connects to backend WebSocket and exposes progress state.",
+            "dependencies": [
+              "10.3"
+            ],
+            "details": "• Utilize react-use-websocket with automatic reconnect\n• Parse incoming JSON, update internal reducer {percent,state}\n• Expose {percent,completed:boolean,error}\n• Provide cleanup on unmount",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Progress Bar Component",
+            "description": "Implement <SimulationProgressBar /> that visually represents percent from hook.",
+            "dependencies": [
+              "10.4"
+            ],
+            "details": "• Use CSS width binding or Material UI LinearProgress\n• Display numeric percent label\n• Show completion badge when state==='completed'\n• Add props: simId, className",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "End-to-End Integration Tests",
+            "description": "Verify real-time progress flow from backend to UI using simulated run.",
+            "dependencies": [
+              "10.1",
+              "10.2",
+              "10.3",
+              "10.4",
+              "10.5"
+            ],
+            "details": "Backend: pytest-asyncio spins demo simulation, opens websocket, asserts final 100% message.\nFrontend: Jest with msw mocks or live backend, mount ProgressBar, advance fake timers, assert width grows and completion banner appears.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Result Parsing & 3D Visualization",
+        "description": "Parse VTK results with meshio and render interactive 3D plot in browser.",
+        "details": "• Backend: meshio==5.4 read *.vtu → extract points, cells, data['Temperature'] or ['Displacement'].\n  Return JSON: {nodes:[[x,y,z],...], cells:[[n1,n2,n3],...], field:[v1,v2,...]} compressed with gzip & FastAPI’s StreamingResponse.\n• Frontend: Plotly.js 2.27 Surface/mesh3d; color scale Viridis; controls orbit/zoom.\n  Lazy-load component to reduce bundle size.\n• Display legend, min/max, tooltip on hover.\n",
+        "testStrategy": "Backend unit test loads sample .vtu, endpoint returns 200 + correct array lengths.\nFrontend visual regression screenshot using Cypress + Percy ensuring rendering succeeds.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          5,
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Sample VTK Dataset Collection",
+            "description": "Gather and curate representative *.vtu files for heat-transfer and displacement cases to drive development and testing.",
+            "dependencies": [],
+            "details": "• Find permissively licensed VTK datasets (e.g., VTKData, FEniCS demos) or generate simple cubes/beams in Elmer.\n• Ensure each file includes nodes, cells, and at least one scalar (Temperature) and one vector (Displacement) field.\n• Store under backend/tests/data with README on provenance.\n• Provide lightweight (<2 MB) and heavy (~25 MB) variants to benchmark streaming.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "meshio Parsing Module",
+            "description": "Implement Python helper that loads *.vtu with meshio==5.4 and returns compact JSON-serialisable dict.",
+            "dependencies": [
+              "11.1"
+            ],
+            "details": "• Function parse_vtu(path) → {nodes: [[x,y,z]], cells: [[n1,n2,n3]], field: [...] }.\n• Auto-detect field names (Temperature, Displacement) and handle float32/64.\n• Add unit tests using datasets from 11.1 (pytest, coverage ≥90%).",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Streaming Response with Compression",
+            "description": "Expose /api/simulations/{id}/result that streams gzipped JSON produced by 11.2 via FastAPI’s StreamingResponse.",
+            "dependencies": [
+              "11.2"
+            ],
+            "details": "• Chunk JSON serialization with orjson + gzip to avoid high memory peaks.\n• Set headers: Content-Type: application/json, Content-Encoding: gzip.\n• Verify client-side decompression with curl and unit test expecting 200 + correct lengths.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Frontend Data Adapter",
+            "description": "Create TS utility to fetch, decompress, and transform streamed result JSON into Plotly-ready arrays.",
+            "dependencies": [
+              "11.3"
+            ],
+            "details": "• Use browser Streams API + pako for gzip inflate.\n• Convert to Float32Array where possible; validate lengths against metadata.\n• Expose hook useSimulationResult(id) returning {points, cells, values, loading, error}.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Plotly 3D Renderer Component",
+            "description": "Build React component that renders mesh3d/surface with Viridis color scale, legend, and tooltips.",
+            "dependencies": [
+              "11.4"
+            ],
+            "details": "• <VtkViewer data={…}/> uses Plotly.js 2.27.\n• Provide orbit/zoom controls, display min/max scalar values, and tooltip showing node index + value.\n• Ensure responsiveness and dark-mode friendly colors.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Lazy-Loading & Performance Optimization",
+            "description": "Reduce initial bundle size by code-splitting Plotly and heavy logic; implement memoization for large arrays.",
+            "dependencies": [
+              "11.5"
+            ],
+            "details": "• React.lazy/Dynamic import for Plotly component; prefetch on hover of Result tab.\n• Webpack chunk analysis target <250 kB initial JS.\n• Use WebGL data traces to handle ≥100k nodes without frame drops.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Visual Regression Tests",
+            "description": "Automate rendering checks with Cypress + Percy to catch UI regressions and performance stalls.",
+            "dependencies": [
+              "11.5"
+            ],
+            "details": "• Load each sample dataset (11.1) via mocked backend.\n• Capture viewport 1280×800 screenshots and compare against baseline.\n• Fail test if pixel diff >0.1% or if rendering exceeds 5 s.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Automated Test & CI Pipeline",
+        "description": "Add full test suite, code quality gates, and artifacts to GitHub Actions.",
+        "details": "• Extend workflow: matrix (ubuntu-latest, windows-latest) steps →\n   – Checkout\n   – Set up Node and Python\n   – pnpm install, pnpm test:coverage\n   – poetry install, pytest --cov\n   – docker compose build --parallel\n   – Run backend integration test: post minimal job, await completion ≤60s.\n• Upload coverage to Codecov; require >80%.\n• On main merge, push multi-arch elmer image to GHCR.\n",
+        "testStrategy": "Create failing test, ensure CI turns red; fix test, CI green. Simulated PR gating confirms pipeline executes all steps within 10 minutes.",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Workflow Environment Matrix",
+            "description": "Create a reusable GitHub Actions matrix covering ubuntu-latest and windows-latest with required setup steps for Node.js and Python.",
+            "dependencies": [],
+            "details": "Add matrix strategy to ci.yml; include versions, cache keys, and fail-fast config.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Frontend Test & Coverage Job",
+            "description": "Add job that installs dependencies with pnpm and runs `pnpm test:coverage` under the defined matrix.",
+            "dependencies": [
+              "12.1"
+            ],
+            "details": "Use actions/setup-node with caching; output coverage to coverage/frontend/.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Backend Test & Coverage Job",
+            "description": "Add job that sets up Python via `actions/setup-python`, installs with poetry, and executes `pytest --cov`.",
+            "dependencies": [
+              "12.1"
+            ],
+            "details": "Publish backend coverage to coverage/backend/; cache poetry virtualenv.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Docker Compose Build & Integration Tests",
+            "description": "Extend workflow to build service containers in parallel and run integration test hitting simulation endpoint.",
+            "dependencies": [
+              "12.3"
+            ],
+            "details": "Invoke `docker compose build --parallel` then run scripted test waiting ≤60 s for job completion.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Coverage Upload & Quality Gate",
+            "description": "Aggregate frontend and backend coverage reports, upload to Codecov, and enforce ≥80% threshold.",
+            "dependencies": [
+              "12.2",
+              "12.3"
+            ],
+            "details": "Use Codecov action with combined coverage.xml; configure required status check.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Artifact & Image Publishing",
+            "description": "On successful main-branch builds, push multi-arch Docker image to GHCR and upload build artifacts.",
+            "dependencies": [
+              "12.4",
+              "12.5"
+            ],
+            "details": "Set up QEMU for cross-build, login to ghcr.io, tag version and latest.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Configure PR Status Checks",
+            "description": "Enable mandatory checks for tests, coverage gate, and image build before merge is allowed.",
+            "dependencies": [
+              "12.5",
+              "12.6"
+            ],
+            "details": "Use GitHub branch protection rules referencing workflow job names.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Pipeline Documentation",
+            "description": "Write README section and docs/ci.md explaining workflow, commands, and troubleshooting.",
+            "dependencies": [
+              "12.7"
+            ],
+            "details": "Include diagrams, badge links, and instructions for local test run via `act`.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-23T21:20:07.825Z",
+      "updated": "2025-07-24T07:30:53.064Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

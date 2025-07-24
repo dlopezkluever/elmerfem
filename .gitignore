@@ -557,3 +557,69 @@ healthchecksdb
 MigrationBackup/
 
 
+
+# Logs
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+# Environment variables
+.env
+# Editor directories and files
+.idea
+.vscode
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# Task files
+# tasks.json
+# tasks/ 
+
+# Web Platform Specific Additions
+# Frontend build outputs
+frontend/dist/
+frontend/build/
+
+# Additional Node.js files
+.pnpm-debug.log*
+.pnpm-store/
+pnpm-lock.yaml
+
+# Python virtual environments
+backend/.venv/
+backend/venv/
+backend/__pycache__/
+backend/*.egg-info/
+
+# Python cache and compiled files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.so
+
+# Poetry
+poetry.lock
+
+# Development databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Docker volumes and data
+workspace/
+
+# Environment configuration
+.env.local
+.env.development
+.env.test
+.env.production 

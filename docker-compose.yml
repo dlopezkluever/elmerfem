@@ -1,0 +1,56 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+    volumes:
+      - workspace:/workspace
+    networks:
+      - simnet
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  frontend:
+    image: node:lts-alpine
+    working_dir: /app
+    command: sh -c "npm install -g pnpm && pnpm install && pnpm dev --host"
+    ports:
+      - "5173:5173"
+    environment:
+      - BACKEND_URL=http://backend:8000
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - backend
+    networks:
+      - simnet
+    restart: unless-stopped
+
+  elmer:
+    build:
+      context: .
+      dockerfile: docker/elmer.dockerfile
+    entrypoint: sh -c "tail -f /dev/null"
+    volumes:
+      - workspace:/usr/src/elmerfem/work
+    networks:
+      - simnet
+    healthcheck:
+      test: ["CMD", "ElmerSolver", "--version"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  workspace:
+
+networks:
+  simnet:
+    driver: bridge 

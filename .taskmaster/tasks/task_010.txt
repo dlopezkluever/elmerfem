@@ -1,0 +1,21 @@
+# Task ID: 10
+# Title: Real-Time Progress Streaming (Backend & UI)
+# Status: pending
+# Dependencies: 5, 9, 3
+# Priority: medium
+# Description: Stream Elmer progress lines over WebSocket to display interactive progress bar.
+# Details:
+• Backend: FastAPI websocket /ws/simulations/{id}.
+  async def streamer(websocket):
+      follow = await asyncio.create_subprocess_exec('tail','-F',logfile,...)
+      for line in follow.stdout:
+          if line.startswith('PROGRESS:'):
+              pct = float(line.split()[1])
+              await websocket.send_json({'percent':pct})
+• Frontend: use react-use-websocket; componentProgressBar receives {percent} ➜ sets width.
+• On DONE, backend sends {'state':'completed'}; UI routes to /result/{id}.
+
+
+# Test Strategy:
+Jest: mount ProgressBar component with mocked WebSocket emits; assert bar grows.
+Integration: Start simulation via API, open websocket, ensure percent reaches 100 within tolerance of solver runtime.

@@ -1,0 +1,18 @@
+# Task ID: 2
+# Title: Create Docker Compose Environment
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Provide single-command local setup bundling frontend, backend, and ElmerFEM solver container.
+# Details:
+• docker-compose.yml services:
+   1. backend: build ./backend, mount ./workspace volume, expose 8000.
+   2. frontend: node:lts-alpine, command `pnpm dev`, env BACKEND_URL=http://backend:8000, expose 5173, depends_on backend.
+   3. elmer: build context ./elmer_fem_docker (use official docker/elmer.dockerfile, add compilers gfortran 13, OpenMPI, cmake >=3.28), entrypoint sh (idle).
+• Named volume workspace mounted into /usr/src/elmerfem/work inside elmer.
+• Health-checks for backend (GET /health) and elmer (`ElmerSolver --version`).
+• Makefile targets: `make up`, `make down`, `make elmer-shell`.
+
+
+# Test Strategy:
+`make up` boots containers; `docker compose ps` shows healthy; exec into elmer container and run `ElmerSolver --version` (returns version string).

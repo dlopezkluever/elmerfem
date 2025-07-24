@@ -1,0 +1,21 @@
+# Task ID: 5
+# Title: React UI & Form Validation
+# Status: pending
+# Dependencies: 3
+# Priority: medium
+# Description: Build student-friendly React interface with large controls and zod-based validation.
+# Details:
+• Tailwind CSS 3 + daisyUI for large components.
+• react-hook-form + @hookform/resolvers/zod.
+• Pages:
+   – Home / Template Select
+   – ParameterForm (dynamic fields)
+   – ProgressView
+   – ResultView
+• POST to /api/simulations, navigate to /progress/{id}.
+• Validation: numerical >0, required, select options.
+• Axios instance with baseURL from env.
+
+
+# Test Strategy:
+Jest + React Testing Library – field validation messages rendered; msw mocks backend; Cypress e2e: user creates simulation stub, UI proceeds to progress page.

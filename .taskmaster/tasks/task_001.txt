@@ -1,0 +1,18 @@
+# Task ID: 1
+# Title: Initialize Mono-Repo & Toolchain
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Create a mono-repo with clearly separated frontend, backend, and Fortran-Docker workspaces plus shared docs/tests.
+# Details:
+• Create Git repository (main branch) ➜ folders: frontend/, backend/, elmer_fem_docker/, docs/.
+• Add .editorconfig, .gitignore, LICENCE (MIT).
+• Frontend: `npm create vite@latest frontend -- --template react-ts` ; Node 20.11 ; pnpm workspace root.
+• Backend: Python 3.11; `poetry init` ; add deps: fastapi==0.110.*, uvicorn[standard]==0.27.*, pydantic==2.*, jinja2==3.*, pytest==8.*.
+• Fortran code copied as git submodule from official ElmerFEM or release tarball into elmer_fem_docker/src.
+• Configure pre-commit hooks (black, ruff, isort, prettier, eslint, commitlint).
+• Add GitHub Actions workflow skeleton: (lint → test → build-docker).
+
+
+# Test Strategy:
+Run `pnpm install && pnpm -r lint` (should exit 0); run `poetry run pytest -q` (no tests yet → passes); push branch → GitHub Action executes without failure.

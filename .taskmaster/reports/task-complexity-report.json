@@ -1,0 +1,109 @@
+{
+	"meta": {
+		"generatedAt": "2025-07-23T21:40:00.493Z",
+		"tasksAnalyzed": 12,
+		"totalTasks": 12,
+		"analysisCount": 12,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": false
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Integrate Web Platform Toolchain into ElmerFEM Repository",
+			"complexityScore": 4,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break this task into discrete steps such as: repo directory scaffolding, root configuration files (.gitignore, .editorconfig, pnpm-workspace.yaml), frontend Vite setup, backend Poetry setup, shared lint-format tooling (pre-commit), and initial GitHub Actions workflow. For each subtask provide acceptance criteria and commands/scripts to execute.",
+			"reasoning": "Mostly standard project scaffolding with multiple tech stacks but limited domain logic; coordination overhead moderate."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Create Docker Compose Environment",
+			"complexityScore": 5,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Decompose into: base compose file authoring, service Dockerfiles/contexts, volume & network definitions, health-check implementation, Makefile command wrappers, and local verification & documentation. Specify expected compose commands and health-check endpoints for each subtask.",
+			"reasoning": "Requires composing three heterogeneous services with health-checks and developer UX scripts; some orchestration nuance but well-known patterns."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Backend Core API & Job Orchestration",
+			"complexityScore": 7,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Split into: FastAPI project layout, DTO & settings definitions, REST endpoint implementations, async job launcher abstraction, in-memory/Redis job store, Docker orchestration wrapper, unit & integration tests, and documentation/readme update.",
+			"reasoning": "Involves async process management, state persistence, REST design, and test coverage; higher risk in concurrency and Docker interactions."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "SIF Generation Engine",
+			"complexityScore": 6,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break down into: Jinja2 environment setup, template authoring per physics, parameter-to-context mapper, unit conversion utilities, rendering function with I/O, and snapshot/solver validation tests.",
+			"reasoning": "Template system plus validation logic is moderately complex; requires careful mapping of physics parameters."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "React UI & Form Validation",
+			"complexityScore": 6,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Separate into: project Tailwind/daisyUI configuration, API service layer, routing skeleton, dynamic form component with zod schema, progress page, result page, and testing suite (unit + e2e).",
+			"reasoning": "Multi-page UI with form generation and validation; complexity spread across styling, state management, and testing."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Material Library JSON, API, UI",
+			"complexityScore": 5,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Create subtasks: author materials.json & schema, backend data loader and GET endpoint, SIF injection logic, frontend dropdown component, properties modal, and full-stack tests.",
+			"reasoning": "Adds data layer and simple UI integration; moderate back-front coordination but straightforward logic."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Extend Fortran Code for Simplified Materials",
+			"complexityScore": 8,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Outline steps: analyse current Elmer data structures, design MaterialLib.F90, integrate FSON parser, modify ModelDescription.F90, adjust build scripts/Dockerfile, implement JSON mapping, regression solver tests, documentation of new keyword, and code review checklist.",
+			"reasoning": "Requires non-trivial Fortran changes, external library integration, and ensuring solver correctness—high technical depth and risk."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Robust Input Validation Layer (Server & Client)",
+			"complexityScore": 7,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Divide into: build KeywordsDump utility, capture JSON during image build, backend pydantic validator layer, frontend zod schema generator, shared validation contract, invalid input test cases, CI integration, and developer docs.",
+			"reasoning": "Cross-language introspection of Fortran metadata feeding two validation stacks; significant tooling and serialization work."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Instrument ElmerSolver.F90 for Progress Output",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Subtasks: identify insertion points in solver loops, implement conditional WRITE statements, add solver flag handling, update Docker build, and regression/performance tests to confirm no physics change.",
+			"reasoning": "Localized Fortran edits but must preserve solver integrity; moderate complexity with testing and rebuilds."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Real-Time Progress Streaming (Backend & UI)",
+			"complexityScore": 6,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Plan: backend WebSocket endpoint, log follower utility, message serializer, frontend WebSocket hook, progress bar component, and integration tests with running simulation.",
+			"reasoning": "Requires websocket handling and UI synchronization; manageable but touches both stacks and async flow."
+		},
+		{
+			"taskId": 11,
+			"taskTitle": "Result Parsing & 3D Visualization",
+			"complexityScore": 7,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Break into: sample VTK dataset collection, meshio parsing module, streaming response with compression, frontend data adapter, Plotly 3D renderer, lazy-loading/optimization, and visual regression tests.",
+			"reasoning": "Binary data processing, large payload streaming, and interactive 3D rendering add performance and UX challenges."
+		},
+		{
+			"taskId": 12,
+			"taskTitle": "Automated Test & CI Pipeline",
+			"complexityScore": 8,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Segment into: workflow environment matrix definition, frontend test/coverage job, backend test/coverage job, docker compose build & integration tests, coverage upload & gate, artifact/image publishing, PR status checks, and pipeline documentation.",
+			"reasoning": "Comprehensive cross-platform pipeline coordinating multiple languages, containers, coverage, and publishing—high orchestration complexity."
+		}
+	]
+}

@@ -1,0 +1,15 @@
+# Task ID: 8
+# Title: Robust Input Validation Layer (Server & Client)
+# Status: pending
+# Dependencies: 4
+# Priority: medium
+# Description: Leverage Elmer’s SOLVER.KEYWORDS via Lists.F90 metadata to enforce parameter ranges.
+# Details:
+• Investigate Lists.F90 – expose small Fortran program `KeywordsDump` that outputs allowed range/type for basic keywords to stdout as JSON.
+• Build the program during docker image build, execute once, cache dump in backend/validation/keywords.json.
+• Backend Validation: Pydantic custom validators read keywords.json ➜ raise HTTP 422 with detailed msg.
+• Frontend zod schemas mirror same constraints (import JSON at build with vite-dynamic-import).
+
+
+# Test Strategy:
+Unit tests send invalid params (e.g., negative Young’s Modulus) → backend returns 422, message includes ’Young’s Modulus must be >0’. Frontend prevents submission until fixed.

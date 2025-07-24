@@ -1,0 +1,28 @@
+# Task ID: 3
+# Title: Backend Core API & Job Orchestration
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Implement FastAPI service exposing REST endpoints for simulations and orchestrating Docker execution.
+# Details:
+• Endpoints:
+  POST /api/simulations → body: SimulationParamsDTO ➜ returns {id,status}
+  GET  /api/simulations/{id}/status → {progress,state,msg}
+  GET  /api/simulations/{id}/result  → stream file/json
+• Job flow (pseudo-code):
+  async def launch_job(params):
+      workdir = Path('/workspace')/uuid4()
+      render_sif(params, workdir/'case.sif')
+      cmd=["docker","compose","exec","-T","elmer","ElmerSolver","case.sif"]
+      proc = await asyncio.create_subprocess_exec(*cmd,cwd=workdir,stdout=PIPE,stderr=STDOUT)
+      persist job id → redis (or in-mem dict for MVP).
+• Use Pydantic v2 models; dependency injection for settings via pydantic-settings.
+• Add /health endpoint.
+
+
+# Test Strategy:
+pytest with TestClient:
+  – POST valid params returns 201
+  – job record stored
+  – mock subprocess, assert called with correct cmd.
+Integration: spin up docker compose, POST demo heat-transfer job, poll status until DONE (exit code 0).

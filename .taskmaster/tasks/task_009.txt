@@ -1,0 +1,16 @@
+# Task ID: 9
+# Title: Instrument ElmerSolver.F90 for Progress Output
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Emit deterministic progress lines parsable by backend without affecting solver accuracy.
+# Details:
+• In ElmerSolver.F90 main iteration loops add:
+   WRITE(*,*) 'PROGRESS:',REAL(currentIter)/REAL(totalIter)*100.0
+• Guard with IF (ProgressOutput) logical set via new solver flag (enable by default in educational image).
+• Use format `PROGRESS: <percent> <timeStep>/<total>`.
+• Update Dockerfile to rebuild.
+
+
+# Test Strategy:
+Run heat example, pipe output, regex `PROGRESS:` matches ascending 0→100. Ensure simulation results identical to unmodified solver with example case (energy norm difference <1e-12).

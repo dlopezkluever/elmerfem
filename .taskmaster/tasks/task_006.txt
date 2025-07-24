@@ -1,0 +1,18 @@
+# Task ID: 6
+# Title: Material Library JSON, API, UI
+# Status: pending
+# Dependencies: 5
+# Priority: medium
+# Description: Deliver default material list to frontend and inject properties into SIF.
+# Details:
+• backend/data/materials.json schema: {id,name,E,nu,k,rho}.
+• GET /api/materials returns list.
+• SIF engine: if params.materialId → load props, render under `Material 1` block.
+• Frontend: Dropdown + «View properties» modal. Selected material writes materialId into form context.
+• Provide minimum 6 materials (Steel, Aluminum, Copper, ABS Plastic, Air, Water).
+
+
+# Test Strategy:
+pytest: GET /materials returns >=6 entries with required keys.
+Snapshot test: SIF includes `Youngs Modulus = 210e9` when Steel chosen.
+Cypress: user selects material, props table visible, validation passes.

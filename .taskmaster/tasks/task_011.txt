@@ -1,0 +1,17 @@
+# Task ID: 11
+# Title: Result Parsing & 3D Visualization
+# Status: pending
+# Dependencies: 3, 5, 2
+# Priority: medium
+# Description: Parse VTK results with meshio and render interactive 3D plot in browser.
+# Details:
+• Backend: meshio==5.4 read *.vtu → extract points, cells, data['Temperature'] or ['Displacement'].
+  Return JSON: {nodes:[[x,y,z],...], cells:[[n1,n2,n3],...], field:[v1,v2,...]} compressed with gzip & FastAPI’s StreamingResponse.
+• Frontend: Plotly.js 2.27 Surface/mesh3d; color scale Viridis; controls orbit/zoom.
+  Lazy-load component to reduce bundle size.
+• Display legend, min/max, tooltip on hover.
+
+
+# Test Strategy:
+Backend unit test loads sample .vtu, endpoint returns 200 + correct array lengths.
+Frontend visual regression screenshot using Cypress + Percy ensuring rendering succeeds.
