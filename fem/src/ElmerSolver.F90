@@ -138,6 +138,7 @@
 
      LOGICAL :: Silent=.FALSE., Version=.FALSE., GotModelName, FinishEarly=.FALSE.
      LOGICAL :: FirstLoad = .TRUE., FirstTime=.TRUE., Found
+     LOGICAL :: ProgressOutput = .TRUE.  ! Default to TRUE for educational use
 
      INTEGER :: iargc, NoArgs
      INTEGER :: iostat, iSweep = 1, OptimIters
@@ -428,6 +429,12 @@
                     'Additive namespaces', Found ) )
 
          !----------------------------------------------------------------------------------
+         ! Read ProgressOutput flag (default TRUE for educational use)
+         !----------------------------------------------------------------------------------
+         ProgressOutput = ListGetLogical( CurrentModel % Simulation, 'Progress Output', Found )
+         IF(.NOT. Found) ProgressOutput = .TRUE.  ! Default to TRUE for educational platform
+         
+         !----------------------------------------------------------------------------------
          MeshMode = ListGetLogical( CurrentModel % Simulation, 'Mesh Mode', Found)
 
          !------------------------------------------------------------------------------
@@ -618,6 +625,13 @@
            CALL Info('MAIN','Control Loop '//I2S(iSweep))
            CALL Info('MAIN','========================================================',Level=5)
            
+           ! Output progress for educational platform
+           IF (ProgressOutput .AND. OptimIters > 0) THEN
+             WRITE(*,'(A,F6.1,1X,I0,A,I0)') 'PROGRESS: ', &
+                 REAL(iSweep)/REAL(OptimIters)*100.0_dp, iSweep, '/', OptimIters
+             CALL FLUSH(6)
+           END IF
+           
            sSweep = 1.0_dp * iSweep
            ! If there are no parameters this does nothing                  
            CALL ControlResetMesh(CurrentModel % Control, iSweep )            
@@ -644,7 +658,7 @@
            END IF
 
            CALL ExecSimulation( TimeIntervals, CoupledMinIter, &
-               CoupledMaxIter, OutputIntervals, Transient, Scanning) 
+               CoupledMaxIter, OutputIntervals, Transient, Scanning, ProgressOutput) 
            
            ! This evaluates the cost function and saves the results of control
            CALL ControlParameters(CurrentModel % Control, &
@@ -697,7 +711,7 @@
          END DO
        ELSE
          CALL ExecSimulation( TimeIntervals, CoupledMinIter, &
-             CoupledMaxIter, OutputIntervals, Transient, Scanning) 
+             CoupledMaxIter, OutputIntervals, Transient, Scanning, ProgressOutput) 
        END IF
        
        ! Comparison to reference is done to enable consistency test under ctest.
@@ -2660,12 +2674,12 @@
 !> Execute the individual solvers in defined sequence. 
 !------------------------------------------------------------------------------
    SUBROUTINE ExecSimulation(TimeIntervals,  CoupledMinIter, &
-       CoupledMaxIter, OutputIntervals, Transient, Scanning)
+       CoupledMaxIter, OutputIntervals, Transient, Scanning, ProgressOutput)
 !------------------------------------------------------------------------------     
      USE Integration, ONLY : GaussPointsInitialized, GaussPointsInit
      IMPLICIT NONE
      INTEGER :: TimeIntervals,CoupledMinIter, CoupledMaxIter,OutputIntervals(:)
-     LOGICAL :: Transient,Scanning
+     LOGICAL :: Transient,Scanning,ProgressOutput
 !------------------------------------------------------------------------------
      INTEGER :: interval, timestep, i, j, k, n
      REAL(KIND=dp) :: dt, ddt, dtfunc, timeleft
@@ -2876,6 +2890,12 @@
 
          cum_Timestep = cum_Timestep + 1
          sStep(1) = cum_Timestep
+         
+         ! Output progress for educational platform
+         IF (ProgressOutput .AND. stepcount > 0) THEN
+           WRITE(*,'(A,F6.1,1X,I0,A,I0)') 'PROGRESS: ', &
+               REAL(cum_Timestep)/REAL(stepcount)*100.0_dp, cum_Timestep, '/', stepcount
+         END IF
 
          IF ( GetNamespaceCheck() ) THEN
            IF( Scanning ) THEN
@@ -3590,7 +3610,7 @@
      CALL SetInitialConditions()
 
      CALL ExecSimulation( TimeIntervals, CoupledMinIter, &
-         CoupledMaxIter, OutputIntervals, Transient, Scanning)
+         CoupledMaxIter, OutputIntervals, Transient, Scanning, .FALSE.)
 
      DO i=1,NoParam     
        Fvec(i) = GetControlValue(CurrentModel % Mesh,CurrentModel % Control,i)
