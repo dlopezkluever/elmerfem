@@ -6,12 +6,13 @@ import asyncio
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, UUID
+from typing import Dict, Optional
+from uuid import UUID
 
 from ..config.settings import settings
-from ..models import JobDTO, SimulationParamsDTO, JobStatus
+from ..models import SimulationJob, SimulationParamsDTO, JobStatus
 from ..services.docker_wrapper import DockerWrapper
-from ..services.mesh_generator import MeshGenerator
+from ..services.educational_mesh_service import EducationalMeshService
 from ..services.sif_generator import SIFGenerator
 from .store import JobStore
 
@@ -24,11 +25,11 @@ class JobLauncher:
     def __init__(self, job_store: JobStore, docker_wrapper: DockerWrapper):
         self.job_store = job_store
         self.docker = docker_wrapper
-        self.mesh_generator = MeshGenerator()
+        self.educational_mesh_service = EducationalMeshService()
         self.sif_generator = SIFGenerator()
         self._running_tasks: Dict[UUID, asyncio.Task] = {}
     
-    async def launch_job(self, params: SimulationParamsDTO) -> JobDTO:
+    async def launch_job(self, params: SimulationParamsDTO) -> SimulationJob:
         """
         Launch a new simulation job
         
@@ -82,17 +83,31 @@ class JobLauncher:
                 job_id, 10.0, "SIF file generated"
             )
             
-            # Generate mesh files
+            # Generate mesh files using EducationalMeshService
+            # The educational mesh generator provides fast, reliable mesh generation
+            # for standard educational geometries (rectangle, circle, annulus, L-shape)
             logger.info(f"Generating mesh for job {job_id}")
-            mesh_success = await self.mesh_generator.generate_mesh(
-                job.params.geometry,
-                job.workspace_dir,
-                job.params.mesh_density
-            )
+            try:
+                mesh_quality = await asyncio.to_thread(
+                    self.educational_mesh_service.generate_mesh,
+                    job.params.geometry,
+                    str(job.workspace_dir),
+                    job.params.mesh_density
+                )
+                mesh_success = mesh_quality.return_code == 0
+                
+                if mesh_success:
+                    logger.info(f"Mesh generated successfully: {mesh_quality.total_elements} elements, "
+                               f"{mesh_quality.total_nodes} nodes")
+                else:
+                    logger.error(f"Mesh generation failed with code {mesh_quality.return_code}")
+            except Exception as e:
+                logger.error(f"Mesh generation error: {e}")
+                mesh_success = False
             
             if not mesh_success:
                 await self.job_store.mark_job_failed(
-                    job_id, "Mesh generation failed"
+                    job_id, f"Mesh generation failed"
                 )
                 return
             

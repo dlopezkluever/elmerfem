@@ -1077,11 +1077,545 @@
             "testStrategy": ""
           }
         ]
+      },
+      {
+        "id": 13,
+        "title": "Purge temporary mesh generator & update imports",
+        "description": "Delete quick-fix mesh generator files and remove their references to prepare repository for new implementation.",
+        "details": "• Delete backend/app/services/mesh_generator.py and related helper code.\n• Revert/clean modifications in backend/app/jobs/launcher.py that import or call the temporary generator.\n• Search code-base (ripgrep) for mesh_generator import paths and delete/replace.\n• Add TODO comments pointing to forthcoming EducationalMeshService.\n• Verify CI passes after deletion (skip failing tests with pytest -k \"not mesh_generator\" until replacement lands).",
+        "testStrategy": "• Run git grep to confirm no reference to deleted module remains.\n• Execute unit-test suite; expect only tests marked xfail.\n• Docker image must build without missing-module errors.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "Create Fortran mesh generator core library skeleton",
+        "description": "Scaffold EducationalMeshGenerator Fortran 2008 module, build system, and Docker toolchain.",
+        "details": "• Path: backend/elmerfem_custom/mesh_generator/.\n• Files: CMakeLists.txt or Makefile, educational_mesh_generator.F90.\n• Implement MODULE with TYPE(GeometryParams) / TYPE(MeshQuality) (see PRD) and stubbed subroutines returning dummy meshes.\n• Use ISO_C_BINDING to expose GenerateMesh() as C ABI.\n• Build shared object via gfortran 12.2  ( -O3 -fPIC -shared ).\n• Extend backend Dockerfile (debian:bookworm-slim) with apt-get install -y gfortran && make.\n• Artifact: libeducational_mesh.so placed in /app/elmerfem_custom/mesh_generator/.",
+        "testStrategy": "• Run make && ldd ./libeducational_mesh.so – ensure no unresolved symbols.\n• Call nm -gD to verify symbol “generate_mesh_” exported.\n• In container, run simple ctypes python script that loads the .so and checks return code 0.",
+        "priority": "high",
+        "dependencies": [
+          13
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Fortran Module and Define Types",
+            "description": "Set up the 'educational_mesh_generator.F90' file with a Fortran 2008 module named 'EducationalMeshGenerator'. Define the derived types 'GeometryParams' and 'MeshQuality' as specified in the Product Requirements Document (PRD).",
+            "dependencies": [],
+            "details": "Create a Fortran module 'EducationalMeshGenerator' in 'educational_mesh_generator.F90'. Define the derived types 'GeometryParams' and 'MeshQuality' according to the PRD specifications. Implement stubbed subroutines that return dummy meshes for initial testing purposes.\n<info added on 2025-07-25T20:26:30.707Z>\nImplementation completed: educational_mesh_generator.F90 now contains the fully scaffolded EducationalMeshGenerator module with GeometryParams and MeshQuality derived types per PRD. Four geometry-specific stub subroutines (rectangle, circle, annulus, L-shape) are included and return placeholder mesh data for testing, compiling cleanly with gfortran.\n</info added on 2025-07-25T20:26:30.707Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement C Interoperability with ISO_C_BINDING",
+            "description": "Use the 'iso_c_binding' module to expose the 'GenerateMesh' subroutine with a C-compatible interface, ensuring interoperability between Fortran and C components.",
+            "dependencies": [],
+            "details": "In 'educational_mesh_generator.F90', include the 'iso_c_binding' module. Modify the 'GenerateMesh' subroutine to be interoperable with C by using the 'bind(c)' attribute. This allows the subroutine to be called from C code, facilitating integration with other components.\n<info added on 2025-07-25T20:26:50.105Z>\nImplemented the C-interoperable wrapper subroutine GenerateMesh_C with  \nBIND(C, name=\"generate_mesh\") and VALUE attributes; arguments use integer(C_INT) and real(C_DOUBLE) kinds, plus a character(kind=C_CHAR) pointer for output_dir.  \nA helper routine converts the incoming C string to an allocatable Fortran string before delegating to the native GenerateMesh implementation.  \nModule now USEs ISO_C_BINDING, EXPORTs generate_mesh, compiles into libeducational_mesh.so, and nm -gD confirms the exported symbol. A minimal C test program links and returns success, confirming end-to-end interoperability.\n</info added on 2025-07-25T20:26:50.105Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Set Up Build System with gfortran",
+            "description": "Configure the build system to compile the Fortran module into a shared object using gfortran 12.2 with optimization and position-independent code flags.",
+            "dependencies": [],
+            "details": "Create a 'CMakeLists.txt' file or 'Makefile' in the 'backend/elmerfem_custom/mesh_generator/' directory. Set up the build system to compile 'educational_mesh_generator.F90' into a shared object named 'libeducational_mesh.so'. Use gfortran 12.2 with the flags '-O3 -fPIC -shared' to optimize and generate position-independent code suitable for shared libraries.\n<info added on 2025-07-25T20:27:38.610Z>\nImplemented Makefile under backend/elmerfem_custom/mesh_generator:  \n• Default target compiles educational_mesh_generator.F90 into libeducational_mesh.so using gfortran 12.2 with flags -O3 -fPIC -std=f2008 -shared.  \n• clean target deletes intermediate objects and the shared library.  \n• test target runs ldd and nm checks to confirm all dependencies are resolved and symbol generate_mesh_ is exported.  \nCompilation and verification run successfully, marking the build system setup as complete.\n</info added on 2025-07-25T20:27:38.610Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Extend Dockerfile to Include Build Tools",
+            "description": "Modify the backend Dockerfile to install gfortran and the necessary build tools, ensuring the Docker environment can compile the Fortran module into a shared object.",
+            "dependencies": [],
+            "details": "Update the backend Dockerfile (based on 'debian:bookworm-slim') to include the installation of gfortran and make. Add the following lines to the Dockerfile: 'RUN apt-get update && apt-get install -y gfortran make'. This ensures that the Docker environment has the necessary tools to build the Fortran module into a shared object.\n<info added on 2025-07-25T20:28:16.634Z>\nAdded a second Dockerfile layer: `RUN cd elmerfem_custom/mesh_generator && make`, compiling the Fortran module during image build and producing `libeducational_mesh.so` in the backend image.\n</info added on 2025-07-25T20:28:16.634Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Verify Build and Integration",
+            "description": "Test the build process to ensure the shared object is correctly generated and can be loaded by Python using ctypes, confirming the integration between Fortran and Python components.",
+            "dependencies": [],
+            "details": "After building the Docker image, run the following commands to verify the build: 'make' to compile the Fortran module, and 'ldd ./libeducational_mesh.so' to ensure there are no unresolved symbols. Use 'nm -gD' to check that the 'generate_mesh_' symbol is exported. In the Docker container, run a simple Python script using ctypes to load 'libeducational_mesh.so' and verify that the 'GenerateMesh' function can be called successfully, returning the expected dummy mesh data.\n<info added on 2025-07-25T20:29:58.913Z>\nAdded backend/elmerfem_custom/mesh_generator/test_library.py which:\n\n• Defines ctypes.Structure wrappers for GeometryParams (L, H, nx, ny, element_type) and MeshQuality (num_nodes, num_elements, min_angle, max_aspect).  \n• Loads libeducational_mesh.so at runtime with CDLL and sets argtypes/restype for generate_mesh_.  \n• Instantiates GeometryParams for a 1 m × 0.5 m rectangle with a 10 × 5 element grid, calls the Fortran routine, and asserts MeshQuality.num_elements == 50 and return code == 0.  \n• Exits with code 0 when the library is correctly exported and callable, enabling use in CI (`python test_library.py`).\n\nA new README.md in the same directory documents:\n\n1. Prerequisites and Docker-based build steps (`make`, `ldd`, `nm -gD`).  \n2. How to run the test_library.py verification script both inside and outside the container.  \n3. Expected output and troubleshooting tips for unresolved symbols or incorrect ctypes signatures.\n</info added on 2025-07-25T20:29:58.913Z>",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "title": "Implement Rectangle mesh generation routine",
+        "description": "Add GenerateRectangleMesh() capable of structured quad/tri mesh with density control.",
+        "details": "• Inputs: width, height, nx, ny.\n• Algorithm: structured grid with linspace division; optionally split quads into two tris.\n• Write mesh.header, mesh.nodes, mesh.elements, mesh.boundary per Elmer ASCII format.\n• Ensure <2 s for nx,ny ≤ 400.\n• Pseudo-code:\n  do j=0,ny ; y=j*dy\n    do i=0,nx ; x=i*dx ; store node\n  connectivity = …\n• Update GenerateMesh dispatcher to call this routine when geometry_type==1.",
+        "testStrategy": "• For nx=10,ny=5 expect nodes=(nx+1)*(ny+1) and elems=nx*ny.\n• Verify element areas constant within 1e-12.\n• Run ElmerSolver with Poisson sample case to ensure solver accepts mesh.",
+        "priority": "high",
+        "dependencies": [
+          14
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement GenerateRectangleMesh() Function",
+            "description": "Develop the GenerateRectangleMesh() function to create a structured grid mesh based on input parameters: width, height, nx, and ny. The function should generate nodes and elements, optionally splitting quadrilaterals into triangles, and ensure performance meets the specified time constraints.",
+            "dependencies": [],
+            "details": "The function will iterate over the specified nx and ny divisions, calculating node positions using linspace division. It will store node coordinates and connectivity information, optionally splitting quadrilaterals into triangles. The function should be optimized to execute in less than 2 seconds for nx, ny ≤ 400.",
+            "status": "done",
+            "testStrategy": "Test with nx=10, ny=5 to verify that the number of nodes equals (nx+1)*(ny+1) and the number of elements equals nx*ny. Ensure that the execution time is under 2 seconds for nx, ny ≤ 400."
+          },
+          {
+            "id": 2,
+            "title": "Generate Mesh Files in Elmer ASCII Format",
+            "description": "Implement functionality to write mesh data to Elmer ASCII format files: mesh.header, mesh.nodes, mesh.elements, and mesh.boundary. Ensure the files adhere to Elmer's mesh file format specifications.",
+            "dependencies": [],
+            "details": "Utilize the ElmerSolver Manual to understand the required structure for mesh files. Implement functions to write node coordinates, element connectivity, and boundary conditions to the respective files, ensuring compliance with Elmer's mesh file format specifications.",
+            "status": "done",
+            "testStrategy": "Validate the generated mesh files by loading them into ElmerSolver and verifying that the mesh is correctly recognized and processed without errors."
+          },
+          {
+            "id": 3,
+            "title": "Optimize Mesh Generation Performance",
+            "description": "Optimize the mesh generation process to ensure that the GenerateRectangleMesh() function executes in less than 2 seconds for nx, ny ≤ 400, meeting the performance requirements.",
+            "dependencies": [],
+            "details": "Profile the mesh generation function to identify performance bottlenecks. Implement optimizations such as efficient data structures, parallel processing, or algorithmic improvements to reduce execution time.",
+            "status": "done",
+            "testStrategy": "Measure the execution time of the GenerateRectangleMesh() function for various values of nx and ny up to 400, ensuring that the time remains under 2 seconds."
+          },
+          {
+            "id": 4,
+            "title": "Update GenerateMesh Dispatcher",
+            "description": "Modify the GenerateMesh dispatcher to call the GenerateRectangleMesh() function when geometry_type is set to 1, integrating the new mesh generation routine into the existing system.",
+            "dependencies": [],
+            "details": "Locate the GenerateMesh dispatcher in the codebase and add a conditional check for geometry_type == 1. Implement a call to the GenerateRectangleMesh() function within this condition to handle rectangle mesh generation requests.",
+            "status": "done",
+            "testStrategy": "Test the dispatcher by setting geometry_type to 1 and verifying that the GenerateRectangleMesh() function is invoked and executes correctly."
+          },
+          {
+            "id": 5,
+            "title": "Conduct Mesh Quality Assurance Tests",
+            "description": "Perform quality assurance tests on the generated mesh to ensure it meets the specified criteria, including constant element areas and compatibility with ElmerSolver.",
+            "dependencies": [],
+            "details": "Implement tests to verify that the element areas are constant within 1e-12 and that the mesh is compatible with ElmerSolver. This may involve running sample cases and comparing results against known benchmarks.",
+            "status": "done",
+            "testStrategy": "Run ElmerSolver with a Poisson sample case using the generated mesh and compare the results against analytical solutions to ensure accuracy and mesh quality."
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "title": "Implement Circle mesh generation routine",
+        "description": "Add GenerateCircleMesh() supporting radial refinement and optional graded layers.",
+        "details": "• Polar grid algorithm: nr radial divisions, ntheta angular; radial spacing exponential if boundary_layer true.\n• Convert (r,θ) → Cartesian.\n• Connectivity: triangles (fan between radii).\n• Edge nodes tagged with boundary ID=1.\n• Performance target <2 s for nr≤200, nθ≤360.",
+        "testStrategy": "• Validate radius of each boundary node ≈ input radius ±1e-8.\n• Compute min element angle >30°.\n• Run ElmerSolver heat conduction example on disk; compare results against analytical T(r).",
+        "priority": "medium",
+        "dependencies": [
+          14
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Polar to Cartesian Coordinate Conversion",
+            "description": "Develop a function to convert polar coordinates (r, θ) to Cartesian coordinates (x, y) using the formulas x = r * cos(θ) and y = r * sin(θ).",
+            "dependencies": [],
+            "details": "Implement a function that takes polar coordinates (r, θ) as input and returns the corresponding Cartesian coordinates (x, y). This conversion is essential for mesh generation in Cartesian coordinate systems. ([mathworks.com](https://www.mathworks.com/help/matlab/ref/pol2cart.html?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Test the function with known polar coordinates and verify that the output Cartesian coordinates match expected values."
+          },
+          {
+            "id": 2,
+            "title": "Generate Radial Mesh Points",
+            "description": "Create a set of radial mesh points by dividing the radial distance into 'nr' intervals, with exponential spacing if 'boundary_layer' is true.",
+            "dependencies": [
+              "16.1"
+            ],
+            "details": "Develop an algorithm to generate 'nr' radial divisions, ensuring exponential spacing between points if 'boundary_layer' is true. This approach is crucial for accurately modeling boundary layers in mesh generation.",
+            "status": "pending",
+            "testStrategy": "Validate the distribution of radial points by comparing the spacing between consecutive points, especially near boundaries."
+          },
+          {
+            "id": 3,
+            "title": "Construct Mesh Connectivity Using Triangle Fan Method",
+            "description": "Implement the triangle fan method to establish mesh connectivity between radial divisions and angular divisions, forming triangular elements.",
+            "dependencies": [
+              "16.1",
+              "16.2"
+            ],
+            "details": "Utilize the triangle fan method to connect radial and angular mesh points, creating triangular elements that fan out from the center. This method is effective for generating circular meshes in finite element analysis.",
+            "status": "pending",
+            "testStrategy": "Verify the connectivity by visualizing the mesh and ensuring that all elements are correctly formed without overlaps or gaps."
+          },
+          {
+            "id": 4,
+            "title": "Tag Boundary Nodes with Boundary ID=1",
+            "description": "Assign a boundary ID of 1 to all nodes located on the boundary of the mesh to facilitate boundary condition assignments.",
+            "dependencies": [
+              "16.1",
+              "16.2",
+              "16.3"
+            ],
+            "details": "Implement a function to identify and tag all nodes that lie on the boundary of the mesh with a boundary ID of 1. This tagging is essential for applying boundary conditions in simulations.",
+            "status": "pending",
+            "testStrategy": "Check that all boundary nodes are correctly tagged by comparing the tagged nodes with the expected boundary locations."
+          },
+          {
+            "id": 5,
+            "title": "Optimize Mesh Generation for Performance",
+            "description": "Ensure that the mesh generation process completes in under 2 seconds for nr ≤ 200 and nθ ≤ 360 to meet performance targets.",
+            "dependencies": [
+              "16.1",
+              "16.2",
+              "16.3",
+              "16.4"
+            ],
+            "details": "Profile the mesh generation function to identify and optimize performance bottlenecks, ensuring that the process is efficient and meets the specified time constraints.",
+            "status": "pending",
+            "testStrategy": "Measure the execution time of the mesh generation function with various values of nr and nθ to confirm that it consistently completes within the target time frame."
+          }
+        ]
+      },
+      {
+        "id": 17,
+        "title": "Implement Annulus mesh generation routine",
+        "description": "Generate meshes for pipe-flow annulus geometries with inner & outer radii.",
+        "details": "• Similar to circle routine but with two boundary loops.\n• Supports boundary_layer on both walls with geometric progression ratio 1.2.\n• Tag inner boundary ID=2, outer=1 for BC assignment.",
+        "testStrategy": "• Check no element quality metric (aspect ratio) exceeds 3.\n• Volume of mesh approximates π(R²–r²) within 0.1 %.\n• ElmerSolver Stokes benchmark across annulus runs without mesh errors.",
+        "priority": "medium",
+        "dependencies": [
+          16
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Mesh Geometry and Parameters",
+            "description": "Establish the geometric parameters for the annulus mesh, including inner and outer radii, and determine the number of radial and angular divisions (nr and nθ) for the mesh grid.",
+            "dependencies": [],
+            "details": "The mesh will be generated for a pipe-flow annulus geometry with specified inner and outer radii. The number of radial divisions (nr) and angular divisions (nθ) will be determined based on the desired mesh resolution and performance targets. The geometric progression ratio for the boundary layer will be set to 1.2, as specified in the implementation details. ([queiruga.net](https://queiruga.net/simulation/2018/08/21/geometric-progression-for-meshes.html?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Radial and Angular Mesh Generation",
+            "description": "Develop algorithms to generate the mesh grid in both radial and angular directions, ensuring proper node distribution and connectivity for the annulus geometry.",
+            "dependencies": [],
+            "details": "Utilize a polar grid algorithm to create the mesh, with nr radial divisions and nθ angular divisions. The radial spacing will follow an exponential progression if the boundary_layer flag is true, as specified in the implementation details. ([queiruga.net](https://queiruga.net/simulation/2018/08/21/geometric-progression-for-meshes.html?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Generate Boundary Layer Mesh",
+            "description": "Create boundary layer mesh elements on both the inner and outer walls of the annulus, applying a geometric progression ratio of 1.2 for layer growth.",
+            "dependencies": [],
+            "details": "Implement a boundary layer mesh generation routine that adds layers near the inner and outer walls of the annulus. The growth ratio for the boundary layer will be set to 1.2, as specified in the implementation details. ([queiruga.net](https://queiruga.net/simulation/2018/08/21/geometric-progression-for-meshes.html?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Assign Boundary Conditions and Tags",
+            "description": "Tag the inner and outer boundaries of the mesh with IDs 2 and 1, respectively, to facilitate boundary condition assignment during simulations.",
+            "dependencies": [],
+            "details": "Assign boundary IDs to the inner and outer walls of the annulus mesh, with ID=2 for the inner boundary and ID=1 for the outer boundary, as specified in the implementation details.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Validate Mesh Quality and Performance",
+            "description": "Ensure the generated mesh meets quality metrics and performance targets, including aspect ratio constraints and volume approximation accuracy.",
+            "dependencies": [],
+            "details": "Verify that no element quality metric (aspect ratio) exceeds 3. Ensure that the volume of the mesh approximates π(R²–r²) within 0.1%. Perform a benchmark test using ElmerSolver with a Stokes flow problem to confirm that the mesh runs without errors. ([ansyshelp.ansys.com](https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/cfx_mod/cfxTurbModeGuid.html?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "title": "Implement L-shape mesh generation routine",
+        "description": "Provide hard-coded node/element generation for classic re-entrant corner domain.",
+        "details": "• Parameters: outer_length, cut_length, density.\n• Algorithm: start from rectangle grid then remove elements inside cut.\n• Add local refinement near notch: size ∝ r^0.5.\n• Tag boundaries: left=1, right=2, top=3, bottom=4, interior notch=5.",
+        "testStrategy": "• Ensure corner node count increases with density.\n• Solve Laplace problem; compare singular stress exponent using published reference (~0.544).",
+        "priority": "medium",
+        "dependencies": [
+          14
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Rectangular Grid",
+            "description": "Create a structured rectangular grid based on the provided outer_length and density parameters.",
+            "dependencies": [],
+            "details": "Generate a grid with nx and ny divisions, where nx = outer_length * density and ny = outer_length * density. This grid will serve as the foundation for the L-shaped mesh generation.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Cut Removal Algorithm",
+            "description": "Develop an algorithm to remove elements inside the cut region, transforming the rectangular grid into an L-shaped domain.",
+            "dependencies": [],
+            "details": "Identify the elements within the cut region defined by cut_length and remove them from the grid, ensuring the remaining mesh accurately represents the L-shaped domain.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Apply Local Refinement Near Notch",
+            "description": "Introduce local mesh refinement near the notch, with element size proportional to r^0.5, to capture stress concentrations accurately.",
+            "dependencies": [],
+            "details": "Implement a refinement strategy that decreases element size near the notch, following a scaling law of r^0.5, to enhance the mesh's resolution in areas of high stress gradients.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Tag Mesh Boundaries",
+            "description": "Assign boundary tags to the mesh elements to facilitate boundary condition application during simulations.",
+            "dependencies": [],
+            "details": "Tag the mesh boundaries as follows: left=1, right=2, top=3, bottom=4, and interior notch=5, to correspond with the specified boundary conditions.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Validate Mesh Quality and Performance",
+            "description": "Conduct tests to ensure the mesh quality meets the required standards and performs efficiently in simulations.",
+            "dependencies": [],
+            "details": "Verify that the corner node count increases with density, solve the Laplace problem on the mesh, and compare the singular stress exponent to published references (~0.544) to ensure accuracy and performance.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 19,
+        "title": "Mesh quality metrics & optimization utilities",
+        "description": "Implement aspect ratio, skewness, min/max angle calculations and optional Laplacian smoothing.",
+        "details": "• Add FUNCTION ComputeQuality() returning MeshQuality.\n• Apply 3-iteration Laplacian smoothing when aspect_ratio_max>4.\n• If boundary_layer TRUE, skip movement of boundary nodes.\n• Store quality stats JSON in mesh.quality file for backend consumption.",
+        "testStrategy": "• Generate worst-case distorted grid, verify smoothing reduces aspect_ratio_max.\n• Unit tests in Fortran with pFUnit 4.7 assert metric formulas.",
+        "priority": "high",
+        "dependencies": [
+          15,
+          16,
+          17,
+          18
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement ComputeQuality() Function",
+            "description": "Develop a Fortran function named ComputeQuality() that calculates mesh quality metrics, including aspect ratio, skewness, and minimum/maximum angles, and returns a MeshQuality structure.",
+            "dependencies": [],
+            "details": "The ComputeQuality() function should iterate over all mesh elements, compute the specified quality metrics for each element, and aggregate these metrics to produce a comprehensive MeshQuality structure. This function will serve as the foundation for mesh quality assessment and optimization processes.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Apply Laplacian Smoothing Based on Aspect Ratio",
+            "description": "Implement a routine that performs 3 iterations of Laplacian smoothing on the mesh when the maximum aspect ratio exceeds 4, to improve mesh quality by reducing element distortion.",
+            "dependencies": [],
+            "details": "The smoothing process should adjust vertex positions iteratively to minimize element distortion. Boundary nodes should remain fixed during this process to preserve the mesh's structural integrity. The Laplacian smoothing algorithm can be applied using an explicit scheme, where each vertex is moved towards the average position of its neighbors, effectively reducing high-frequency variations in the mesh. ([rodolphe-vaillant.fr](https://rodolphe-vaillant.fr/entry/70/laplacian-smoothing-c-code-to-smooth-a-mesh?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Boundary Node Movement Constraints",
+            "description": "Modify the Laplacian smoothing routine to skip the movement of boundary nodes when the boundary_layer flag is set to TRUE, ensuring that boundary conditions are preserved during optimization.",
+            "dependencies": [],
+            "details": "Boundary nodes should be identified based on the mesh's boundary conditions. During the smoothing process, these nodes should remain stationary to maintain the mesh's boundary integrity. This approach ensures that the optimization focuses on interior nodes, allowing for mesh refinement without altering boundary conditions.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Store Mesh Quality Statistics in JSON Format",
+            "description": "Implement functionality to generate a JSON file containing mesh quality statistics, including aspect ratio, skewness, and angle metrics, and save it as mesh.quality for backend consumption.",
+            "dependencies": [],
+            "details": "The JSON file should be structured to include all relevant quality metrics, with clear labeling and formatting for easy parsing by backend systems. This file will serve as a standardized output for mesh quality assessment, facilitating integration with other components of the simulation pipeline.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Develop Unit Tests for Mesh Quality Metrics and Optimization",
+            "description": "Create unit tests using pFUnit 4.7 to validate the correctness of the ComputeQuality() function and the Laplacian smoothing routine, ensuring accurate computation of mesh quality metrics and effective optimization.",
+            "dependencies": [],
+            "details": "The unit tests should cover a range of scenarios, including meshes with varying element shapes and sizes, to ensure robustness and accuracy of the implemented functions. Test cases should assert that the computed metrics match expected values and that the smoothing process effectively reduces element distortion without violating boundary conditions.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 20,
+        "title": "Boundary layer & adaptive element sizing",
+        "description": "Provide optional boundary layer creation and smooth gradation across mesh.",
+        "details": "• For boundary_layer flag, insert nr_bl layers with thickness progression ratio q=1.2.\n• Implement size field function S(x) ∝ distance_to_boundary^β for adaptive sizing (β=0.8).\n• Works for circle & annulus first; extend rectangle later.",
+        "testStrategy": "• Visual inspection via Paraview: layer thickness geometric.\n• Quality metrics: ensure min_angle>25° in layered region.\n• Benchmark circle with nr_bl=5 completes <2 s.",
+        "priority": "medium",
+        "dependencies": [
+          19
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Boundary Layer Mesh Generation",
+            "description": "Develop functionality to create a specified number of boundary layer mesh elements with a thickness progression ratio of 1.2, starting with a first layer thickness of 0.5 units.",
+            "dependencies": [],
+            "details": "Utilize meshing tools to generate boundary layers with the specified parameters, ensuring smooth gradation across the mesh. ([2021.help.altair.com](https://2021.help.altair.com/2021.2/hwdesktop/engsol/topics/tutorials/cfd/tut_cfd_1200_cfd_meshing_with_automatic_bl_t.htm?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Visual inspection via Paraview to verify geometric progression of layer thicknesses."
+          },
+          {
+            "id": 2,
+            "title": "Implement Adaptive Element Sizing Function",
+            "description": "Create a size field function S(x) proportional to distance_to_boundary raised to the power of 0.8 for adaptive element sizing.",
+            "dependencies": [],
+            "details": "Develop a function that adjusts element sizes based on proximity to boundaries, enhancing mesh resolution where needed. ([cfmesh.com](https://cfmesh.com/low-re-turbulence-modelling-of-boundary-layers-with-cf-mesh/?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Compare generated mesh against known benchmarks to ensure accuracy of adaptive sizing."
+          },
+          {
+            "id": 3,
+            "title": "Extend Mesh Generation to Annular Geometries",
+            "description": "Modify the mesh generation routine to support annular geometries, including both inner and outer boundary layers with a geometric progression ratio of 1.2.",
+            "dependencies": [],
+            "details": "Adapt existing mesh generation code to handle annular shapes, ensuring correct boundary layer application on both walls. ([cfmesh.com](https://cfmesh.com/low-re-turbulence-modelling-of-boundary-layers-with-cf-mesh/?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Verify mesh quality metrics, ensuring no element aspect ratio exceeds 3, and that volume approximates π(R²–r²) within 0.1%."
+          },
+          {
+            "id": 4,
+            "title": "Implement Mesh Generation for Rectangular Geometries",
+            "description": "Develop mesh generation capabilities for rectangular geometries, incorporating boundary layers and adaptive sizing as implemented for circular and annular cases.",
+            "dependencies": [],
+            "details": "Extend mesh generation code to handle rectangular domains, applying boundary layers and adaptive sizing functions appropriately.",
+            "status": "pending",
+            "testStrategy": "Ensure mesh quality metrics meet specified criteria, and that mesh generation completes within acceptable time frames."
+          },
+          {
+            "id": 5,
+            "title": "Conduct Performance Benchmarking and Optimization",
+            "description": "Benchmark the mesh generation process for both circular and rectangular geometries, optimizing for performance and accuracy.",
+            "dependencies": [],
+            "details": "Measure mesh generation times and quality for various geometries, identifying and implementing optimizations as needed.",
+            "status": "pending",
+            "testStrategy": "Benchmark circle with nr_bl=5 to complete in under 2 seconds, and ensure mesh quality metrics are within specified thresholds."
+          }
+        ]
+      },
+      {
+        "id": 21,
+        "title": "Expose Fortran library to Python via f2py/ctypes",
+        "description": "Create Python binding module educational_mesh_wrapper using NumPy f2py; fallback to ctypes.",
+        "details": "• Use numpy==2.0.0 + f2py –c educational_mesh_generator.F90 -m _edu_mesh.\n• Provide Python class EducationalMeshGenerator with generate_mesh(dict)->MeshQuality dataclass.\n• Packaging: add setup.cfg with [options] ext_modules.\n• Extend Dockerfile to install numpy, build wheel during image build.",
+        "testStrategy": "• Pytest: call generate_mesh on rectangle; assert MeshQuality.totalElements>0.\n• Profiling: ensure overhead <50 ms call time using %timeit.",
+        "priority": "high",
+        "dependencies": [
+          14,
+          19
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 22,
+        "title": "Replace launcher workflow with EducationalMeshService",
+        "description": "Implement backend/app/services/educational_mesh_service.py and integrate into job launcher.",
+        "details": "• Use wrapper from Task 21.\n• Accept geometry JSON, validate via Pydantic v2 BaseModel.\n• Generate mesh into run_dir/mesh/ ; write quality summary to DB.\n• Remove conditional code paths for old ElmerGrid quick fix.\n• Failure modes: raise MeshGenerationError with error_code.\n• Add structured logging (structlog 24.x) with duration metrics.",
+        "testStrategy": "• Unit tests with fastapi TestClient that POST simulation request; assert mesh dir exists.\n• Simulate invalid params -> 422.\n• Integration smoke test runs full solver on rectangle.",
+        "priority": "high",
+        "dependencies": [
+          21
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 23,
+        "title": "Extend REST API for mesh parameters & status",
+        "description": "Add/modify endpoints /simulations/{id}/mesh and /mesh/preview.",
+        "details": "• FastAPI + Pydantic schemas GeometryParameters & MeshQuality.\n• WebSocket channel for real-time status using fastapi-websocket.\n• GET /mesh/preview returns base64 STL preview generated by meshio 5.3.\n• Update OpenAPI docs via fastapi auto-generation.",
+        "testStrategy": "• Swagger UI displays new endpoints.\n• E2E tests using pytest-asyncio ensure WS sends completed message.\n• Response JSON validated by pydantic.",
+        "priority": "medium",
+        "dependencies": [
+          22
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 24,
+        "title": "Frontend geometry input UI",
+        "description": "Implement React components for simplified geometry selection and parameter entry.",
+        "details": "• Stack: React 18, TypeScript 5, MUI 5.15.\n• Components: GeometrySelector, RectangleForm, CircleForm, etc.\n• Use Zod for client-side schema validation.\n• State managed with Redux Toolkit 2.2, RTK Query for API calls.",
+        "testStrategy": "• Jest + React Testing Library: form validation, disable submit on errors.\n• Cypress E2E: create simulation with rectangle, assert 200 response.",
+        "priority": "medium",
+        "dependencies": [
+          23
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 25,
+        "title": "WebGL mesh preview with Three.js",
+        "description": "Render generated mesh and quality heat-map in browser.",
+        "details": "• Use three@0.161 + drei helpers.\n• Fetch /mesh/preview STL, load via STLLoader, display.\n• Heat-map: vertex colors mapped from aspect_ratio using dat.GUI to toggle.\n• OrbitControls for interaction.",
+        "testStrategy": "• Unit test using jest-canvas-mock to ensure component mounts.\n• Visual regression snapshots with cypress-image-snapshot.",
+        "priority": "low",
+        "dependencies": [
+          24
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 26,
+        "title": "Educational scenario test suite",
+        "description": "Create canonical test cases and CI pipeline for mesh + solver validation.",
+        "details": "• Cases: plate_with_hole, concentric_cylinder_heat, L-shape stress.\n• Scripts in tests/edu_cases/run_all.sh call mesh generator then ElmerSolver; compare numeric results to reference CSV using numpy.allclose(rtol=1e-3).\n• GitHub Actions matrix (ubuntu-latest, windows-latest).",
+        "testStrategy": "• CI must pass with max runtime 10 min.\n• Fail build if any case deviates >1 %.\n• Coverage ≥85 % for Python service.",
+        "priority": "high",
+        "dependencies": [
+          22,
+          18
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 27,
+        "title": "Performance benchmarking & optimization automation",
+        "description": "Measure mesh generation time, memory, and quality; auto-fail CI if regressions occur.",
+        "details": "• Use pytest-benchmark to record timings; thresholds stored in .benchmarks/last_run.json.\n• Memory via tracemalloc.\n• Add pre-merge GitHub Action comparing HEAD vs main; regression tolerance +10 % time or +5 % memory.\n• Generate Prometheus metrics in production with mesh_generation_seconds histogram.",
+        "testStrategy": "• Run benchmark locally; adjust thresholds file.\n• Simulate regression (sleep) and confirm CI fails.\n• Validate Prometheus endpoint /metrics returns mesh_generation_seconds buckets.",
+        "priority": "medium",
+        "dependencies": [
+          26
+        ],
+        "status": "pending",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-07-23T21:20:07.825Z",
-      "updated": "2025-07-25T02:16:15.299Z",
+      "updated": "2025-07-25T22:12:51.436Z",
       "description": "Tasks for master context"
     }
   }
