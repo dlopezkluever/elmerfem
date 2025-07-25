@@ -1,17 +1,17 @@
 """
-Async job launcher for simulation execution
+Job launcher and execution management
 """
 
 import asyncio
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
-from uuid import UUID
+from typing import Dict, Optional, UUID
 
 from ..config.settings import settings
-from ..models import SimulationJob, SimulationParamsDTO, JobStatus
+from ..models import JobDTO, SimulationParamsDTO, JobStatus
 from ..services.docker_wrapper import DockerWrapper
+from ..services.mesh_generator import MeshGenerator
 from ..services.sif_generator import SIFGenerator
 from .store import JobStore
 
@@ -19,15 +19,16 @@ logger = logging.getLogger(__name__)
 
 
 class JobLauncher:
-    """Manages simulation job execution"""
+    """Manages the execution of simulation jobs"""
     
     def __init__(self, job_store: JobStore, docker_wrapper: DockerWrapper):
         self.job_store = job_store
         self.docker = docker_wrapper
+        self.mesh_generator = MeshGenerator()
         self.sif_generator = SIFGenerator()
-        self._running_tasks: dict[UUID, asyncio.Task] = {}
+        self._running_tasks: Dict[UUID, asyncio.Task] = {}
     
-    async def launch_job(self, params: SimulationParamsDTO) -> SimulationJob:
+    async def launch_job(self, params: SimulationParamsDTO) -> JobDTO:
         """
         Launch a new simulation job
         
@@ -35,26 +36,13 @@ class JobLauncher:
             params: Simulation parameters
             
         Returns:
-            Created job instance
+            Job details
         """
-        # Check if we can run more jobs
-        active_count = await self.job_store.get_active_job_count()
-        if active_count >= settings.max_concurrent_jobs:
-            raise RuntimeError(
-                f"Maximum concurrent jobs ({settings.max_concurrent_jobs}) reached"
-            )
+        # Create job
+        job = await self.job_store.create(params)
+        logger.info(f"Created job {job.id} for {params.simulation_type.value} simulation")
         
-        # Create job record
-        job = SimulationJob(params=params)
-        
-        # Set up workspace directory
-        job.workspace_dir = settings.get_workspace_path() / str(job.id)
-        job.workspace_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Store job
-        await self.job_store.create(job)
-        
-        # Launch job execution in background
+        # Start execution task
         task = asyncio.create_task(self._execute_job(job.id))
         self._running_tasks[job.id] = task
         
@@ -92,6 +80,25 @@ class JobLauncher:
             # Update progress
             await self.job_store.update_job_progress(
                 job_id, 10.0, "SIF file generated"
+            )
+            
+            # Generate mesh files
+            logger.info(f"Generating mesh for job {job_id}")
+            mesh_success = await self.mesh_generator.generate_mesh(
+                job.params.geometry,
+                job.workspace_dir,
+                job.params.mesh_density
+            )
+            
+            if not mesh_success:
+                await self.job_store.mark_job_failed(
+                    job_id, "Mesh generation failed"
+                )
+                return
+            
+            # Update progress
+            await self.job_store.update_job_progress(
+                job_id, 30.0, "Mesh generated"
             )
             
             # Execute ElmerSolver

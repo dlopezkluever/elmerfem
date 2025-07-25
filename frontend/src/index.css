@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  --font-family-primary: Inter, Arial, sans-serif;
+  
+  --color-neumorphic-bg: #F0F0F0;
+  --color-neumorphic-light: #FFFFFF;
+  --color-neumorphic-dark: #E0E0E0;
+  
+  /* DaisyUI cupcake theme colors */
+  --color-primary: #65c3c8;
+  --color-secondary: #ef9fbc;
+  
+  --shadow-neumorphic: 8px 8px 16px #E0E0E0, -8px -8px 16px #FFFFFF;
+  --shadow-neumorphic-inset: inset 8px 8px 16px #E0E0E0, inset -8px -8px 16px #FFFFFF;
+  --shadow-neumorphic-hover: 12px 12px 20px #E0E0E0, -12px -12px 20px #FFFFFF;
+}
+
+@layer base {
+  body {
+    @apply bg-neumorphic-bg text-black;
+    font-family: Inter, Arial, sans-serif;
+  }
+}
+
+@layer components {
+  /* Neumorphic button styles */
+  .btn-neumorphic {
+    @apply px-6 py-3 rounded-xl transition-all duration-200 font-medium;
+    @apply bg-neumorphic-bg shadow-neumorphic;
+    @apply hover:shadow-neumorphic-hover active:shadow-neumorphic-inset;
+  }
+
+  .btn-neumorphic-primary {
+    @apply px-6 py-3 rounded-xl transition-all duration-200 font-semibold;
+    @apply bg-neumorphic-bg shadow-neumorphic text-primary;
+    @apply hover:shadow-neumorphic-hover active:shadow-neumorphic-inset;
+  }
+
+  /* Neumorphic card styles */
+  .card-neumorphic {
+    @apply rounded-2xl p-6 bg-neumorphic-bg shadow-neumorphic;
+  }
+
+  /* Neumorphic input styles */
+  .input-neumorphic {
+    @apply w-full px-4 py-3 rounded-xl bg-neumorphic-bg;
+    @apply shadow-neumorphic-inset outline-none transition-all duration-200;
+    @apply focus:ring-2 focus:ring-primary/20;
+  }
+
+  /* Progress bar styles */
+  .progress-neumorphic {
+    @apply w-full h-6 rounded-full bg-neumorphic-bg shadow-neumorphic-inset p-1;
+  }
+
+  .progress-bar {
+    @apply h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all duration-300;
+  }
+}
+
+@layer utilities {
+  /* Remove scrollbar for cleaner look */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+} 

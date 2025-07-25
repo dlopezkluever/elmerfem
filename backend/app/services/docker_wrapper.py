@@ -19,12 +19,14 @@ class DockerWrapper:
         self.compose_project = settings.docker_compose_project
         self.elmer_container = settings.elmer_container_name
         self.work_dir = settings.elmer_work_dir
+        self.compose_file = "/docker-compose.yml"
     
     async def check_elmer_health(self) -> bool:
         """Check if the Elmer container is healthy"""
         try:
             cmd = [
                 "docker", "compose",
+                "-f", self.compose_file,
                 "-p", self.compose_project,
                 "ps", self.elmer_container,
                 "--format", "json"
@@ -78,6 +80,7 @@ class DockerWrapper:
             # Build the command
             cmd = [
                 "docker", "compose",
+                "-f", self.compose_file,
                 "-p", self.compose_project,
                 "exec",
                 "-T",  # Disable pseudo-TTY
@@ -135,6 +138,7 @@ class DockerWrapper:
             # Build the docker compose exec command
             cmd = [
                 "docker", "compose",
+                "-f", self.compose_file,
                 "-p", self.compose_project,
                 "exec",
                 "-T"  # Disable pseudo-TTY

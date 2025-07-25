@@ -200,7 +200,7 @@
               "3.2",
               "3.4"
             ],
-            "details": "Define JobStore interface, InMemoryJobStore, RedisJobStore using aioredis; provide CRUD & pub/sub for progress.",
+            "details": "Define JobStore interface, InMemoryJobStore, RedisJobStore using aioredis; provide CRUD & pub/sub for progress.\n<info added on 2025-07-24T23:08:04.750Z>\nDeployment scope clarification:\n• The InMemoryJobStore and RedisJobStore are intended exclusively for local, single-host use within the educational platform; neither implementation is supported for cloud or multi-node scenarios.\n• When the Redis option is selected (e.g., JOBSTORE_BACKEND=redis), a lightweight redis:alpine container is started by docker-compose alongside the backend service. No external or managed Redis service is contacted, preserving the fully self-contained, offline-capable architecture.\n</info added on 2025-07-24T23:08:04.750Z>",
             "status": "done",
             "testStrategy": ""
           },
@@ -337,7 +337,7 @@
         "dependencies": [
           3
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -345,7 +345,7 @@
             "description": "Integrate Tailwind CSS 3 and daisyUI, define custom theme with extra-large controls, and wire global styles into Vite React project.",
             "dependencies": [],
             "details": "• Install tailwindcss, postcss, autoprefixer, daisyui via pnpm.\n• Generate tailwind.config.ts; enable daisyui with `themes: [\"cupcake\", \"business\"]` and add size overrides.\n• Import `index.css` with `@tailwind base; @tailwind components; @tailwind utilities;`.\n• Verify with a sample button rendered in App.tsx.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -353,8 +353,8 @@
             "title": "API Service Layer",
             "description": "Create Axios instance and typed service functions for simulations and materials endpoints.",
             "dependencies": [],
-            "details": "• Configure Axios with `baseURL` from `import.meta.env.VITE_BACKEND_URL`.\n• Add interceptors for JSON error handling.\n• Expose functions: `postSimulation(params)`, `getSimulation(id)`, `getMaterials()`.\n• Export hook wrappers (e.g., React Query) for future caching.",
-            "status": "pending",
+            "details": "• Configure Axios with `baseURL` from `import.meta.env.VITE_BACKEND_URL`.\n• Add interceptors for JSON error handling.\n• Expose functions: `postSimulation(params)`, `getSimulation(id)`, `getMaterials()`.\n• Export hook wrappers (e.g., React Query) for future caching.\n<info added on 2025-07-24T23:07:45.283Z>\n• Add explicit note that `VITE_BACKEND_URL` should be set to `http://localhost:8000` (FastAPI container exposed by docker-compose) in `.env.development` / `.env.example`, reinforcing that the current deployment model expects all services to run locally.\n</info added on 2025-07-24T23:07:45.283Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -365,7 +365,7 @@
               "5.1"
             ],
             "details": "• Install `react-router-dom`.\n• Define `<BrowserRouter>` with routes:\n  – `/` → Home\n  – `/form` → ParameterForm\n  – `/progress/:id` → ProgressView\n  – `/result/:id` → ResultView\n• Add NotFound fallback and basic nav bar styled with daisyUI.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -377,7 +377,7 @@
               "5.2"
             ],
             "details": "• Build zod schema mirroring backend constraints (positive numbers, required selects).\n• Generate form fields dynamically from a config array; connect with RHF `useForm` and zod resolver.\n• Integrate material dropdown; on submit, call `postSimulation` then navigate to `/progress/{id}`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -389,7 +389,7 @@
               "5.3"
             ],
             "details": "• Fetch simulation status via `getSimulation(id)` every 3 s (or use SSE when available).\n• Render progress bar and cancel button.\n• On status `completed`, redirect to `/result/{id}`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -401,7 +401,7 @@
               "5.3"
             ],
             "details": "• Fetch final simulation data and result artifacts.\n• Show summary table, link to download SIF/output files, and placeholder for future 3D viewer.\n• Provide ‘Run New Simulation’ button.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -417,7 +417,7 @@
               "5.6"
             ],
             "details": "• Configure Jest with ts-jest; add RTL helpers.\n• Unit tests: zod validation, API service error handling.\n• Component tests: form renders, validation messages.\n• MSW mocks for HTTP.\n• Cypress e2e: user submits valid form → progress → result.\n• Add GitHub Action job running `pnpm test && pnpm cypress:run`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -1081,7 +1081,7 @@
     ],
     "metadata": {
       "created": "2025-07-23T21:20:07.825Z",
-      "updated": "2025-07-24T20:29:06.721Z",
+      "updated": "2025-07-25T02:16:15.299Z",
       "description": "Tasks for master context"
     }
   }

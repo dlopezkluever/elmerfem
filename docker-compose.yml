@@ -1,12 +1,15 @@
 services:
   backend:
     build: ./backend
+    working_dir: /
     ports:
       - "8000:8000"
     environment:
       - ENVIRONMENT=development
     volumes:
       - workspace:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./docker-compose.yml:/docker-compose.yml:ro
     networks:
       - simnet
     healthcheck:
