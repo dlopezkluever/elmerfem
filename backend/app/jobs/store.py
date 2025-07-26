@@ -221,4 +221,20 @@ class RedisJobStore(JobStore):
     
     async def mark_job_failed(self, job_id: UUID, error: str) -> Optional[SimulationJob]:
         """Mark job as failed"""
-        return await self._fallback_store.mark_job_failed(job_id, error) 
+        return await self._fallback_store.mark_job_failed(job_id, error)
+    
+    async def get_active_job_count(self) -> int:
+        """Get count of currently running jobs"""
+        return await self._fallback_store.get_active_job_count()
+
+
+# Global job store instance getter
+def get_job_store() -> JobStore:
+    """
+    Get the job store instance
+    
+    This function is used for dependency injection in FastAPI endpoints.
+    It returns the global job store instance from the main application.
+    """
+    from ..main import job_store
+    return job_store 

@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import simulations
+from .api.v1 import simulations_router, mesh_router
 from .config.settings import settings
 from .jobs.launcher import JobLauncher
 from .jobs.store import InMemoryJobStore, JobStore
@@ -76,7 +76,8 @@ def create_app() -> FastAPI:
     )
     
     # Include routers
-    app.include_router(simulations.router)
+    app.include_router(simulations_router, prefix="/api/v1")
+    app.include_router(mesh_router, prefix="/api/v1")
     
     @app.get("/")
     async def root():

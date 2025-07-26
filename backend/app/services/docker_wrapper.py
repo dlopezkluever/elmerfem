@@ -198,3 +198,15 @@ class DockerWrapper:
         except Exception as e:
             logger.error(f"Error testing Elmer version: {e}")
             return None 
+
+
+# Global docker wrapper instance getter
+def get_docker_wrapper() -> DockerWrapper:
+    """
+    Get the docker wrapper instance
+    
+    This function is used for dependency injection in FastAPI endpoints.
+    It returns the global docker wrapper instance from the main application.
+    """
+    from ..main import docker_wrapper
+    return docker_wrapper 

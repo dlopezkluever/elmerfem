@@ -11,6 +11,16 @@ from .dtos import (
     SimulationType,
 )
 from .job import SimulationJob
+from .mesh_dtos import (
+    GeometryType,
+    RectangleGeometry,
+    CircleGeometry,
+    AnnulusGeometry,
+    LShapeGeometry,
+    MeshGenerationRequest,
+    MeshQualityMetrics,
+    MeshGenerationParams,
+)
 
 __all__ = [
     "BoundaryCondition",
@@ -22,4 +32,12 @@ __all__ = [
     "SimulationResultDTO",
     "SimulationStatusDTO",
     "SimulationType",
+    "GeometryType",
+    "RectangleGeometry",
+    "CircleGeometry",
+    "AnnulusGeometry",
+    "LShapeGeometry",
+    "MeshGenerationRequest",
+    "MeshQualityMetrics",
+    "MeshGenerationParams",
 ] 

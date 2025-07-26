@@ -12,7 +12,12 @@ from uuid import UUID
 from ..config.settings import settings
 from ..models import SimulationJob, SimulationParamsDTO, JobStatus
 from ..services.docker_wrapper import DockerWrapper
-from ..services.educational_mesh_service import EducationalMeshService
+from ..services.educational_mesh_service import (
+    EducationalMeshService, 
+    MeshGenerationRequest,
+    GeometryType,
+    MeshQualityMetrics
+)
 from ..services.sif_generator import SIFGenerator
 from .store import JobStore
 
@@ -54,12 +59,18 @@ class JobLauncher:
     
     async def _execute_job(self, job_id: UUID) -> None:
         """
-        Execute a simulation job
+        Execute a simulation job with enhanced error handling and quality metrics
         
         Args:
             job_id: ID of the job to execute
         """
-        logger.info(f"Starting execution of job {job_id}")
+        logger.info(
+            "Starting job execution",
+            extra={
+                "job_id": str(job_id),
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        )
         
         try:
             # Get job from store
@@ -83,31 +94,79 @@ class JobLauncher:
                 job_id, 10.0, "SIF file generated"
             )
             
-            # Generate mesh files using EducationalMeshService
-            # The educational mesh generator provides fast, reliable mesh generation
-            # for standard educational geometries (rectangle, circle, annulus, L-shape)
-            logger.info(f"Generating mesh for job {job_id}")
-            try:
-                mesh_quality = await asyncio.to_thread(
-                    self.educational_mesh_service.generate_mesh,
-                    job.params.geometry,
-                    str(job.workspace_dir),
-                    job.params.mesh_density
-                )
-                mesh_success = mesh_quality.return_code == 0
-                
-                if mesh_success:
-                    logger.info(f"Mesh generated successfully: {mesh_quality.total_elements} elements, "
-                               f"{mesh_quality.total_nodes} nodes")
-                else:
-                    logger.error(f"Mesh generation failed with code {mesh_quality.return_code}")
-            except Exception as e:
-                logger.error(f"Mesh generation error: {e}")
-                mesh_success = False
+            # Generate mesh using enhanced EducationalMeshService
+            logger.info(
+                "Generating educational mesh",
+                extra={
+                    "job_id": str(job_id),
+                    "geometry": job.params.geometry,
+                    "mesh_density": job.params.mesh_density
+                }
+            )
             
-            if not mesh_success:
+            try:
+                # Create validated mesh generation request
+                # Extract geometry type from params
+                geometry_type_str = job.params.geometry.get('type', 'rectangle').lower()
+                
+                # Map to GeometryType enum
+                geometry_type_map = {
+                    'rectangle': GeometryType.RECTANGLE,
+                    'circle': GeometryType.CIRCLE,
+                    'annulus': GeometryType.ANNULUS,
+                    'l_shape': GeometryType.L_SHAPE,
+                    'l-shape': GeometryType.L_SHAPE
+                }
+                
+                geometry_type = geometry_type_map.get(geometry_type_str, GeometryType.RECTANGLE)
+                
+                # Create mesh generation request with validation
+                mesh_request = MeshGenerationRequest(
+                    geometry_type=geometry_type,
+                    parameters=job.params.geometry,
+                    mesh_density=int(job.params.mesh_density),
+                    enable_boundary_layer=job.params.solver_settings.get('enable_boundary_layer', False) 
+                        if job.params.solver_settings else False
+                )
+                
+                # Generate mesh with quality metrics
+                success, quality_metrics = await self.educational_mesh_service.generate_mesh(
+                    request=mesh_request,
+                    output_dir=job.workspace_dir,
+                    job_id=str(job_id)
+                )
+                
+                if success:
+                    # Store mesh quality metrics in job metadata
+                    job.metadata['mesh_quality'] = quality_metrics.dict()
+                    await self.job_store.update(job)
+                    
+                    logger.info(
+                        "Mesh generated successfully",
+                        extra={
+                            "job_id": str(job_id),
+                            "total_elements": quality_metrics.total_elements,
+                            "total_nodes": quality_metrics.total_nodes,
+                            "generation_time_ms": quality_metrics.generation_time_ms,
+                            "min_angle": quality_metrics.min_angle,
+                            "aspect_ratio_avg": quality_metrics.aspect_ratio_avg
+                        }
+                    )
+                else:
+                    raise RuntimeError("Mesh generation failed")
+                    
+            except Exception as e:
+                logger.error(
+                    "Mesh generation error",
+                    extra={
+                        "job_id": str(job_id),
+                        "error": str(e),
+                        "error_type": type(e).__name__
+                    },
+                    exc_info=True
+                )
                 await self.job_store.mark_job_failed(
-                    job_id, f"Mesh generation failed"
+                    job_id, f"Mesh generation failed: {str(e)}"
                 )
                 return
             
@@ -117,7 +176,15 @@ class JobLauncher:
             )
             
             # Execute ElmerSolver
-            logger.info(f"Executing ElmerSolver for job {job_id}")
+            logger.info(
+                "Executing ElmerSolver",
+                extra={
+                    "job_id": str(job_id),
+                    "sif_file": sif_file_path.name,
+                    "workspace": str(job.workspace_dir)
+                }
+            )
+            
             returncode, stdout, stderr = await self.docker.execute_solver(
                 sif_file_path.name,
                 job.workspace_dir,
@@ -136,7 +203,13 @@ class JobLauncher:
             
             if returncode == 0:
                 # Success
-                logger.info(f"Job {job_id} completed successfully")
+                logger.info(
+                    "Job completed successfully",
+                    extra={
+                        "job_id": str(job_id),
+                        "execution_time": (datetime.utcnow() - job.started_at).total_seconds()
+                    }
+                )
                 
                 # Find result files
                 result_files = list(job.workspace_dir.glob("*.vtu"))
@@ -146,6 +219,13 @@ class JobLauncher:
                 job.result_files = [str(f.relative_to(job.workspace_dir)) for f in result_files]
                 if result_files:
                     job.vtk_file_path = result_files[0]  # Use first VTK/VTU file
+                
+                # Update job metadata with completion info
+                job.metadata['solver_execution'] = {
+                    'return_code': returncode,
+                    'result_files_count': len(result_files),
+                    'execution_completed': datetime.utcnow().isoformat()
+                }
                 
                 await self.job_store.mark_job_completed(
                     job_id,
@@ -157,11 +237,25 @@ class JobLauncher:
                 if stderr:
                     error_msg += f": {stderr[:500]}"  # First 500 chars of error
                 
-                logger.error(f"Job {job_id} failed: {error_msg}")
+                logger.error(
+                    "Job failed",
+                    extra={
+                        "job_id": str(job_id),
+                        "return_code": returncode,
+                        "error_msg": error_msg
+                    }
+                )
                 await self.job_store.mark_job_failed(job_id, error_msg)
                 
         except Exception as e:
-            logger.exception(f"Error executing job {job_id}")
+            logger.exception(
+                "Unexpected error executing job",
+                extra={
+                    "job_id": str(job_id),
+                    "error": str(e),
+                    "error_type": type(e).__name__
+                }
+            )
             await self.job_store.mark_job_failed(job_id, str(e))
 
     
@@ -178,7 +272,13 @@ class JobLauncher:
         # Check if job is running
         task = self._running_tasks.get(job_id)
         if task and not task.done():
-            logger.info(f"Cancelling job {job_id}")
+            logger.info(
+                "Cancelling job",
+                extra={
+                    "job_id": str(job_id),
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
             task.cancel()
             
             # Update job status

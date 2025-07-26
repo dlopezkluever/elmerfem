@@ -1531,7 +1531,72 @@
           19
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement ctypes-based Python bindings for Fortran mesh generator",
+            "description": "Develop Python bindings for the Fortran mesh generator using ctypes, focusing on simplicity and educational purposes.",
+            "dependencies": [],
+            "details": "Utilize ctypes to interface with the Fortran mesh generator, ensuring compatibility with Python. This approach is chosen for its simplicity and educational value, as ctypes provides a more straightforward method for exposing Fortran code to Python compared to f2py. ([iifx.dev](https://iifx.dev/docs/numpy/f2py/f2py-examples?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Create unit tests to verify the correct functionality of the ctypes bindings, ensuring that the Python interface correctly interacts with the Fortran code."
+          },
+          {
+            "id": 2,
+            "title": "Define Python class EducationalMeshGenerator with generate_mesh method",
+            "description": "Create a Python class that utilizes the ctypes bindings to generate meshes, supporting four geometry types: rectangle, circle, annulus, and L-shape.",
+            "dependencies": [
+              "21.1"
+            ],
+            "details": "Implement the EducationalMeshGenerator class with a generate_mesh method that accepts a dictionary of parameters and returns a MeshQuality dataclass. This class will serve as the primary interface for mesh generation, allowing users to specify geometry types and parameters. The generate_mesh method will handle the logic for selecting the appropriate geometry type and invoking the corresponding Fortran subroutine via the ctypes bindings. ([iifx.dev](https://iifx.dev/docs/numpy/f2py/f2py-examples?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Develop tests to ensure that the generate_mesh method correctly handles different geometry types and parameters, and that it returns the expected MeshQuality dataclass."
+          },
+          {
+            "id": 3,
+            "title": "Optimize performance to achieve sub-50ms overhead per mesh generation",
+            "description": "Ensure that the mesh generation process has minimal overhead, aiming for a sub-50ms execution time for each call to generate_mesh.",
+            "dependencies": [
+              "21.2"
+            ],
+            "details": "Profile the mesh generation process to identify and eliminate performance bottlenecks. Utilize tools like %timeit in Python to measure execution times and make necessary optimizations to achieve the desired performance. This may involve optimizing the Fortran code, refining the ctypes bindings, or improving the Python class implementation. ([stackoverflow.com](https://stackoverflow.com/questions/75901508/how-can-i-improve-performance-of-this-fortran-code-interfacing-with-python?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Conduct performance benchmarks to verify that the mesh generation process consistently completes within the target time frame, ensuring that the overhead remains below 50ms per call."
+          },
+          {
+            "id": 4,
+            "title": "Implement comprehensive error handling and parameter validation",
+            "description": "Develop robust error handling and parameter validation mechanisms to ensure the stability and reliability of the mesh generation process.",
+            "dependencies": [
+              "21.3"
+            ],
+            "details": "Implement error handling to manage exceptions that may arise during mesh generation, such as invalid parameters or computational errors. Validate input parameters to ensure they meet the expected criteria before processing, providing informative error messages when invalid inputs are detected. This will enhance the user experience and prevent runtime errors. ([stackoverflow.com](https://stackoverflow.com/questions/69368224/issues-transferring-numpy-array-into-fortran-using-ctypes?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Create test cases that simulate various error scenarios, ensuring that the system responds appropriately with clear error messages and does not crash or produce incorrect results."
+          },
+          {
+            "id": 5,
+            "title": "Integrate mesh generator into existing Docker build process",
+            "description": "Modify the Dockerfile to include the necessary steps for building and installing the mesh generator, ensuring seamless integration into the existing Docker environment.",
+            "dependencies": [
+              "21.4"
+            ],
+            "details": "Update the Dockerfile to install the required dependencies for the mesh generator, including Python, NumPy, and any other necessary libraries. Add steps to compile the Fortran code and build the Python bindings during the Docker image build process. This integration will allow the mesh generator to be used within the Dockerized environment without additional setup steps. ([github.com](https://github.com/PyCOMPLETE/pypkgexample/blob/master/README.md?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Build the Docker image and run tests to verify that the mesh generator is correctly installed and functional within the Docker environment, ensuring that all components work together as expected."
+          },
+          {
+            "id": 6,
+            "title": "Document usage and provide examples for mesh generator integration",
+            "description": "Create comprehensive documentation and examples to guide users in integrating and utilizing the mesh generator within their projects.",
+            "dependencies": [
+              "21.5"
+            ],
+            "details": "Develop user-friendly documentation that explains how to integrate the EducationalMeshGenerator class into Python projects, including code examples and best practices. Provide guidance on setting up the Docker environment and using the mesh generator effectively. This documentation will serve as a valuable resource for users seeking to incorporate the mesh generator into their workflows. ([github.com](https://github.com/PyCOMPLETE/pypkgexample/blob/master/README.md?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Review the documentation for clarity and completeness, ensuring that all instructions are accurate and that the examples provided are functional and easy to follow."
+          }
+        ]
       },
       {
         "id": 22,
@@ -1543,8 +1608,63 @@
         "dependencies": [
           21
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement EducationalMeshService",
+            "description": "Develop the 'educational_mesh_service.py' service to replace the temporary mesh generator in the job launcher, utilizing the Python wrapper from Task 21.",
+            "dependencies": [],
+            "details": "Create a new service file 'educational_mesh_service.py' within the 'backend/app/services/' directory. This service should integrate the Python wrapper developed in Task 21 to handle mesh generation tasks. Ensure that the service is designed to be modular and easily integrable into the existing job launcher workflow, facilitating a seamless transition from the temporary mesh generator to the new service.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Remove Legacy Mesh Generator Code",
+            "description": "Eliminate the temporary mesh generator files and associated conditional code paths from the project to streamline the codebase and prevent future maintenance issues.",
+            "dependencies": [],
+            "details": "Identify and remove all files, functions, and code segments related to the old ElmerGrid quick fix and temporary mesh generator. This includes any conditional code paths that were previously used to switch between the old and new mesh generation methods. Ensure that the removal does not affect other parts of the system and that all references to the legacy code are thoroughly cleaned up to maintain code clarity and prevent potential errors.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Geometry Validation with Pydantic v2",
+            "description": "Utilize Pydantic v2's BaseModel to validate incoming geometry JSON data, ensuring that the data conforms to the expected structure and constraints before processing.",
+            "dependencies": [],
+            "details": "Define Pydantic v2 models that represent the expected structure of the geometry JSON data. Implement validation logic to check for required fields, data types, and any other constraints necessary for mesh generation. Utilize Pydantic's validation features to raise appropriate errors when invalid data is encountered, providing clear feedback for debugging and data correction. Refer to Pydantic's documentation for best practices in model validation and error handling. ([docs.pydantic.dev](https://docs.pydantic.dev/latest/concepts/validators/?utm_source=openai))",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Generate Mesh Files in ElmerFEM Format",
+            "description": "Develop functionality within the EducationalMeshService to generate mesh files in the ElmerFEM format, including 'mesh.header', 'mesh.nodes', 'mesh.elements', and 'mesh.boundary', and save them to the 'run_dir/mesh/' directory.",
+            "dependencies": [],
+            "details": "Implement functions within the EducationalMeshService that convert validated geometry data into the ElmerFEM mesh format. This includes creating and writing to the 'mesh.header', 'mesh.nodes', 'mesh.elements', and 'mesh.boundary' files. Ensure that the generated mesh files are saved to the 'run_dir/mesh/' directory, maintaining the project's directory structure. Pay attention to the specific formatting and data requirements of the ElmerFEM mesh files to ensure compatibility with ElmerSolver. Refer to ElmerFEM documentation for detailed specifications of the mesh file format.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Structured Logging and Error Handling",
+            "description": "Integrate structured logging using structlog 24.x and implement robust error handling within the EducationalMeshService to monitor performance and handle exceptions effectively.",
+            "dependencies": [],
+            "details": "Set up structured logging using structlog 24.x to capture detailed logs of the mesh generation process, including timestamps, log levels, and contextual information. Implement error handling mechanisms that raise MeshGenerationError with appropriate error codes when failures occur during mesh generation. Ensure that error messages are informative and provide sufficient context for debugging. Additionally, include duration metrics in the logs to monitor performance and identify potential bottlenecks in the mesh generation process.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Integrate Mesh Quality Metrics into Database",
+            "description": "Modify the EducationalMeshService to calculate mesh quality metrics and store them in the database, facilitating performance monitoring and optimization efforts.",
+            "dependencies": [],
+            "details": "Implement functionality within the EducationalMeshService to calculate mesh quality metrics, such as element quality, aspect ratio, and volume accuracy. After generating the mesh, store these metrics in the database to enable tracking and analysis over time. Ensure that the database schema is updated to accommodate these new metrics and that the data is stored in a structured manner for easy retrieval and analysis. This integration will support ongoing performance monitoring and optimization of the mesh generation process.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 23,
@@ -1556,8 +1676,54 @@
         "dependencies": [
           22
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement FastAPI Endpoint for Mesh Generation",
+            "description": "Develop a POST endpoint at /simulations/{id}/mesh to initiate mesh generation based on provided simulation ID and parameters.",
+            "dependencies": [],
+            "details": "Create a FastAPI route that accepts POST requests to /simulations/{id}/mesh, processes the input data, and triggers the mesh generation process. Ensure proper validation and error handling are in place to manage invalid inputs and provide informative responses to the client.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Develop WebSocket Endpoint for Real-Time Status Updates",
+            "description": "Set up a WebSocket endpoint at /mesh/status to provide real-time updates on the mesh generation progress to connected clients.",
+            "dependencies": [],
+            "details": "Implement a WebSocket route that clients can connect to in order to receive live updates on the mesh generation status. Utilize FastAPI's WebSocket support to manage connections and broadcast status messages to all connected clients. Ensure efficient handling of multiple concurrent connections and implement appropriate error handling for disconnections and message processing.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create Mesh Preview Endpoint Returning Simplified Visualization Data",
+            "description": "Design a GET endpoint at /mesh/preview that returns simplified mesh visualization data in a lightweight format suitable for educational purposes.",
+            "dependencies": [],
+            "details": "Develop a FastAPI route that generates and returns a simplified mesh preview in a format such as JSON or SVG, avoiding complex formats like STL. This endpoint should process the mesh data and produce a visual representation that is easy to interpret and suitable for educational demonstrations. Ensure the endpoint is optimized for performance to handle multiple requests efficiently.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Define Pydantic Schemas for Geometry Parameters Supporting Educational Geometry Types",
+            "description": "Create Pydantic schemas to validate and serialize geometry parameters, supporting four educational geometry types: rectangle, circle, triangle, and polygon.",
+            "dependencies": [],
+            "details": "Design Pydantic models that define the structure and validation rules for geometry parameters corresponding to the four specified educational geometry types. These schemas will be used to validate incoming data for mesh generation and preview endpoints, ensuring data integrity and facilitating automatic documentation generation. Include appropriate field types, constraints, and default values as needed.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Integrate OpenAPI Documentation for New Endpoints",
+            "description": "Update the OpenAPI documentation to include the newly created endpoints for mesh generation, real-time status updates, and mesh preview.",
+            "dependencies": [],
+            "details": "Utilize FastAPI's automatic documentation generation to include the new endpoints in the OpenAPI schema. Ensure that the documentation accurately reflects the request and response models, including the Pydantic schemas for geometry parameters. Provide clear descriptions and examples to assist developers in understanding and utilizing the new API features effectively.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 24,
@@ -1570,7 +1736,62 @@
           23
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design and Implement Geometry Input Forms",
+            "description": "Create React components for input forms corresponding to the four educational geometry types: rectangle, circle, annulus, and L-shape. Each form should include fields for relevant parameters and utilize visual icons for geometry selection to enhance user understanding.",
+            "dependencies": [],
+            "details": "Utilize React 18 and TypeScript 5 to develop the input forms. Incorporate Material-UI 5.15 for consistent styling and responsive design. Ensure that each form is intuitive and accessible, with clear labels and tooltips for parameter fields. Implement visual icons that represent each geometry type to aid in user selection and comprehension. Leverage Zod for client-side schema validation to ensure data integrity and provide immediate feedback to users. Manage form state using Redux Toolkit 2.2 to maintain consistency across the application. Ensure that the forms are responsive and adapt seamlessly to both desktop and tablet devices, following best practices for responsive design in React applications. ([medium.com](https://medium.com/%40sayanpramanick/building-a-responsive-react-application-key-principles-and-best-practices-e93d87e3ddee?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Develop unit tests using Jest and React Testing Library to validate form rendering, input handling, and schema validation. Implement end-to-end tests with Cypress to simulate user interactions, such as selecting different geometry types and entering parameters, ensuring the forms function correctly across various devices."
+          },
+          {
+            "id": 2,
+            "title": "Implement Real-Time Parameter Validation",
+            "description": "Integrate real-time validation for user inputs in the geometry forms, providing immediate feedback and clear error messages to guide users in correcting invalid entries.",
+            "dependencies": [],
+            "details": "Utilize Zod for schema validation to enforce correct data types and value ranges for each parameter field. Display error messages adjacent to the relevant input fields when validation fails, ensuring they are clear and instructive. Implement visual cues, such as changing input field borders to red, to indicate validation errors. Ensure that error messages are concise and provide guidance on acceptable input formats or value ranges. Manage validation state using Redux Toolkit to maintain consistency and facilitate error handling across the application. Ensure that validation messages are accessible and can be read by screen readers to support users with disabilities. ([medium.com](https://medium.com/%40sayanpramanick/building-a-responsive-react-application-key-principles-and-best-practices-e93d87e3ddee?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Create unit tests to verify that validation logic correctly identifies invalid inputs and displays appropriate error messages. Perform integration tests to ensure that validation errors are handled gracefully within the form and that the user experience remains smooth."
+          },
+          {
+            "id": 3,
+            "title": "Integrate Visual Feedback for Mesh Density Estimation",
+            "description": "Provide users with visual feedback indicating the estimated mesh density or element count based on their geometry input, enhancing their understanding of the simulation setup.",
+            "dependencies": [],
+            "details": "After the user enters parameters for a geometry, calculate the estimated mesh density or element count based on predefined formulas or heuristics. Display this information prominently within the form, using clear and concise language. Utilize visual elements, such as progress bars or numerical indicators, to represent the estimated mesh density or element count. Ensure that the feedback is updated in real-time as the user adjusts input parameters, providing immediate insight into how their changes affect the simulation setup. Ensure that the visual feedback is responsive and adapts to different screen sizes, maintaining usability across devices. ([medium.com](https://medium.com/%40sayanpramanick/building-a-responsive-react-application-key-principles-and-best-practices-e93d87e3ddee?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Develop unit tests to verify the accuracy of mesh density calculations based on various input parameters. Implement integration tests to ensure that visual feedback updates correctly in response to user input and that the information is displayed appropriately across different devices."
+          },
+          {
+            "id": 4,
+            "title": "Implement Responsive Design for Geometry Input Forms",
+            "description": "Ensure that the geometry input forms are fully responsive, providing an optimal user experience on both desktop and tablet devices by adapting layouts and interactions accordingly.",
+            "dependencies": [],
+            "details": "Adopt a mobile-first design approach, starting with layouts optimized for smaller screens and progressively enhancing them for larger devices. Utilize CSS Flexbox and Grid to create fluid and adaptive layouts that adjust seamlessly to various screen sizes. Implement media queries to apply different styles based on device characteristics, ensuring that the forms maintain usability and aesthetics across devices. Ensure that interactive elements, such as buttons and input fields, are appropriately sized and spaced to accommodate touch interactions on tablets. Test the forms on multiple devices and screen sizes to identify and address any responsiveness issues, ensuring a consistent experience for all users. ([medium.com](https://medium.com/%40sayanpramanick/building-a-responsive-react-application-key-principles-and-best-practices-e93d87e3ddee?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Conduct manual testing on a range of devices, including desktops and tablets, to assess responsiveness and usability. Utilize browser developer tools to simulate different screen sizes and orientations, ensuring that the forms adapt appropriately. Gather user feedback to identify any areas for improvement in the responsive design."
+          },
+          {
+            "id": 5,
+            "title": "Integrate Redux Toolkit for State Management",
+            "description": "Utilize Redux Toolkit 2.2 to manage the state of geometry parameters across the application, ensuring consistency and facilitating efficient data handling.",
+            "dependencies": [],
+            "details": "Define slices of state for each geometry type, storing relevant parameters and validation states. Utilize Redux Toolkit's createSlice and createAsyncThunk to manage state and handle asynchronous actions, such as fetching default values or validation schemas. Implement selectors to access state values and dispatch actions to update state, ensuring that components remain decoupled and maintainable. Ensure that state management is optimized for performance, minimizing unnecessary re-renders and maintaining a responsive user experience. ([medium.com](https://medium.com/%40sayanpramanick/building-a-responsive-react-application-key-principles-and-best-practices-e93d87e3ddee?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Develop unit tests for reducers and actions to ensure correct state management and handling of asynchronous actions. Implement integration tests to verify that components correctly interact with the Redux store and that state changes are reflected in the UI as expected."
+          },
+          {
+            "id": 6,
+            "title": "Conduct Comprehensive Testing and Quality Assurance",
+            "description": "Perform thorough testing and quality assurance to ensure that the geometry input forms function correctly, are free of defects, and provide a seamless user experience across all supported devices.",
+            "dependencies": [],
+            "details": "Develop a comprehensive test suite that includes unit tests, integration tests, and end-to-end tests to cover all aspects of the geometry input forms. Utilize Jest and React Testing Library for unit and integration tests, focusing on form rendering, input handling, validation, and state management. Implement end-to-end tests with Cypress to simulate user interactions, such as selecting geometry types, entering parameters, and submitting forms, ensuring that the entire workflow functions correctly. Perform cross-browser and cross-device testing to identify and address any compatibility issues, ensuring that the forms provide a consistent experience across different environments. Conduct accessibility testing to ensure that the forms are usable by all users, including those with disabilities, by adhering to WCAG guidelines and utilizing tools like Axe. ([medium.com](https://medium.com/%40sayanpramanick/building-a-responsive-react-application-key-principles-and-best-practices-e93d87e3ddee?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Execute the comprehensive test suite to validate all aspects of the geometry input forms. Address any identified issues promptly and iteratively refine the forms based on testing outcomes to ensure high quality and user satisfaction."
+          }
+        ]
       },
       {
         "id": 25,
@@ -1583,7 +1804,61 @@
           24
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Three.js Scene Setup",
+            "description": "Initialize a Three.js scene with a camera, renderer, and lighting to prepare for mesh rendering.",
+            "dependencies": [],
+            "details": "Set up a Three.js scene by creating a camera with a 75-degree field of view, an aspect ratio matching the window dimensions, and near and far clipping planes at 0.1 and 1000 units, respectively. Initialize a WebGLRenderer and add it to the document body. Add ambient lighting to the scene to ensure proper illumination of the mesh. This foundational setup is essential for rendering 3D objects in the browser.",
+            "status": "pending",
+            "testStrategy": "Verify that the scene renders correctly with the camera and lighting setup by displaying a simple object, such as a cube, to ensure proper initialization."
+          },
+          {
+            "id": 2,
+            "title": "Load and Display STL Mesh",
+            "description": "Fetch an STL file from the '/mesh/preview' endpoint, load it using STLLoader, and display it in the scene.",
+            "dependencies": [
+              "25.1"
+            ],
+            "details": "Use the STLLoader from Three.js to load the STL file fetched from the '/mesh/preview' endpoint. Once loaded, create a mesh with the loaded geometry and a basic material, and add it to the scene. This step enables the visualization of 3D models in the browser using Three.js.",
+            "status": "pending",
+            "testStrategy": "Test the loading functionality by mocking the '/mesh/preview' endpoint to return a sample STL file and verify that the mesh is correctly loaded and displayed in the scene."
+          },
+          {
+            "id": 3,
+            "title": "Implement Heat-Map Visualization",
+            "description": "Apply a heat-map to the mesh by mapping vertex colors based on aspect ratios, with toggling functionality using dat.GUI.",
+            "dependencies": [
+              "25.2"
+            ],
+            "details": "Calculate the aspect ratio for each vertex in the mesh and map these values to colors, creating a heat-map effect. Integrate dat.GUI to allow users to toggle the heat-map visualization on and off, providing an interactive way to inspect mesh quality. This feature enhances the educational value by visually representing mesh quality metrics.",
+            "status": "pending",
+            "testStrategy": "Ensure that the heat-map correctly reflects aspect ratios by testing with meshes of known quality and verifying that the dat.GUI controls toggle the heat-map visibility as expected."
+          },
+          {
+            "id": 4,
+            "title": "Integrate OrbitControls for Interaction",
+            "description": "Add OrbitControls to the scene to enable user interaction, allowing rotation, zooming, and panning of the mesh.",
+            "dependencies": [
+              "25.3"
+            ],
+            "details": "Integrate OrbitControls from Three.js to allow users to interact with the scene by rotating, zooming, and panning the camera around the mesh. This interaction is crucial for detailed inspection of the mesh from different angles. Ensure that OrbitControls are properly configured to work with the renderer's DOM element and that the controls are updated in the animation loop to reflect user input.",
+            "status": "pending",
+            "testStrategy": "Test the interactivity by verifying that the user can rotate, zoom, and pan the camera around the mesh using mouse or touch inputs, and that the controls respond smoothly to user actions."
+          },
+          {
+            "id": 5,
+            "title": "Optimize Performance for Educational Preview",
+            "description": "Implement performance optimizations to ensure smooth interaction, focusing on rendering a representative view of the mesh without full detail.",
+            "dependencies": [
+              "25.4"
+            ],
+            "details": "Optimize the rendering process by simplifying the mesh geometry or using level-of-detail techniques to display a representative view of the mesh. This approach ensures that the application remains responsive and suitable for educational purposes, where quick feedback and smooth interaction are essential. Additionally, consider implementing frustum culling and other performance-enhancing techniques to maintain a high frame rate during user interactions.",
+            "status": "pending",
+            "testStrategy": "Measure the frame rate and responsiveness of the application during user interactions to ensure that performance optimizations are effective and that the application remains smooth and responsive."
+          }
+        ]
       },
       {
         "id": 26,
@@ -1597,7 +1872,62 @@
           18
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Develop Canonical Test Cases for Four Geometry Types",
+            "description": "Create canonical test cases for four geometry types: rectangle heat transfer, circle flow, annulus temperature gradient, and L-shape stress, ensuring they cover a range of educational scenarios for mesh and solver validation.",
+            "dependencies": [],
+            "details": "Design test cases that encompass the specified geometry types, incorporating relevant physical models and boundary conditions to validate mesh generation and solver performance. Utilize analytical solutions or known FEM results as references for comparison.",
+            "status": "pending",
+            "testStrategy": "Implement test cases that generate meshes, run simulations using ElmerSolver, and compare numerical results to reference solutions using numpy.allclose with a relative tolerance of 1e-3."
+          },
+          {
+            "id": 2,
+            "title": "Implement Automated Test Scripts for Mesh Generation and Solver Execution",
+            "description": "Develop automated test scripts that generate meshes, execute simulations with ElmerSolver, and validate results against reference solutions, streamlining the testing process for mesh and solver validation.",
+            "dependencies": [],
+            "details": "Create scripts that automate the process of mesh generation, simulation execution, and result validation. Ensure compatibility with existing test infrastructure and adherence to coding standards.",
+            "status": "pending",
+            "testStrategy": "Integrate the automated test scripts into the existing test suite, ensuring they pass with a maximum runtime of 10 minutes and fail the build if any case deviates by more than 1% from the reference solution."
+          },
+          {
+            "id": 3,
+            "title": "Integrate Performance Benchmarks for Mesh Generation",
+            "description": "Measure and optimize mesh generation time, ensuring it completes in under 2 seconds to maintain efficient testing workflows.",
+            "dependencies": [],
+            "details": "Utilize tools like pytest-benchmark to record mesh generation timings and set thresholds for performance. Store benchmark data in a dedicated directory and implement checks to detect regressions.",
+            "status": "pending",
+            "testStrategy": "Run benchmarks locally to adjust thresholds, simulate regressions (e.g., by introducing delays), and confirm that the continuous integration pipeline fails if performance degrades beyond acceptable limits."
+          },
+          {
+            "id": 4,
+            "title": "Establish Cross-Platform Continuous Integration with GitHub Actions",
+            "description": "Set up a continuous integration pipeline using GitHub Actions to run tests across multiple platforms, including Ubuntu and Windows, ensuring consistent behavior and performance of mesh generation and solver functionalities.",
+            "dependencies": [],
+            "details": "Configure GitHub Actions workflows with a matrix strategy to execute tests on different operating systems. Ensure that the CI pipeline passes with a maximum runtime of 10 minutes and fails if any test case deviates by more than 1% from the reference solution.",
+            "status": "pending",
+            "testStrategy": "Implement a matrix strategy in GitHub Actions to run tests on both Ubuntu and Windows environments, verifying that all tests pass within the specified time and accuracy constraints."
+          },
+          {
+            "id": 5,
+            "title": "Develop Test Data Management and Result Comparison Framework",
+            "description": "Create a framework for managing test data and comparing simulation results to reference solutions, facilitating efficient validation and debugging processes.",
+            "dependencies": [],
+            "details": "Design a system for storing and retrieving test data, including input parameters, mesh files, and reference solutions. Implement result comparison mechanisms to identify discrepancies and aid in debugging.",
+            "status": "pending",
+            "testStrategy": "Ensure that the framework allows for easy retrieval of test data and comparison of results, with automated checks to flag significant deviations from reference solutions."
+          },
+          {
+            "id": 6,
+            "title": "Ensure Mesh Quality and Simulation Accuracy Validation",
+            "description": "Implement validation procedures to assess mesh quality and simulation accuracy, ensuring that both aspects meet predefined standards for educational scenarios.",
+            "dependencies": [],
+            "details": "Develop criteria for evaluating mesh quality, such as element aspect ratio and skewness, and implement checks to ensure that simulation results align with expected accuracy thresholds.",
+            "status": "pending",
+            "testStrategy": "Incorporate mesh quality assessments and accuracy checks into the test suite, with automated reporting of any issues to facilitate prompt resolution."
+          }
+        ]
       },
       {
         "id": 27,
@@ -1610,12 +1940,58 @@
           26
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Integrate pytest-benchmark for Mesh Generation Timing",
+            "description": "Implement pytest-benchmark to measure mesh generation times across various geometries, storing thresholds in .benchmarks/last_run.json for regression detection.",
+            "dependencies": [],
+            "details": "Utilize pytest-benchmark to record mesh generation timings for different geometries, comparing current performance against stored thresholds to identify regressions.",
+            "status": "pending",
+            "testStrategy": "Run benchmarks locally; adjust thresholds file. Simulate regression (sleep) and confirm CI fails."
+          },
+          {
+            "id": 2,
+            "title": "Implement Memory Profiling with tracemalloc",
+            "description": "Use tracemalloc to monitor memory usage during mesh generation, ensuring it remains below 50MB for all geometry types.",
+            "dependencies": [],
+            "details": "Integrate tracemalloc to track memory allocations during mesh generation, comparing current usage against stored thresholds to detect regressions.",
+            "status": "pending",
+            "testStrategy": "Run benchmark locally; adjust thresholds file. Simulate regression (sleep) and confirm CI fails."
+          },
+          {
+            "id": 3,
+            "title": "Set Up CI Integration with Automatic Regression Detection",
+            "description": "Configure a pre-merge GitHub Action to compare HEAD vs main, failing the CI if mesh generation time exceeds +10% or memory usage exceeds +5% of the previous run.",
+            "dependencies": [],
+            "details": "Add a GitHub Action that runs benchmarks on each pull request, comparing results to the main branch and failing the build if performance regressions are detected.",
+            "status": "pending",
+            "testStrategy": "Run benchmark locally; adjust thresholds file. Simulate regression (sleep) and confirm CI fails."
+          },
+          {
+            "id": 4,
+            "title": "Generate Prometheus Metrics for Production Monitoring",
+            "description": "Implement Prometheus metrics to monitor mesh generation performance in production, including a histogram for mesh generation time.",
+            "dependencies": [],
+            "details": "Expose Prometheus metrics in the production environment, including a histogram for mesh generation time, to monitor performance and detect regressions.",
+            "status": "pending",
+            "testStrategy": "Validate Prometheus endpoint /metrics returns mesh_generation_seconds buckets."
+          },
+          {
+            "id": 5,
+            "title": "Create Performance Dashboard for Tracking Trends",
+            "description": "Develop a dashboard to visualize mesh generation performance trends over time, aiding in optimization efforts and regression detection.",
+            "dependencies": [],
+            "details": "Build a dashboard that displays mesh generation performance metrics over time, allowing for trend analysis and identification of performance issues.",
+            "status": "pending",
+            "testStrategy": "Monitor dashboard for accurate representation of performance trends and timely detection of regressions."
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-07-23T21:20:07.825Z",
-      "updated": "2025-07-26T04:58:31.268Z",
+      "updated": "2025-07-26T16:12:56.555Z",
       "description": "Tasks for master context"
     }
   }
