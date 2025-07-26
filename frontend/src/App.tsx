@@ -8,6 +8,7 @@ import MaterialLibrary from './pages/MaterialLibrary';
 import Help from './pages/Help';
 import Settings from './pages/Settings';
 import { GeometryTestPage } from './pages/GeometryTestPage';
+import { MeshPreviewTestPage } from './pages/MeshPreviewTestPage';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
             <Route path="/help" element={<Help />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/geometry-test" element={<GeometryTestPage />} />
+            <Route path="/mesh-preview-test" element={<MeshPreviewTestPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
