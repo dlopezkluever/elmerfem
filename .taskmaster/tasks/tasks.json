@@ -1290,7 +1290,7 @@
         "dependencies": [
           16
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1298,7 +1298,7 @@
             "description": "Establish the geometric parameters for the annulus mesh, including inner and outer radii, and determine the number of radial and angular divisions (nr and nθ) for the mesh grid.",
             "dependencies": [],
             "details": "The mesh will be generated for a pipe-flow annulus geometry with specified inner and outer radii. The number of radial divisions (nr) and angular divisions (nθ) will be determined based on the desired mesh resolution and performance targets. The geometric progression ratio for the boundary layer will be set to 1.2, as specified in the implementation details. ([queiruga.net](https://queiruga.net/simulation/2018/08/21/geometric-progression-for-meshes.html?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1307,7 +1307,7 @@
             "description": "Develop algorithms to generate the mesh grid in both radial and angular directions, ensuring proper node distribution and connectivity for the annulus geometry.",
             "dependencies": [],
             "details": "Utilize a polar grid algorithm to create the mesh, with nr radial divisions and nθ angular divisions. The radial spacing will follow an exponential progression if the boundary_layer flag is true, as specified in the implementation details. ([queiruga.net](https://queiruga.net/simulation/2018/08/21/geometric-progression-for-meshes.html?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1316,7 +1316,7 @@
             "description": "Create boundary layer mesh elements on both the inner and outer walls of the annulus, applying a geometric progression ratio of 1.2 for layer growth.",
             "dependencies": [],
             "details": "Implement a boundary layer mesh generation routine that adds layers near the inner and outer walls of the annulus. The growth ratio for the boundary layer will be set to 1.2, as specified in the implementation details. ([queiruga.net](https://queiruga.net/simulation/2018/08/21/geometric-progression-for-meshes.html?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1325,7 +1325,7 @@
             "description": "Tag the inner and outer boundaries of the mesh with IDs 2 and 1, respectively, to facilitate boundary condition assignment during simulations.",
             "dependencies": [],
             "details": "Assign boundary IDs to the inner and outer walls of the annulus mesh, with ID=2 for the inner boundary and ID=1 for the outer boundary, as specified in the implementation details.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1334,7 +1334,7 @@
             "description": "Ensure the generated mesh meets quality metrics and performance targets, including aspect ratio constraints and volume approximation accuracy.",
             "dependencies": [],
             "details": "Verify that no element quality metric (aspect ratio) exceeds 3. Ensure that the volume of the mesh approximates π(R²–r²) within 0.1%. Perform a benchmark test using ElmerSolver with a Stokes flow problem to confirm that the mesh runs without errors. ([ansyshelp.ansys.com](https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/cfx_mod/cfxTurbModeGuid.html?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -1349,7 +1349,7 @@
         "dependencies": [
           14
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1357,7 +1357,7 @@
             "description": "Create a structured rectangular grid based on the provided outer_length and density parameters.",
             "dependencies": [],
             "details": "Generate a grid with nx and ny divisions, where nx = outer_length * density and ny = outer_length * density. This grid will serve as the foundation for the L-shaped mesh generation.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1366,7 +1366,7 @@
             "description": "Develop an algorithm to remove elements inside the cut region, transforming the rectangular grid into an L-shaped domain.",
             "dependencies": [],
             "details": "Identify the elements within the cut region defined by cut_length and remove them from the grid, ensuring the remaining mesh accurately represents the L-shaped domain.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1375,7 +1375,7 @@
             "description": "Introduce local mesh refinement near the notch, with element size proportional to r^0.5, to capture stress concentrations accurately.",
             "dependencies": [],
             "details": "Implement a refinement strategy that decreases element size near the notch, following a scaling law of r^0.5, to enhance the mesh's resolution in areas of high stress gradients.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1384,7 +1384,7 @@
             "description": "Assign boundary tags to the mesh elements to facilitate boundary condition application during simulations.",
             "dependencies": [],
             "details": "Tag the mesh boundaries as follows: left=1, right=2, top=3, bottom=4, and interior notch=5, to correspond with the specified boundary conditions.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1393,7 +1393,7 @@
             "description": "Conduct tests to ensure the mesh quality meets the required standards and performs efficiently in simulations.",
             "dependencies": [],
             "details": "Verify that the corner node count increases with density, solve the Laplace problem on the mesh, and compare the singular stress exponent to published references (~0.544) to ensure accuracy and performance.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -1411,7 +1411,7 @@
           17,
           18
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1419,7 +1419,7 @@
             "description": "Develop a Fortran function named ComputeQuality() that calculates mesh quality metrics, including aspect ratio, skewness, and minimum/maximum angles, and returns a MeshQuality structure.",
             "dependencies": [],
             "details": "The ComputeQuality() function should iterate over all mesh elements, compute the specified quality metrics for each element, and aggregate these metrics to produce a comprehensive MeshQuality structure. This function will serve as the foundation for mesh quality assessment and optimization processes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1428,7 +1428,7 @@
             "description": "Implement a routine that performs 3 iterations of Laplacian smoothing on the mesh when the maximum aspect ratio exceeds 4, to improve mesh quality by reducing element distortion.",
             "dependencies": [],
             "details": "The smoothing process should adjust vertex positions iteratively to minimize element distortion. Boundary nodes should remain fixed during this process to preserve the mesh's structural integrity. The Laplacian smoothing algorithm can be applied using an explicit scheme, where each vertex is moved towards the average position of its neighbors, effectively reducing high-frequency variations in the mesh. ([rodolphe-vaillant.fr](https://rodolphe-vaillant.fr/entry/70/laplacian-smoothing-c-code-to-smooth-a-mesh?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1437,7 +1437,7 @@
             "description": "Modify the Laplacian smoothing routine to skip the movement of boundary nodes when the boundary_layer flag is set to TRUE, ensuring that boundary conditions are preserved during optimization.",
             "dependencies": [],
             "details": "Boundary nodes should be identified based on the mesh's boundary conditions. During the smoothing process, these nodes should remain stationary to maintain the mesh's boundary integrity. This approach ensures that the optimization focuses on interior nodes, allowing for mesh refinement without altering boundary conditions.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1446,7 +1446,7 @@
             "description": "Implement functionality to generate a JSON file containing mesh quality statistics, including aspect ratio, skewness, and angle metrics, and save it as mesh.quality for backend consumption.",
             "dependencies": [],
             "details": "The JSON file should be structured to include all relevant quality metrics, with clear labeling and formatting for easy parsing by backend systems. This file will serve as a standardized output for mesh quality assessment, facilitating integration with other components of the simulation pipeline.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1455,7 +1455,7 @@
             "description": "Create unit tests using pFUnit 4.7 to validate the correctness of the ComputeQuality() function and the Laplacian smoothing routine, ensuring accurate computation of mesh quality metrics and effective optimization.",
             "dependencies": [],
             "details": "The unit tests should cover a range of scenarios, including meshes with varying element shapes and sizes, to ensure robustness and accuracy of the implemented functions. Test cases should assert that the computed metrics match expected values and that the smoothing process effectively reduces element distortion without violating boundary conditions.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -1470,7 +1470,7 @@
         "dependencies": [
           19
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1478,7 +1478,7 @@
             "description": "Develop functionality to create a specified number of boundary layer mesh elements with a thickness progression ratio of 1.2, starting with a first layer thickness of 0.5 units.",
             "dependencies": [],
             "details": "Utilize meshing tools to generate boundary layers with the specified parameters, ensuring smooth gradation across the mesh. ([2021.help.altair.com](https://2021.help.altair.com/2021.2/hwdesktop/engsol/topics/tutorials/cfd/tut_cfd_1200_cfd_meshing_with_automatic_bl_t.htm?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Visual inspection via Paraview to verify geometric progression of layer thicknesses."
           },
           {
@@ -1487,7 +1487,7 @@
             "description": "Create a size field function S(x) proportional to distance_to_boundary raised to the power of 0.8 for adaptive element sizing.",
             "dependencies": [],
             "details": "Develop a function that adjusts element sizes based on proximity to boundaries, enhancing mesh resolution where needed. ([cfmesh.com](https://cfmesh.com/low-re-turbulence-modelling-of-boundary-layers-with-cf-mesh/?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Compare generated mesh against known benchmarks to ensure accuracy of adaptive sizing."
           },
           {
@@ -1496,7 +1496,7 @@
             "description": "Modify the mesh generation routine to support annular geometries, including both inner and outer boundary layers with a geometric progression ratio of 1.2.",
             "dependencies": [],
             "details": "Adapt existing mesh generation code to handle annular shapes, ensuring correct boundary layer application on both walls. ([cfmesh.com](https://cfmesh.com/low-re-turbulence-modelling-of-boundary-layers-with-cf-mesh/?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify mesh quality metrics, ensuring no element aspect ratio exceeds 3, and that volume approximates π(R²–r²) within 0.1%."
           },
           {
@@ -1505,7 +1505,7 @@
             "description": "Develop mesh generation capabilities for rectangular geometries, incorporating boundary layers and adaptive sizing as implemented for circular and annular cases.",
             "dependencies": [],
             "details": "Extend mesh generation code to handle rectangular domains, applying boundary layers and adaptive sizing functions appropriately.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Ensure mesh quality metrics meet specified criteria, and that mesh generation completes within acceptable time frames."
           },
           {
@@ -1514,7 +1514,7 @@
             "description": "Benchmark the mesh generation process for both circular and rectangular geometries, optimizing for performance and accuracy.",
             "dependencies": [],
             "details": "Measure mesh generation times and quality for various geometries, identifying and implementing optimizations as needed.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Benchmark circle with nr_bl=5 to complete in under 2 seconds, and ensure mesh quality metrics are within specified thresholds."
           }
         ]
@@ -1615,7 +1615,7 @@
     ],
     "metadata": {
       "created": "2025-07-23T21:20:07.825Z",
-      "updated": "2025-07-25T22:12:51.436Z",
+      "updated": "2025-07-26T04:58:31.268Z",
       "description": "Tasks for master context"
     }
   }
