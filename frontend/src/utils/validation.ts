@@ -74,7 +74,7 @@ export const heatTransferFormSchema = z.object({
   width: z.string().transform(Number).pipe(z.number().positive("Width must be positive")),
   height: z.string().transform(Number).pipe(z.number().positive("Height must be positive")),
   radius: z.string().transform(Number).pipe(z.number().positive("Radius must be positive")),
-  material_id: z.string().transform(Number).pipe(z.number().positive()),
+  material_id: z.string().optional(), // Changed: material_id is now string and optional
   mesh_density: z.string().transform(Number).pipe(z.number().min(0.1).max(10)),
   // Boundary conditions for heat transfer
   temperature_left: z.string().transform(Number).pipe(z.number()),
@@ -89,7 +89,7 @@ export const structuralMechanicsFormSchema = z.object({
   width: z.string().transform(Number).pipe(z.number().positive("Width must be positive")),
   height: z.string().transform(Number).pipe(z.number().positive("Height must be positive")),
   radius: z.string().transform(Number).pipe(z.number().positive("Radius must be positive")),
-  material_id: z.string().transform(Number).pipe(z.number().positive()),
+  material_id: z.string().optional(), // Changed: material_id is now string and optional
   mesh_density: z.string().transform(Number).pipe(z.number().min(0.1).max(10)),
   // Boundary conditions for structural mechanics
   fixed_surface: z.string().min(1, "Fixed surface is required"),

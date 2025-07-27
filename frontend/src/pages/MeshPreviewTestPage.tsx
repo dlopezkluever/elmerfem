@@ -10,6 +10,7 @@ export const MeshPreviewTestPage: React.FC = () => {
   const [meshId, setMeshId] = useState<string>('test-mesh-123');
   const [useMockData, setUseMockData] = useState(true);
   const [autoRotate, setAutoRotate] = useState(true);
+  const [showMeshOutline, setShowMeshOutline] = useState(false);
 
   // Sample quality metrics for testing
   const sampleQualityMetrics = {
@@ -77,6 +78,20 @@ export const MeshPreviewTestPage: React.FC = () => {
               </label>
             </div>
 
+            {/* Mesh Outline Toggle */}
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="meshOutline"
+                checked={showMeshOutline}
+                onChange={(e) => setShowMeshOutline(e.target.checked)}
+                className="w-4 h-4 text-electric-blue rounded"
+              />
+              <label htmlFor="meshOutline" className="text-gray-700">
+                Mesh Outline
+              </label>
+            </div>
+
             {/* Mesh ID Input */}
             <div className="flex items-center space-x-2">
               <label htmlFor="meshId" className="text-gray-700">
@@ -113,6 +128,7 @@ export const MeshPreviewTestPage: React.FC = () => {
               showHeatMap={showHeatMap}
               autoRotate={autoRotate}
               useMockData={useMockData}
+              showMeshOutline={showMeshOutline}
             />
           </div>
         </div>
@@ -148,6 +164,7 @@ export const MeshPreviewTestPage: React.FC = () => {
               <li>Mock Data: Uses a generated wavy surface mesh for testing</li>
               <li>Real Data: Disable mock data and enter a valid mesh ID from the backend</li>
               <li>Auto Rotate: Toggles automatic rotation of the mesh</li>
+              <li>Mesh Outline: Displays pronounced black outlines around mesh elements for better visibility of the mesh structure</li>
             </ul>
           </div>
         </div>

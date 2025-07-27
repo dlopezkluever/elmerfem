@@ -19,18 +19,21 @@ class DockerWrapper:
         self.compose_project = settings.docker_compose_project
         self.elmer_container = settings.elmer_container_name
         self.work_dir = settings.elmer_work_dir
-        self.compose_file = "/docker-compose.yml"
+        # Use relative path to project root when running backend outside Docker
+        self.compose_file = Path(__file__).parent.parent.parent.parent / "docker-compose.yml"
     
     async def check_elmer_health(self) -> bool:
         """Check if the Elmer container is healthy"""
         try:
             cmd = [
                 "docker", "compose",
-                "-f", self.compose_file,
+                "-f", str(self.compose_file),
                 "-p", self.compose_project,
                 "ps", self.elmer_container,
                 "--format", "json"
             ]
+            
+            logger.info(f"Checking Elmer health with command: {' '.join(cmd)}")
             
             process = await asyncio.create_subprocess_exec(
                 *cmd,
@@ -40,12 +43,18 @@ class DockerWrapper:
             
             stdout, stderr = await process.communicate()
             
+            logger.info(f"Docker command return code: {process.returncode}")
+            logger.info(f"Docker stdout length: {len(stdout)}")
+            logger.info(f"Docker stderr: {stderr.decode()}")
+            
             if process.returncode != 0:
                 logger.error(f"Failed to check container health: {stderr.decode()}")
                 return False
             
             # Simple check - if we get output, container exists
-            return bool(stdout.strip())
+            result = bool(stdout.strip())
+            logger.info(f"Health check result: {result}")
+            return result
             
         except Exception as e:
             logger.error(f"Error checking Elmer container health: {e}")
@@ -80,7 +89,7 @@ class DockerWrapper:
             # Build the command
             cmd = [
                 "docker", "compose",
-                "-f", self.compose_file,
+                "-f", str(self.compose_file),
                 "-p", self.compose_project,
                 "exec",
                 "-T",  # Disable pseudo-TTY
@@ -138,7 +147,7 @@ class DockerWrapper:
             # Build the docker compose exec command
             cmd = [
                 "docker", "compose",
-                "-f", self.compose_file,
+                "-f", str(self.compose_file),
                 "-p", self.compose_project,
                 "exec",
                 "-T"  # Disable pseudo-TTY

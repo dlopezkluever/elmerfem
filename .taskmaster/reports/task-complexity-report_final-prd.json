@@ -1,0 +1,233 @@
+{
+	"meta": {
+		"generatedAt": "2025-07-27T09:44:30.552Z",
+		"tasksAnalyzed": 25,
+		"totalTasks": 25,
+		"analysisCount": 30,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"metric": "Cyclomatic Complexity",
+			"description": "Measures the number of linearly independent paths through a program's source code, indicating its structural complexity. Higher values suggest more complex code with increased testing requirements. ([en.wikipedia.org](https://en.wikipedia.org/wiki/Cyclomatic_complexity?utm_source=openai))"
+		},
+		{
+			"metric": "ABC Metric",
+			"description": "Calculates a program's size based on the number of assignments, branches, and conditionals, providing a scalar value that reflects code complexity. ([en.wikipedia.org](https://en.wikipedia.org/wiki/ABC_Software_Metric?utm_source=openai))"
+		},
+		{
+			"metric": "Time Complexity",
+			"description": "Assesses the efficiency of an algorithm by evaluating how its runtime increases with input size, typically expressed using Big O notation. ([algocademy.com](https://algocademy.com/blog/the-importance-of-time-complexity-analysis-in-software-development/?utm_source=openai))"
+		},
+		{
+			"metric": "Structural Complexity",
+			"description": "Examines the interdependencies and relationships among components within a software system, where high interdependence can complicate maintenance and evolution. ([fastercapital.com](https://fastercapital.com/term/software-complexity.html?utm_source=openai))"
+		},
+		{
+			"metric": "Operational Complexity",
+			"description": "Focuses on the challenges associated with deploying, running, and maintaining software in production environments, including infrastructure requirements and configuration management. ([fastercapital.com](https://fastercapital.com/term/software-complexity.html?utm_source=openai))"
+		},
+		{
+			"taskId": 1,
+			"taskTitle": "Refactor Docker-Compose to Unified Container Architecture",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on refactor docker-compose to unified container architecture.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Backend Path Translation & Workspace Sync",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on backend path translation & workspace sync.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Automated Integration Test: End-to-End Heat-Transfer Simulation",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on automated integration test: end-to-end heat-transfer simulation.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "WebSocket Progress Streaming Endpoint",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on websocket progress streaming endpoint.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Frontend WebSocket Hook & Progress State",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on frontend websocket hook & progress state.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Unified SimulationPage (Mesh + Progress)",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on unified simulationpage (mesh + progress).",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Simulation Orchestration Pipeline",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on simulation orchestration pipeline.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Fortran MaterialLib.F90 with JSON FSON Parsing",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on fortran materiallib.f90 with json fson parsing.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Dynamic Backend Input Validation from KeywordsDump",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on dynamic backend input validation from keywordsdump.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Frontend Zod Schemas Autogenerated from Keywords",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on frontend zod schemas autogenerated from keywords.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 11,
+			"taskTitle": "VTU Result Parser & Compressed Streaming",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on vtu result parser & compressed streaming.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 12,
+			"taskTitle": "Frontend 3D Results Visualization",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on frontend 3d results visualization.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 13,
+			"taskTitle": "PDF Report Generation Service",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on pdf report generation service.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 14,
+			"taskTitle": "Frontend Report Download & Actions Panel",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on frontend report download & actions panel.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 15,
+			"taskTitle": "Comprehensive Unit Test Suites (Backend & Frontend)",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on comprehensive unit test suites (backend & frontend).",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 16,
+			"taskTitle": "GitHub Actions CI/CD Pipeline",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on github actions ci/cd pipeline.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 17,
+			"taskTitle": "Redux Toolkit Workflow Slice",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on redux toolkit workflow slice.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 18,
+			"taskTitle": "Accessibility & ARIA Enhancement",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on accessibility & aria enhancement.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 19,
+			"taskTitle": "Performance Optimisation: Mesh & Rendering",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on performance optimisation: mesh & rendering.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 20,
+			"taskTitle": "Educational Content Pages Infrastructure",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on educational content pages infrastructure.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 21,
+			"taskTitle": "Interactive Quiz System",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on interactive quiz system.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 22,
+			"taskTitle": "Success Metrics Telemetry (Local Only)",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on success metrics telemetry (local only).",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 23,
+			"taskTitle": "Repository Documentation Overhaul",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on repository documentation overhaul.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 24,
+			"taskTitle": "Release Packaging & Versioning",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on release packaging & versioning.",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		},
+		{
+			"taskId": 25,
+			"taskTitle": "CAD File Import Pipeline (STL/STEP/OBJ)",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down this task with a focus on cad file import pipeline (stl/step/obj).",
+			"reasoning": "Automatically added due to missing analysis in AI response."
+		}
+	]
+}

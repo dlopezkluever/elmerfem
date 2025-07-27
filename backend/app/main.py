@@ -5,14 +5,16 @@ Main FastAPI application for ElmerFEM Educational Platform
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api.v1 import simulations_router, mesh_router
+from .api.simulations import router as simulations_legacy_router
 from .config.settings import settings
 from .jobs.launcher import JobLauncher
 from .jobs.store import InMemoryJobStore, JobStore
 from .services.docker_wrapper import DockerWrapper
+from .services.materials_service import materials_service
 
 # Configure logging
 logging.basicConfig(
@@ -49,6 +51,13 @@ async def lifespan(app: FastAPI):
     settings.get_workspace_path()
     logger.info(f"Workspace directory: {settings.workspace_base_dir}")
     
+    # Load materials data
+    try:
+        materials = materials_service.get_all_materials()
+        logger.info(f"Loaded {len(materials)} materials")
+    except Exception as e:
+        logger.error(f"Failed to load materials: {e}")
+    
     yield
     
     # Shutdown
@@ -78,6 +87,7 @@ def create_app() -> FastAPI:
     # Include routers
     app.include_router(simulations_router, prefix="/api/v1")
     app.include_router(mesh_router, prefix="/api/v1")
+    app.include_router(simulations_legacy_router)  # Already has /api/simulations prefix
     
     @app.get("/")
     async def root():
@@ -94,50 +104,43 @@ def create_app() -> FastAPI:
         # Check if Elmer is available
         elmer_healthy = await docker_wrapper.check_elmer_health()
         
+        # Check if materials are loaded
+        try:
+            materials_count = len(materials_service.get_all_materials())
+            materials_loaded = True
+        except:
+            materials_count = 0
+            materials_loaded = False
+        
         return {
             "status": "healthy",
             "elmer_available": elmer_healthy,
-            "active_jobs": await job_store.get_active_job_count()
+            "active_jobs": await job_store.get_active_job_count(),
+            "materials_loaded": materials_loaded,
+            "materials_count": materials_count
         }
     
     @app.get("/api/materials")
     async def get_materials():
         """Get available materials for simulations"""
-        # This will be properly implemented in Task 6
-        return {
-            "materials": [
-                {
-                    "id": 1,
-                    "name": "Steel",
-                    "properties": {
-                        "E": 210e9,  # Young's Modulus (Pa)
-                        "nu": 0.3,   # Poisson's Ratio
-                        "rho": 7850, # Density (kg/m³)
-                        "k": 50      # Thermal Conductivity (W/mK)
-                    }
-                },
-                {
-                    "id": 2,
-                    "name": "Aluminum",
-                    "properties": {
-                        "E": 70e9,
-                        "nu": 0.33,
-                        "rho": 2700,
-                        "k": 237
-                    }
-                },
-                {
-                    "id": 3,
-                    "name": "Copper",
-                    "properties": {
-                        "E": 110e9,
-                        "nu": 0.34,
-                        "rho": 8960,
-                        "k": 401
-                    }
-                }
-            ]
-        }
+        try:
+            materials = materials_service.get_all_materials()
+            return {
+                "materials": materials,
+                "count": len(materials)
+            }
+        except FileNotFoundError as e:
+            logger.error(f"Materials file not found: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail="Materials database not found. Please ensure materials.json is present."
+            )
+        except Exception as e:
+            logger.error(f"Error loading materials: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to load materials: {str(e)}"
+            )
     
     return app
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SimulationType, SimulationParams, BoundaryConditionType } from '../types/api';
 import { 
@@ -9,6 +9,7 @@ import {
 } from '../utils/validation';
 import { simulationApi } from '../api';
 import { useMaterials } from '../hooks/useMaterials';
+import { MaterialSelector } from '../components/MaterialSelector';
 
 function ParameterForm() {
   const navigate = useNavigate();
@@ -60,6 +61,7 @@ function HeatTransferForm({ materials }: { materials: any[] }) {
     register,
     handleSubmit,
     watch,
+    control,
     formState: { errors },
   } = useForm<HeatTransferInputs>({
     resolver: zodResolver(heatTransferFormSchema) as any,
@@ -97,7 +99,13 @@ function HeatTransferForm({ materials }: { materials: any[] }) {
             ? { radius: Number(data.radius), height: Number(data.height) }
             : { length: Number(data.length), width: Number(data.width), height: Number(data.height) }
         },
-        material_id: Number(data.material_id),
+        // Handle material selection - provide fallback if no material selected
+        material_id: data.material_id && data.material_id.trim() !== '' ? data.material_id : undefined,
+        custom_material: (!data.material_id || data.material_id.trim() === '') ? {
+          k: 50.0,  // Default thermal conductivity (Steel-like)
+          rho: 7850.0,  // Default density (Steel-like)
+          C: 500.0  // Default heat capacity
+        } : undefined,
         mesh_density: Number(data.mesh_density),
         boundary_conditions: [
           {
@@ -188,12 +196,18 @@ function HeatTransferForm({ materials }: { materials: any[] }) {
         <div className="card-neumorphic p-8">
           <h2 className="text-2xl font-semibold mb-6">Material</h2>
           
-          <FormField
-            label="Select Material"
-            {...register('material_id')}
-            type="select"
-            options={materials.map(m => ({ value: m.id.toString(), label: m.name }))}
-            error={errors.material_id}
+          <Controller
+            name="material_id"
+            control={control}
+            render={({ field }) => (
+              <MaterialSelector
+                materials={materials}
+                value={field.value}
+                onChange={field.onChange}
+                error={errors.material_id}
+                name={field.name}
+              />
+            )}
           />
         </div>
 
@@ -286,6 +300,7 @@ function StructuralMechanicsForm({ materials }: { materials: any[] }) {
     register,
     handleSubmit,
     watch,
+    control,
     formState: { errors },
   } = useForm<StructuralMechanicsInputs>({
     resolver: zodResolver(structuralMechanicsFormSchema) as any,
@@ -325,17 +340,37 @@ function StructuralMechanicsForm({ materials }: { materials: any[] }) {
             ? { radius: Number(data.radius), height: Number(data.height) }
             : { length: Number(data.length), width: Number(data.width), height: Number(data.height) }
         },
-        material_id: Number(data.material_id),
+        material_id: data.material_id && data.material_id.trim() !== '' ? data.material_id : undefined,
+        custom_material: (!data.material_id || data.material_id.trim() === '') ? {
+          E: 200e9, // Default Young's Modulus (Steel-like)
+          nu: 0.3, // Default Poisson's Ratio (Steel-like)
+          rho: 7850.0, // Default density (Steel-like)
+          C: 500.0 // Default heat capacity
+        } : undefined,
         mesh_density: Number(data.mesh_density),
         boundary_conditions: [
           {
             type: BoundaryConditionType.FIXED,
             location: data.fixed_surface,
+            value: 0.0, // Fixed constraints typically have value 0
           },
           {
             type: BoundaryConditionType.FORCE,
             location: 'top',
-            values: [Number(data.force_x), Number(data.force_y), Number(data.force_z)],
+            value: Number(data.force_x),
+            component: 'x',
+          },
+          {
+            type: BoundaryConditionType.FORCE,
+            location: 'top',
+            value: Number(data.force_y),
+            component: 'y',
+          },
+          {
+            type: BoundaryConditionType.FORCE,
+            location: 'top',
+            value: Number(data.force_z),
+            component: 'z',
           },
         ],
       };
@@ -407,12 +442,18 @@ function StructuralMechanicsForm({ materials }: { materials: any[] }) {
         <div className="card-neumorphic p-8">
           <h2 className="text-2xl font-semibold mb-6">Material</h2>
           
-          <FormField
-            label="Select Material"
-            {...register('material_id')}
-            type="select"
-            options={materials.map(m => ({ value: m.id.toString(), label: m.name }))}
-            error={errors.material_id}
+          <Controller
+            name="material_id"
+            control={control}
+            render={({ field }) => (
+              <MaterialSelector
+                materials={materials}
+                value={field.value}
+                onChange={field.onChange}
+                error={errors.material_id}
+                name={field.name}
+              />
+            )}
           />
         </div>
 

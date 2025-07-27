@@ -1,0 +1,124 @@
+{
+  "materials": [
+    {
+      "id": "steel",
+      "name": "Steel",
+      "E": 210e9,
+      "nu": 0.3,
+      "k": 50.0,
+      "rho": 7850.0,
+      "description": "Common structural steel",
+      "units": {
+        "E": "Pa (Young's Modulus)",
+        "nu": "dimensionless (Poisson's Ratio)",
+        "k": "W/(m·K) (Thermal Conductivity)",
+        "rho": "kg/m³ (Density)"
+      }
+    },
+    {
+      "id": "aluminum",
+      "name": "Aluminum",
+      "E": 70e9,
+      "nu": 0.33,
+      "k": 237.0,
+      "rho": 2700.0,
+      "description": "Aluminum alloy (6061)",
+      "units": {
+        "E": "Pa (Young's Modulus)",
+        "nu": "dimensionless (Poisson's Ratio)",
+        "k": "W/(m·K) (Thermal Conductivity)",
+        "rho": "kg/m³ (Density)"
+      }
+    },
+    {
+      "id": "copper",
+      "name": "Copper",
+      "E": 110e9,
+      "nu": 0.34,
+      "k": 401.0,
+      "rho": 8960.0,
+      "description": "Pure copper",
+      "units": {
+        "E": "Pa (Young's Modulus)",
+        "nu": "dimensionless (Poisson's Ratio)",
+        "k": "W/(m·K) (Thermal Conductivity)",
+        "rho": "kg/m³ (Density)"
+      }
+    },
+    {
+      "id": "abs_plastic",
+      "name": "ABS Plastic",
+      "E": 2.3e9,
+      "nu": 0.35,
+      "k": 0.25,
+      "rho": 1050.0,
+      "description": "Acrylonitrile Butadiene Styrene (common 3D printing material)",
+      "units": {
+        "E": "Pa (Young's Modulus)",
+        "nu": "dimensionless (Poisson's Ratio)",
+        "k": "W/(m·K) (Thermal Conductivity)",
+        "rho": "kg/m³ (Density)"
+      }
+    },
+    {
+      "id": "air",
+      "name": "Air",
+      "E": 1e5,
+      "nu": 0.0,
+      "k": 0.026,
+      "rho": 1.225,
+      "description": "Air at 20°C and 1 atm",
+      "units": {
+        "E": "Pa (Young's Modulus - approximate for compressible fluid)",
+        "nu": "dimensionless (Poisson's Ratio)",
+        "k": "W/(m·K) (Thermal Conductivity)",
+        "rho": "kg/m³ (Density)"
+      }
+    },
+    {
+      "id": "water",
+      "name": "Water",
+      "E": 2.2e9,
+      "nu": 0.499,
+      "k": 0.6,
+      "rho": 1000.0,
+      "description": "Water at 20°C",
+      "units": {
+        "E": "Pa (Bulk Modulus for incompressible fluid)",
+        "nu": "dimensionless (Poisson's Ratio - nearly incompressible)",
+        "k": "W/(m·K) (Thermal Conductivity)",
+        "rho": "kg/m³ (Density)"
+      }
+    },
+    {
+      "id": "glass",
+      "name": "Glass",
+      "E": 70e9,
+      "nu": 0.22,
+      "k": 1.0,
+      "rho": 2500.0,
+      "description": "Soda-lime glass",
+      "units": {
+        "E": "Pa (Young's Modulus)",
+        "nu": "dimensionless (Poisson's Ratio)",
+        "k": "W/(m·K) (Thermal Conductivity)",
+        "rho": "kg/m³ (Density)"
+      }
+    },
+    {
+      "id": "concrete",
+      "name": "Concrete",
+      "E": 30e9,
+      "nu": 0.2,
+      "k": 1.7,
+      "rho": 2400.0,
+      "description": "Typical structural concrete",
+      "units": {
+        "E": "Pa (Young's Modulus)",
+        "nu": "dimensionless (Poisson's Ratio)",
+        "k": "W/(m·K) (Thermal Conductivity)",
+        "rho": "kg/m³ (Density)"
+      }
+    }
+  ]
+} 

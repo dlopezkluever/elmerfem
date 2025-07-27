@@ -21,6 +21,7 @@ interface MeshPreviewProps {
   showHeatMap?: boolean;
   autoRotate?: boolean;
   useMockData?: boolean;
+  showMeshOutline?: boolean;
 }
 
 /**
@@ -34,7 +35,8 @@ export const MeshPreview: React.FC<MeshPreviewProps> = React.memo(({
   className = '',
   showHeatMap = false,
   autoRotate = false,
-  useMockData = false
+  useMockData = false,
+  showMeshOutline = false
 }) => {
   const [loadedGeometry, setLoadedGeometry] = useState<THREE.BufferGeometry | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -57,6 +59,7 @@ export const MeshPreview: React.FC<MeshPreviewProps> = React.memo(({
             onMeshLoaded={handleMeshLoaded}
             wireframe={false}
             useMockData={useMockData}
+            showMeshOutline={showMeshOutline}
           />
           
           {/* Heat map visualization overlay */}

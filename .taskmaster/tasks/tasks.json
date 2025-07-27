@@ -432,7 +432,7 @@
         "dependencies": [
           5
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -440,7 +440,7 @@
             "description": "Author the default material dataset and its validation schema.",
             "dependencies": [],
             "details": "Compose a materials.json file containing at least six predefined materials (Steel, Aluminum, Copper, ABS Plastic, Air, Water) each with keys id, name, E, nu, k, rho. Write an accompanying JSON-Schema file to validate the structure and value types. Store both files under backend/data/.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -451,7 +451,7 @@
               "6.1"
             ],
             "details": "Implement a data-loading module that reads and validates materials.json at startup, caches it, and serves it via a fast API route GET /api/materials. Add simple health endpoint GET /api/health.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -462,7 +462,7 @@
               "6.2"
             ],
             "details": "When job parameters include materialId, look up the corresponding material, render a `Material 1` block inside the SIF text, and embed properties E, nu, k, rho in correct Elmer syntax. Write utility to merge with other SIF sections.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -473,7 +473,7 @@
               "6.2"
             ],
             "details": "Create a React dropdown that fetches /api/materials on mount, lists names, and stores the chosen materialId in form context. Handle loading/error states and use Chakra UI styling.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -485,7 +485,7 @@
               "6.4"
             ],
             "details": "Add a \"View properties\" button next to the dropdown. When clicked, open a modal showing a table of the selected material's E, nu, k, rho values. Ensure accessibility and responsive design.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -500,7 +500,7 @@
               "6.5"
             ],
             "details": "Pytest: verify GET /api/materials returns ≥6 entries with required keys. Snapshot test: confirm SIF includes correct Steel modulus. Cypress: simulate user selecting a material, open modal, assert displayed values match backend. Integrate into CI workflow.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -1217,7 +1217,7 @@
         "dependencies": [
           14
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1225,7 +1225,7 @@
             "description": "Develop a function to convert polar coordinates (r, θ) to Cartesian coordinates (x, y) using the formulas x = r * cos(θ) and y = r * sin(θ).",
             "dependencies": [],
             "details": "Implement a function that takes polar coordinates (r, θ) as input and returns the corresponding Cartesian coordinates (x, y). This conversion is essential for mesh generation in Cartesian coordinate systems. ([mathworks.com](https://www.mathworks.com/help/matlab/ref/pol2cart.html?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test the function with known polar coordinates and verify that the output Cartesian coordinates match expected values."
           },
           {
@@ -1236,7 +1236,7 @@
               "16.1"
             ],
             "details": "Develop an algorithm to generate 'nr' radial divisions, ensuring exponential spacing between points if 'boundary_layer' is true. This approach is crucial for accurately modeling boundary layers in mesh generation.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Validate the distribution of radial points by comparing the spacing between consecutive points, especially near boundaries."
           },
           {
@@ -1248,7 +1248,7 @@
               "16.2"
             ],
             "details": "Utilize the triangle fan method to connect radial and angular mesh points, creating triangular elements that fan out from the center. This method is effective for generating circular meshes in finite element analysis.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify the connectivity by visualizing the mesh and ensuring that all elements are correctly formed without overlaps or gaps."
           },
           {
@@ -1261,7 +1261,7 @@
               "16.3"
             ],
             "details": "Implement a function to identify and tag all nodes that lie on the boundary of the mesh with a boundary ID of 1. This tagging is essential for applying boundary conditions in simulations.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Check that all boundary nodes are correctly tagged by comparing the tagged nodes with the expected boundary locations."
           },
           {
@@ -1275,7 +1275,7 @@
               "16.4"
             ],
             "details": "Profile the mesh generation function to identify and optimize performance bottlenecks, ensuring that the process is efficient and meets the specified time constraints.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Measure the execution time of the mesh generation function with various values of nr and nθ to confirm that it consistently completes within the target time frame."
           }
         ]
@@ -1530,7 +1530,7 @@
           14,
           19
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1538,7 +1538,7 @@
             "description": "Develop Python bindings for the Fortran mesh generator using ctypes, focusing on simplicity and educational purposes.",
             "dependencies": [],
             "details": "Utilize ctypes to interface with the Fortran mesh generator, ensuring compatibility with Python. This approach is chosen for its simplicity and educational value, as ctypes provides a more straightforward method for exposing Fortran code to Python compared to f2py. ([iifx.dev](https://iifx.dev/docs/numpy/f2py/f2py-examples?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create unit tests to verify the correct functionality of the ctypes bindings, ensuring that the Python interface correctly interacts with the Fortran code."
           },
           {
@@ -1549,7 +1549,7 @@
               "21.1"
             ],
             "details": "Implement the EducationalMeshGenerator class with a generate_mesh method that accepts a dictionary of parameters and returns a MeshQuality dataclass. This class will serve as the primary interface for mesh generation, allowing users to specify geometry types and parameters. The generate_mesh method will handle the logic for selecting the appropriate geometry type and invoking the corresponding Fortran subroutine via the ctypes bindings. ([iifx.dev](https://iifx.dev/docs/numpy/f2py/f2py-examples?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Develop tests to ensure that the generate_mesh method correctly handles different geometry types and parameters, and that it returns the expected MeshQuality dataclass."
           },
           {
@@ -1560,7 +1560,7 @@
               "21.2"
             ],
             "details": "Profile the mesh generation process to identify and eliminate performance bottlenecks. Utilize tools like %timeit in Python to measure execution times and make necessary optimizations to achieve the desired performance. This may involve optimizing the Fortran code, refining the ctypes bindings, or improving the Python class implementation. ([stackoverflow.com](https://stackoverflow.com/questions/75901508/how-can-i-improve-performance-of-this-fortran-code-interfacing-with-python?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Conduct performance benchmarks to verify that the mesh generation process consistently completes within the target time frame, ensuring that the overhead remains below 50ms per call."
           },
           {
@@ -1571,7 +1571,7 @@
               "21.3"
             ],
             "details": "Implement error handling to manage exceptions that may arise during mesh generation, such as invalid parameters or computational errors. Validate input parameters to ensure they meet the expected criteria before processing, providing informative error messages when invalid inputs are detected. This will enhance the user experience and prevent runtime errors. ([stackoverflow.com](https://stackoverflow.com/questions/69368224/issues-transferring-numpy-array-into-fortran-using-ctypes?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create test cases that simulate various error scenarios, ensuring that the system responds appropriately with clear error messages and does not crash or produce incorrect results."
           },
           {
@@ -1582,7 +1582,7 @@
               "21.4"
             ],
             "details": "Update the Dockerfile to install the required dependencies for the mesh generator, including Python, NumPy, and any other necessary libraries. Add steps to compile the Fortran code and build the Python bindings during the Docker image build process. This integration will allow the mesh generator to be used within the Dockerized environment without additional setup steps. ([github.com](https://github.com/PyCOMPLETE/pypkgexample/blob/master/README.md?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Build the Docker image and run tests to verify that the mesh generator is correctly installed and functional within the Docker environment, ensuring that all components work together as expected."
           },
           {
@@ -1593,7 +1593,7 @@
               "21.5"
             ],
             "details": "Develop user-friendly documentation that explains how to integrate the EducationalMeshGenerator class into Python projects, including code examples and best practices. Provide guidance on setting up the Docker environment and using the mesh generator effectively. This documentation will serve as a valuable resource for users seeking to incorporate the mesh generator into their workflows. ([github.com](https://github.com/PyCOMPLETE/pypkgexample/blob/master/README.md?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Review the documentation for clarity and completeness, ensuring that all instructions are accurate and that the examples provided are functional and easy to follow."
           }
         ]
@@ -1735,7 +1735,7 @@
         "dependencies": [
           23
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1743,7 +1743,7 @@
             "description": "Create React components for input forms corresponding to the four educational geometry types: rectangle, circle, annulus, and L-shape. Each form should include fields for relevant parameters and utilize visual icons for geometry selection to enhance user understanding.",
             "dependencies": [],
             "details": "Utilize React 18 and TypeScript 5 to develop the input forms. Incorporate Material-UI 5.15 for consistent styling and responsive design. Ensure that each form is intuitive and accessible, with clear labels and tooltips for parameter fields. Implement visual icons that represent each geometry type to aid in user selection and comprehension. Leverage Zod for client-side schema validation to ensure data integrity and provide immediate feedback to users. Manage form state using Redux Toolkit 2.2 to maintain consistency across the application. Ensure that the forms are responsive and adapt seamlessly to both desktop and tablet devices, following best practices for responsive design in React applications. ([medium.com](https://medium.com/%40sayanpramanick/building-a-responsive-react-application-key-principles-and-best-practices-e93d87e3ddee?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Develop unit tests using Jest and React Testing Library to validate form rendering, input handling, and schema validation. Implement end-to-end tests with Cypress to simulate user interactions, such as selecting different geometry types and entering parameters, ensuring the forms function correctly across various devices."
           },
           {
@@ -1752,7 +1752,7 @@
             "description": "Integrate real-time validation for user inputs in the geometry forms, providing immediate feedback and clear error messages to guide users in correcting invalid entries.",
             "dependencies": [],
             "details": "Utilize Zod for schema validation to enforce correct data types and value ranges for each parameter field. Display error messages adjacent to the relevant input fields when validation fails, ensuring they are clear and instructive. Implement visual cues, such as changing input field borders to red, to indicate validation errors. Ensure that error messages are concise and provide guidance on acceptable input formats or value ranges. Manage validation state using Redux Toolkit to maintain consistency and facilitate error handling across the application. Ensure that validation messages are accessible and can be read by screen readers to support users with disabilities. ([medium.com](https://medium.com/%40sayanpramanick/building-a-responsive-react-application-key-principles-and-best-practices-e93d87e3ddee?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create unit tests to verify that validation logic correctly identifies invalid inputs and displays appropriate error messages. Perform integration tests to ensure that validation errors are handled gracefully within the form and that the user experience remains smooth."
           },
           {
@@ -1761,7 +1761,7 @@
             "description": "Provide users with visual feedback indicating the estimated mesh density or element count based on their geometry input, enhancing their understanding of the simulation setup.",
             "dependencies": [],
             "details": "After the user enters parameters for a geometry, calculate the estimated mesh density or element count based on predefined formulas or heuristics. Display this information prominently within the form, using clear and concise language. Utilize visual elements, such as progress bars or numerical indicators, to represent the estimated mesh density or element count. Ensure that the feedback is updated in real-time as the user adjusts input parameters, providing immediate insight into how their changes affect the simulation setup. Ensure that the visual feedback is responsive and adapts to different screen sizes, maintaining usability across devices. ([medium.com](https://medium.com/%40sayanpramanick/building-a-responsive-react-application-key-principles-and-best-practices-e93d87e3ddee?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Develop unit tests to verify the accuracy of mesh density calculations based on various input parameters. Implement integration tests to ensure that visual feedback updates correctly in response to user input and that the information is displayed appropriately across different devices."
           },
           {
@@ -1770,7 +1770,7 @@
             "description": "Ensure that the geometry input forms are fully responsive, providing an optimal user experience on both desktop and tablet devices by adapting layouts and interactions accordingly.",
             "dependencies": [],
             "details": "Adopt a mobile-first design approach, starting with layouts optimized for smaller screens and progressively enhancing them for larger devices. Utilize CSS Flexbox and Grid to create fluid and adaptive layouts that adjust seamlessly to various screen sizes. Implement media queries to apply different styles based on device characteristics, ensuring that the forms maintain usability and aesthetics across devices. Ensure that interactive elements, such as buttons and input fields, are appropriately sized and spaced to accommodate touch interactions on tablets. Test the forms on multiple devices and screen sizes to identify and address any responsiveness issues, ensuring a consistent experience for all users. ([medium.com](https://medium.com/%40sayanpramanick/building-a-responsive-react-application-key-principles-and-best-practices-e93d87e3ddee?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Conduct manual testing on a range of devices, including desktops and tablets, to assess responsiveness and usability. Utilize browser developer tools to simulate different screen sizes and orientations, ensuring that the forms adapt appropriately. Gather user feedback to identify any areas for improvement in the responsive design."
           },
           {
@@ -1779,7 +1779,7 @@
             "description": "Utilize Redux Toolkit 2.2 to manage the state of geometry parameters across the application, ensuring consistency and facilitating efficient data handling.",
             "dependencies": [],
             "details": "Define slices of state for each geometry type, storing relevant parameters and validation states. Utilize Redux Toolkit's createSlice and createAsyncThunk to manage state and handle asynchronous actions, such as fetching default values or validation schemas. Implement selectors to access state values and dispatch actions to update state, ensuring that components remain decoupled and maintainable. Ensure that state management is optimized for performance, minimizing unnecessary re-renders and maintaining a responsive user experience. ([medium.com](https://medium.com/%40sayanpramanick/building-a-responsive-react-application-key-principles-and-best-practices-e93d87e3ddee?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Develop unit tests for reducers and actions to ensure correct state management and handling of asynchronous actions. Implement integration tests to verify that components correctly interact with the Redux store and that state changes are reflected in the UI as expected."
           },
           {
@@ -1788,7 +1788,7 @@
             "description": "Perform thorough testing and quality assurance to ensure that the geometry input forms function correctly, are free of defects, and provide a seamless user experience across all supported devices.",
             "dependencies": [],
             "details": "Develop a comprehensive test suite that includes unit tests, integration tests, and end-to-end tests to cover all aspects of the geometry input forms. Utilize Jest and React Testing Library for unit and integration tests, focusing on form rendering, input handling, validation, and state management. Implement end-to-end tests with Cypress to simulate user interactions, such as selecting geometry types, entering parameters, and submitting forms, ensuring that the entire workflow functions correctly. Perform cross-browser and cross-device testing to identify and address any compatibility issues, ensuring that the forms provide a consistent experience across different environments. Conduct accessibility testing to ensure that the forms are usable by all users, including those with disabilities, by adhering to WCAG guidelines and utilizing tools like Axe. ([medium.com](https://medium.com/%40sayanpramanick/building-a-responsive-react-application-key-principles-and-best-practices-e93d87e3ddee?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Execute the comprehensive test suite to validate all aspects of the geometry input forms. Address any identified issues promptly and iteratively refine the forms based on testing outcomes to ensure high quality and user satisfaction."
           }
         ]
@@ -1991,8 +1991,811 @@
     ],
     "metadata": {
       "created": "2025-07-23T21:20:07.825Z",
-      "updated": "2025-07-26T18:12:37.882Z",
+      "updated": "2025-07-26T23:57:46.107Z",
       "description": "Tasks for master context"
+    }
+  },
+  "final-prd": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Refactor Docker-Compose to Unified Container Architecture",
+        "description": "Implement the recommended single-network, shared-volume Docker strategy so backend, frontend and ElmerFEM containers run inside the same compose file, fixing health-checks, ports and volume mapping.",
+        "details": "• Replace existing compose with version 3.8 sample from PRD.\n• Mount named volume “workspace” to /workspace in backend + elmer.\n• Pass /var/run/docker.sock read-only for in-container orchestration.\n• Ensure backend image built from backend/Dockerfile with Poetry 1.6.1.\n• Health-check CMD: curl http://localhost:8000/health.\n• Tag images: elmerfem-edu/backend:0.1, elmerfem-edu/frontend:0.1, elmerfem-edu/solver:0.1",
+        "testStrategy": "Run `docker compose up -d`; curl localhost:8000/health returns 200. `docker compose exec elmer ElmerSolver --version` exits 0. Verify /workspace exists in all three containers and file created in one is visible in the others.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update Docker Compose Configuration to Version 3.8",
+            "description": "Replace the existing Docker Compose file with a version 3.8 configuration as specified in the PRD, ensuring compatibility with the unified container architecture.",
+            "dependencies": [],
+            "details": "Modify the Docker Compose file to version 3.8, incorporating the unified container architecture that includes backend, frontend, and ElmerFEM containers within the same compose file. Ensure all services are correctly defined and configured according to the PRD guidelines.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Configure Shared Volume and Mount Points",
+            "description": "Set up a named volume 'workspace' and mount it to '/workspace' in the backend and ElmerFEM containers to facilitate shared data access.",
+            "dependencies": [],
+            "details": "Define a named volume 'workspace' in the Docker Compose file. Mount this volume to the '/workspace' directory in both the backend and ElmerFEM containers to enable shared data access and persistence.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Set Up Docker Socket for In-Container Orchestration",
+            "description": "Pass '/var/run/docker.sock' as a read-only volume to the backend and ElmerFEM containers to allow in-container orchestration capabilities.",
+            "dependencies": [],
+            "details": "Configure the Docker Compose file to mount '/var/run/docker.sock' as a read-only volume in the backend and ElmerFEM containers. This setup enables the containers to interact with the Docker daemon for orchestration tasks.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Health Checks for Backend Service",
+            "description": "Add a health check to the backend service to monitor its availability and ensure it is running correctly.",
+            "dependencies": [],
+            "details": "In the Docker Compose file, define a health check for the backend service using the 'curl' command to access the '/health' endpoint at 'http://localhost:8000/health'. Set appropriate intervals, timeouts, retries, and start periods to ensure accurate health monitoring. ([nickjanetakis.com](https://nickjanetakis.com/blog/docker-tip-85-define-healthcheck-in-your-docker-compose-file?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Tag Docker Images for Backend, Frontend, and Solver",
+            "description": "Assign specific tags to the Docker images for the backend, frontend, and solver services to maintain version control and clarity.",
+            "dependencies": [],
+            "details": "In the Docker Compose file, specify the following image tags:\n\n- 'elmerfem-edu/backend:0.1' for the backend service.\n- 'elmerfem-edu/frontend:0.1' for the frontend service.\n- 'elmerfem-edu/solver:0.1' for the solver service.\n\nEnsure these tags are consistent with the versioning strategy outlined in the PRD.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Backend Path Translation & Workspace Sync",
+        "description": "Update backend code so all file operations use /workspace and no host paths leak into containers.",
+        "details": "• Introduce env var WORKSPACE_PATH default “/workspace”.\n• Refactor JobLauncher to build absolute paths via pathlib.Path(env[\"WORKSPACE_PATH\"]).\n• Remove os.getcwd() assumptions.\n• Ensure DockerWrapper exec commands include `-w /workspace/{job_id}`.\nPseudo-code:\n```\nworkspace = Path(os.getenv(\"WORKSPACE_PATH\", \"/workspace\"))\njob_dir = workspace / job_id\njob_dir.mkdir(parents=True, exist_ok=True)\n```\n",
+        "testStrategy": "Unit: mock env WORKSPACE_PATH, assert generated SIF path matches /workspace/… Integration: POST /api/simulations, verify files appear inside backend & elmer container at identical paths.",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement WORKSPACE_PATH Environment Variable",
+            "description": "Introduce an environment variable named WORKSPACE_PATH with a default value of '/workspace' to define the workspace directory for file operations.",
+            "dependencies": [],
+            "details": "Add the following code to set the default workspace path:\n\n```python\nimport os\n\nWORKSPACE_PATH = os.getenv('WORKSPACE_PATH', '/workspace')\n```\n\nThis will allow the backend code to reference the workspace directory using the WORKSPACE_PATH environment variable, defaulting to '/workspace' if not set.",
+            "status": "pending",
+            "testStrategy": "Unit test: Mock the WORKSPACE_PATH environment variable to ensure the default value is used when not set."
+          },
+          {
+            "id": 2,
+            "title": "Refactor JobLauncher to Use Absolute Paths",
+            "description": "Modify the JobLauncher component to construct absolute file paths using pathlib.Path and the WORKSPACE_PATH environment variable, replacing any reliance on os.getcwd().",
+            "dependencies": [],
+            "details": "Update the JobLauncher code to build absolute paths as follows:\n\n```python\nfrom pathlib import Path\n\nworkspace = Path(os.getenv('WORKSPACE_PATH', '/workspace'))\njob_dir = workspace / job_id\njob_dir.mkdir(parents=True, exist_ok=True)\n```\n\nThis change ensures that all file operations within JobLauncher are based on the workspace directory, preventing any host paths from leaking into containers.",
+            "status": "pending",
+            "testStrategy": "Unit test: Mock the WORKSPACE_PATH environment variable and verify that the generated file paths are correct and based on the workspace directory."
+          },
+          {
+            "id": 3,
+            "title": "Remove os.getcwd() Assumptions",
+            "description": "Eliminate any code that relies on os.getcwd() to determine file paths, ensuring that all file operations are based on the WORKSPACE_PATH environment variable.",
+            "dependencies": [],
+            "details": "Search through the backend codebase for instances where os.getcwd() is used to construct file paths and refactor them to use the WORKSPACE_PATH environment variable instead. This change ensures consistency in file path construction and prevents potential issues related to the current working directory.",
+            "status": "pending",
+            "testStrategy": "Unit test: Verify that all file paths are correctly constructed using the WORKSPACE_PATH environment variable and that no code relies on os.getcwd()."
+          },
+          {
+            "id": 4,
+            "title": "Update DockerWrapper to Set Working Directory",
+            "description": "Modify the DockerWrapper component to include the '-w /workspace/{job_id}' option in exec commands, ensuring that commands are executed within the correct working directory inside the container.",
+            "dependencies": [],
+            "details": "Update the DockerWrapper code to set the working directory for exec commands as follows:\n\n```python\nself.client.containers.get(container_id).exec_run(\n    command,\n    detach=True,\n    workdir=f'/workspace/{job_id}'\n)\n```\n\nThis change ensures that commands executed within the container are run in the appropriate directory, preventing any host paths from leaking into the container environment.",
+            "status": "pending",
+            "testStrategy": "Integration test: Verify that commands executed within the container are run in the correct working directory and that no host paths are exposed inside the container."
+          },
+          {
+            "id": 5,
+            "title": "Verify Workspace Synchronization Across Containers",
+            "description": "Ensure that the '/workspace' directory is synchronized across all containers, allowing files created in one container to be accessible in others.",
+            "dependencies": [],
+            "details": "Configure the Docker Compose setup to mount a shared volume named 'workspace' to the '/workspace' directory in all relevant containers. This setup ensures that any files created in the '/workspace' directory in one container are accessible in the '/workspace' directory of other containers, facilitating proper workspace synchronization.",
+            "status": "pending",
+            "testStrategy": "Integration test: Verify that files created in the '/workspace' directory of one container are accessible in the '/workspace' directory of other containers, confirming proper synchronization."
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Automated Integration Test: End-to-End Heat-Transfer Simulation",
+        "description": "Provide pytest + AsyncClient test that spins up compose, submits standard heat-transfer job and asserts completion.",
+        "details": "• Use testcontainers-python ≥0.11 to start compose programmatically.\n• Wait until backend health passes.\n• POST simulation payload.\n• Poll /status until completed.\n• Assert result files exist and .result_ok flag present.",
+        "testStrategy": "CI step runs test; success == exit 0 & ElmerSolver log contains ‘ELMER SOLVER FINISHED’ string.",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Docker Compose Environment",
+            "description": "Set up a Docker Compose environment using testcontainers-python ≥0.11 to programmatically start the necessary services for the heat-transfer simulation.",
+            "dependencies": [],
+            "details": "Utilize the testcontainers-python library to create and start the required Docker containers for the simulation environment. Ensure that all services are correctly configured and running before proceeding to the next step. Refer to the testcontainers-python documentation for guidance on setting up and managing Docker containers in Python tests. ([testcontainers-python.readthedocs.io](https://testcontainers-python.readthedocs.io/?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Verify Backend Health Status",
+            "description": "Implement a mechanism to wait until the backend services are healthy and ready to handle requests.",
+            "dependencies": [],
+            "details": "After starting the Docker Compose environment, monitor the health status of the backend services to ensure they are operational. This may involve sending periodic health check requests to the backend and waiting for a successful response before proceeding. Refer to the testcontainers-python documentation for managing container lifecycles and health checks. ([testcontainers-python.readthedocs.io](https://testcontainers-python.readthedocs.io/?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Submit Simulation Payload",
+            "description": "Create and send a POST request with the standard heat-transfer simulation payload to the backend service.",
+            "dependencies": [],
+            "details": "Use an asynchronous HTTP client, such as httpx.AsyncClient, to send a POST request containing the simulation payload to the backend service. Ensure that the payload is correctly formatted and includes all necessary parameters for the simulation. Refer to the FastAPI documentation on async testing for examples of using AsyncClient in tests. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/async-tests/?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Monitor Simulation Status",
+            "description": "Poll the /status endpoint until the simulation reaches completion, indicating that the results are ready.",
+            "dependencies": [],
+            "details": "Implement a polling mechanism that periodically sends requests to the /status endpoint of the backend service to check the progress of the simulation. Continue polling until the simulation is complete, as indicated by the backend's response. This approach is commonly used in asynchronous testing scenarios to monitor the state of long-running operations. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/async-tests/?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Validate Simulation Results",
+            "description": "Verify the existence of result files and the presence of the .result_ok flag to confirm successful completion of the simulation.",
+            "dependencies": [],
+            "details": "After the simulation has completed, check the backend service for the presence of the expected result files and ensure that the .result_ok flag is set, indicating a successful simulation. This step is crucial for confirming that the integration test has passed and that the heat-transfer simulation has been executed correctly. Refer to the FastAPI documentation on async testing for examples of validating asynchronous operations. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/async-tests/?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "WebSocket Progress Streaming Endpoint",
+        "description": "Expose `/ws/simulations/{id}` endpoint emitting JSON progress events from ElmerSolver instrumentation.",
+        "details": "• FastAPI WebSocket; subscribe to asyncio.Queue populated by DockerWrapper log reader.\n• Parse progress lines `PROGRESS:<pct>:<msg>`.\n• Throttle emits to at most 5 Hz.\n```python\nasync for line in container.logs(stream=True):\n   if line.startswith(\"PROGRESS\"):\n       pct, msg = parse(line)\n       await queue.put({\"pct\": pct, \"msg\": msg})\n```",
+        "testStrategy": "pytest-asyncio: open websocket, launch dummy job, assert received ≥5 events finishing at pct==100.",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement FastAPI WebSocket Endpoint",
+            "description": "Create a WebSocket endpoint at `/ws/simulations/{id}` using FastAPI to handle client connections and emit progress events.",
+            "dependencies": [],
+            "details": "Utilize FastAPI's WebSocket support to establish a connection at the specified endpoint. Upon client connection, accept the WebSocket and prepare to send progress updates. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Design JSON Message Format for Progress Events",
+            "description": "Define a JSON schema for progress events containing 'pct' and 'msg' fields to standardize communication between server and client.",
+            "dependencies": [],
+            "details": "Establish a consistent JSON structure for progress events, including 'pct' for percentage and 'msg' for messages, to ensure clear communication. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Extract and Parse Progress Lines from ElmerSolver Output",
+            "description": "Implement logic to read ElmerSolver logs, identify lines starting with 'PROGRESS', and parse them into 'pct' and 'msg' components.",
+            "dependencies": [],
+            "details": "Develop a function to process ElmerSolver logs, detect lines beginning with 'PROGRESS', and extract the percentage and message for each line. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Throttling Mechanism for Event Emission",
+            "description": "Ensure that progress events are emitted to clients at a maximum rate of 5 Hz to prevent overwhelming the client and maintain performance.",
+            "dependencies": [],
+            "details": "Incorporate a throttling mechanism within the WebSocket endpoint to limit the emission of progress events to 5 times per second, balancing real-time updates with system performance. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Manage Client Connections and Handle Disconnections",
+            "description": "Develop logic to manage multiple client connections, handle disconnections gracefully, and ensure that progress events are sent to all connected clients.",
+            "dependencies": [],
+            "details": "Implement connection management to handle multiple clients, ensuring that progress events are broadcasted to all connected clients and that disconnections are managed without errors. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Frontend WebSocket Hook & Progress State",
+        "description": "Create TypeScript hook `useSimulationProgress` connecting to backend WebSocket and updating Redux slice.",
+        "details": "• Use native WebSocket API inside useEffect.\n• On message JSON.parse and dispatch `updateProgress`.\n• Auto-reconnect with exponential back-off ≤5 tries.",
+        "testStrategy": "Jest with jest-websocket-mock: send fake progress events, expect store updated correctly and hook cleans up on unmount.",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement `useSimulationProgress` Hook with WebSocket Connection",
+            "description": "Create a TypeScript hook `useSimulationProgress` that establishes a WebSocket connection to the backend using the native WebSocket API within a `useEffect` hook.",
+            "dependencies": [],
+            "details": "Utilize the native WebSocket API inside the `useEffect` hook to establish a connection to the backend server. Ensure the WebSocket connection is properly managed and cleaned up to prevent memory leaks. ([ittrip.xyz](https://ittrip.xyz/react/react-useeffect-websocket-setup?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Use Jest with jest-websocket-mock to simulate WebSocket events and verify that the hook establishes and cleans up the connection correctly."
+          },
+          {
+            "id": 2,
+            "title": "Parse Incoming Messages and Dispatch `updateProgress` Action",
+            "description": "Within the `useSimulationProgress` hook, parse incoming WebSocket messages and dispatch the `updateProgress` action to update the Redux state.",
+            "dependencies": [],
+            "details": "Set up an event listener for the `onmessage` event of the WebSocket connection. Parse the incoming JSON messages and dispatch the `updateProgress` action with the parsed data to update the Redux state. ([geeksforgeeks.org](https://www.geeksforgeeks.org/how-to-integrate-websockets-with-react-redux/?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Use Jest to mock WebSocket messages and verify that the `updateProgress` action is dispatched with the correct data."
+          },
+          {
+            "id": 3,
+            "title": "Implement Auto-Reconnect with Exponential Back-Off",
+            "description": "Enhance the `useSimulationProgress` hook to automatically reconnect to the WebSocket server with exponential back-off, limiting the number of reconnection attempts to 5.",
+            "dependencies": [],
+            "details": "Implement reconnection logic within the `useSimulationProgress` hook that attempts to reconnect to the WebSocket server upon disconnection. Use exponential back-off to increase the delay between reconnection attempts, capping the number of attempts at 5. ([reliasoftware.com](https://reliasoftware.com/blog/react-websocket?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Use Jest to simulate WebSocket disconnections and verify that the hook attempts to reconnect with the correct back-off strategy and limits the number of attempts to 5."
+          },
+          {
+            "id": 4,
+            "title": "Integrate `useSimulationProgress` Hook with Redux Slice",
+            "description": "Connect the `useSimulationProgress` hook to the Redux slice to manage and update the simulation progress state.",
+            "dependencies": [],
+            "details": "Ensure that the `useSimulationProgress` hook is properly connected to the Redux store, allowing it to dispatch actions and access the current state. This integration ensures that the simulation progress is managed centrally and can be accessed throughout the application. ([geeksforgeeks.org](https://www.geeksforgeeks.org/how-to-integrate-websockets-with-react-redux/?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Use Jest to verify that the hook correctly dispatches actions to update the Redux state and that the state reflects the expected progress data."
+          },
+          {
+            "id": 5,
+            "title": "Handle WebSocket Errors and Cleanup on Unmount",
+            "description": "Implement error handling within the `useSimulationProgress` hook to manage WebSocket errors and ensure proper cleanup when the component unmounts.",
+            "dependencies": [],
+            "details": "Set up error handling within the `useSimulationProgress` hook to manage WebSocket errors, such as connection failures or unexpected closures. Ensure that the WebSocket connection is properly closed and cleaned up when the component unmounts to prevent memory leaks. ([ittrip.xyz](https://ittrip.xyz/react/react-useeffect-websocket-setup?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Use Jest to simulate WebSocket errors and verify that the hook handles errors gracefully and cleans up the connection upon unmounting."
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Unified SimulationPage (Mesh + Progress)",
+        "description": "Merge MeshPreview and ProgressPage; conditional rendering of Three.js mesh then solver bar.",
+        "details": "• Component tree: <SimulationPage> → <MeshView /> + <ProgressPanel />.\n• When progress.stage==\"mesh\", show live mesh preview; else freeze preview & show solving bar.\n• Disable “See Results” button until pct===100.",
+        "testStrategy": "React Testing Library: simulate store changes, assert DOM switches between views, button enabled only at completion.",
+        "priority": "medium",
+        "dependencies": [
+          5
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Merge MeshPreview and ProgressPage Components",
+            "description": "Combine the MeshPreview and ProgressPage components into a unified SimulationPage component, ensuring a cohesive structure and functionality.",
+            "dependencies": [],
+            "details": "Refactor the existing MeshPreview and ProgressPage components to create a single SimulationPage component. This involves integrating their respective JSX structures and ensuring that their functionalities do not conflict. The new component should maintain the existing component tree hierarchy: <SimulationPage> → <MeshView /> + <ProgressPanel />. Ensure that the combined component is modular and maintainable, following React best practices for component composition.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Conditional Rendering Logic",
+            "description": "Develop logic to conditionally render the Three.js mesh preview or the solver progress bar based on the simulation stage.",
+            "dependencies": [],
+            "details": "Utilize React's state management to track the current simulation stage. Implement conditional rendering within the SimulationPage component to display the live mesh preview when progress.stage equals 'mesh', and to display the solver progress bar when progress.stage is not 'mesh'. This requires setting up state variables and using conditional statements within the JSX to render the appropriate components. Ensure that the rendering logic is efficient and does not cause unnecessary re-renders.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Integrate Three.js Mesh Display",
+            "description": "Incorporate a Three.js mesh display into the SimulationPage component to visualize the simulation mesh during the 'mesh' stage.",
+            "dependencies": [],
+            "details": "Use React Three Fiber to integrate Three.js into the React application. Set up a <Canvas> component to render the 3D scene. Within this canvas, create a <mesh> component that represents the simulation mesh. Utilize appropriate Three.js geometries and materials to accurately represent the mesh. Ensure that the mesh is responsive and updates correctly based on the simulation data. Refer to the React Three Fiber documentation for guidance on setting up and rendering 3D scenes in React. ([r3f.docs.pmnd.rs](https://r3f.docs.pmnd.rs/getting-started/your-first-scene?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Progress Bar Integration",
+            "description": "Add a progress bar to the SimulationPage component to display the solver's progress during the simulation.",
+            "dependencies": [],
+            "details": "Create a progress bar component that visually represents the solver's progress. The progress bar should be displayed when progress.stage is not 'mesh'. Implement accessibility features such as ARIA roles and properties to ensure the progress bar is usable by all users. Style the progress bar to match the application's design guidelines. Ensure that the progress bar updates in real-time as the solver progresses. For guidance on creating accessible progress indicators in React, refer to this resource: ([medium.com](https://medium.com/vzp-engineering/creating-accessible-progress-indicator-in-react-1ae7eca76633?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Manage State Transitions Between Mesh and Progress Phases",
+            "description": "Ensure smooth state transitions between the mesh preview and progress bar phases, and disable the 'See Results' button until the simulation is complete.",
+            "dependencies": [],
+            "details": "Implement state management to handle transitions between the mesh preview and progress bar phases. This involves updating the state variables that control the rendering of the mesh and progress bar based on the simulation's progress. Additionally, disable the 'See Results' button until the simulation reaches 100% completion. This requires monitoring the simulation's progress and updating the button's disabled state accordingly. Ensure that the state transitions are smooth and do not cause flickering or other visual issues.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Simulation Orchestration Pipeline",
+        "description": "Refactor backend JobLauncher to sequentially: validate→mesh→write SIF→solve→post-process; emit stage tags.",
+        "details": "• Implement asyncio Task per job storing status in Redis (redis-py 5.0).\n• Mesh step calls Fortran library via ctypes wrapper.\n• Solver step runs `docker exec elmer ElmerSolver` with `--case` path.\n• Post-process converts VTU to JSON via meshio 5.3.",
+        "testStrategy": "Unit: patch mesh & solver functions, assert stage order. Integration (depends task 3) verifies real output folders contain mesh, SIF, VTU.",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Asyncio Task per Job with Redis Status Tracking",
+            "description": "Develop an asyncio Task for each simulation job that manages its execution status, storing updates in Redis using redis-py 5.0. Ensure proper connection pooling and coroutine safety to handle concurrent tasks effectively.",
+            "dependencies": [],
+            "details": "Utilize redis-py 5.0's asyncio support to create a Redis client for each job, storing status updates in a Redis database. Implement connection pooling to manage multiple concurrent tasks efficiently. Ensure coroutine safety by properly handling Redis connections and using context managers to manage their lifecycle. Refer to redis-py documentation for best practices on asyncio usage and connection management. ([redis-py.readthedocs.io](https://redis-py.readthedocs.io/en/stable/examples/asyncio_examples.html?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": "Unit tests should mock Redis interactions to verify that status updates are correctly stored and retrieved. Integration tests should simulate multiple concurrent jobs to ensure that Redis connections are managed efficiently and that status updates are accurate."
+          },
+          {
+            "id": 2,
+            "title": "Integrate Fortran Mesh Generation via ctypes",
+            "description": "Create a Python interface using ctypes to call the Fortran library responsible for mesh generation, ensuring seamless integration within the simulation pipeline.",
+            "dependencies": [],
+            "details": "Use Python's ctypes library to create bindings to the Fortran mesh generation functions. Ensure that data types and memory management are correctly handled to prevent errors. Test the integration by running the mesh generation step and verifying the output against expected results.",
+            "status": "pending",
+            "testStrategy": "Unit tests should mock the Fortran library to verify that the ctypes interface correctly passes data and handles errors. Integration tests should run the mesh generation step and compare the output to known correct results."
+          },
+          {
+            "id": 3,
+            "title": "Implement Solver Execution with Docker Integration",
+            "description": "Develop functionality to execute the ElmerSolver within a Docker container, passing the appropriate case path and handling the solver's output.",
+            "dependencies": [],
+            "details": "Use Python's subprocess module to run the ElmerSolver command within a Docker container. Pass the '--case' argument with the correct path to the simulation case. Capture the solver's output and handle any errors that may occur during execution. Ensure that the Docker container is properly managed to prevent resource leaks.",
+            "status": "pending",
+            "testStrategy": "Unit tests should mock the subprocess calls to verify that the correct command is constructed and executed. Integration tests should run the solver with a sample case and verify that the output matches expected results."
+          },
+          {
+            "id": 4,
+            "title": "Develop Post-Processing to Convert VTU to JSON",
+            "description": "Implement functionality to convert VTU files to JSON format using meshio 5.3, facilitating easier data manipulation and analysis.",
+            "dependencies": [],
+            "details": "Use meshio 5.3 to read VTU files and convert them into a JSON-serializable dictionary. Ensure that all necessary data, such as points, cells, and point data, are included in the conversion. Handle any exceptions that may occur during the reading and conversion process to ensure robustness.",
+            "status": "pending",
+            "testStrategy": "Unit tests should mock the meshio library to verify that the conversion function correctly processes VTU files. Integration tests should run the conversion on sample VTU files and verify that the resulting JSON matches expected structures and data."
+          },
+          {
+            "id": 5,
+            "title": "Implement Progress Event Emission for Each Stage",
+            "description": "Develop functionality to emit progress events at each stage of the simulation pipeline, providing real-time feedback on the simulation's progress.",
+            "dependencies": [],
+            "details": "At each stage of the simulation pipeline (validate, mesh, write SIF, solve, post-process), emit progress events that include the current stage and percentage completion. Use a WebSocket or similar mechanism to transmit these events to the frontend, allowing users to monitor the simulation's progress in real-time.",
+            "status": "pending",
+            "testStrategy": "Unit tests should mock the event emission to verify that the correct events are emitted at the appropriate times. Integration tests should simulate a full simulation run and verify that progress events are received and processed correctly by the frontend."
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Fortran MaterialLib.F90 with JSON FSON Parsing",
+        "description": "Create module allowing ElmerSolver to read material properties from shared JSON, enabling material selector to affect physics.",
+        "details": "• Add FSON v1.5 (https://github.com/josephalevin/fson) as git submodule.\n• Implement `LoadMaterial(name)` returning type(Material).\n• Extend ElmerSolver.F90: on SectionRead if line==\"Material = <name>\" then call LoadMaterial.\n• Rebuild solver Docker image with ENABLE_PROGRESS_OUTPUT & MaterialLib.",
+        "testStrategy": "Fortran unit (pFUnit) loads steel.json, assert E==210e9. Integration: run simulation with material ‘copper’ → output Young’s modulus 115e9.",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Integrate FSON v1.5 as a Git Submodule",
+            "description": "Add FSON v1.5 as a Git submodule to the project repository to enable JSON parsing capabilities in Fortran.",
+            "dependencies": [],
+            "details": "Clone the FSON v1.5 repository from GitHub and add it as a submodule to the project's Git repository. Ensure that the submodule is correctly initialized and updated to the latest version. Verify that the FSON module is accessible within the project's Fortran codebase.",
+            "status": "pending",
+            "testStrategy": "Perform a simple test to parse a sample JSON file using FSON to confirm successful integration."
+          },
+          {
+            "id": 2,
+            "title": "Implement LoadMaterial Function",
+            "description": "Develop the LoadMaterial function to read material properties from a JSON file and return a Material type in Fortran.",
+            "dependencies": [],
+            "details": "Utilize the FSON module to parse JSON files containing material properties. Define a Fortran derived type 'Material' to store properties such as Young's modulus, density, and thermal conductivity. Implement the LoadMaterial function to read a JSON file, extract relevant properties, and populate a Material instance. Handle potential errors gracefully, such as missing or malformed JSON data.",
+            "status": "pending",
+            "testStrategy": "Create unit tests using pFUnit to load a sample JSON file (e.g., steel.json) and assert that the extracted properties match expected values."
+          },
+          {
+            "id": 3,
+            "title": "Extend ElmerSolver.F90 to Utilize LoadMaterial",
+            "description": "Modify ElmerSolver.F90 to call LoadMaterial when a material is specified in the input file, enabling dynamic material property assignment.",
+            "dependencies": [],
+            "details": "In ElmerSolver.F90, locate the section of code that reads input lines. Implement a conditional check to identify lines defining materials (e.g., 'Material = <name>'). When such a line is encountered, extract the material name and call the LoadMaterial function to retrieve the corresponding Material instance. Ensure that the material properties are correctly assigned to the relevant variables or data structures within the solver.",
+            "status": "pending",
+            "testStrategy": "Develop integration tests to run simulations with different materials specified in the input file and verify that the solver correctly applies the material properties during computation."
+          },
+          {
+            "id": 4,
+            "title": "Rebuild Solver Docker Image with New Dependencies",
+            "description": "Update the solver's Docker image to include the FSON module and enable progress output, ensuring the solver operates with the new material handling capabilities.",
+            "dependencies": [],
+            "details": "Modify the Dockerfile to include the FSON submodule and any necessary build steps to compile and link it with the solver code. Set the ENABLE_PROGRESS_OUTPUT flag to true to enable progress reporting during solver execution. Rebuild the Docker image and test the solver to confirm that it functions correctly with the new material handling features.",
+            "status": "pending",
+            "testStrategy": "Run the solver within the Docker container, specifying different materials in the input file, and verify that the solver correctly processes the materials and reports progress as expected."
+          },
+          {
+            "id": 5,
+            "title": "Validate Material Handling with Unit and Integration Tests",
+            "description": "Ensure the new material handling functionality is robust by conducting unit and integration tests, confirming correct behavior across different scenarios.",
+            "dependencies": [],
+            "details": "Develop comprehensive unit tests to validate the LoadMaterial function's ability to parse various JSON files and handle different material properties. Create integration tests to simulate real-world scenarios, such as running simulations with multiple materials and verifying that the solver applies the correct properties during computation. Address any issues identified during testing to ensure the reliability of the material handling system.",
+            "status": "pending",
+            "testStrategy": "Utilize pFUnit for unit tests and a combination of unit and integration tests to cover a wide range of scenarios, ensuring the material handling system operates correctly under various conditions."
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Dynamic Backend Input Validation from KeywordsDump",
+        "description": "Generate JSON of Elmer keywords, build Pydantic models at startup to validate simulation payloads.",
+        "details": "• Compile KeywordsDump.F90 into util container, dump to /data/keywords.json.\n• At backend startup load and cache.\n• Use pydantic.create_model and FastAPI dependency injection.\n• Return 422 with detailed error if constraint violated.",
+        "testStrategy": "pytest: send temp=-10 expect 422, send 500 K expect 200.",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Compile KeywordsDump.F90 into JSON",
+            "description": "Compile the KeywordsDump.F90 file into a utility container and generate a JSON file containing Elmer keywords, saving it to /data/keywords.json.",
+            "dependencies": [],
+            "details": "Ensure that the KeywordsDump.F90 file is correctly compiled within the utility container, and that the resulting JSON file is accurately generated and saved to the specified path.",
+            "status": "pending",
+            "testStrategy": "Verify the existence and correctness of /data/keywords.json after the compilation process."
+          },
+          {
+            "id": 2,
+            "title": "Load and Cache Keywords at Startup",
+            "description": "At backend startup, load the /data/keywords.json file and cache its contents for efficient access during simulation payload validation.",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "Implement a mechanism to read the JSON file upon backend initialization and store its contents in a cache to optimize subsequent validation operations.",
+            "status": "pending",
+            "testStrategy": "Test the caching mechanism to ensure that the keywords are loaded and accessible without redundant file reads."
+          },
+          {
+            "id": 3,
+            "title": "Dynamically Create Pydantic Models",
+            "description": "Utilize Pydantic's create_model function to dynamically generate models based on the cached Elmer keywords, facilitating flexible validation of simulation payloads.",
+            "dependencies": [
+              "9.2"
+            ],
+            "details": "Use Pydantic's create_model function to define models that correspond to the structure and constraints of the Elmer keywords, allowing for dynamic validation based on the cached data.",
+            "status": "pending",
+            "testStrategy": "Create test cases that validate the dynamic model creation process and ensure that the generated models accurately reflect the Elmer keywords."
+          },
+          {
+            "id": 4,
+            "title": "Integrate Validation into FastAPI Endpoints",
+            "description": "Incorporate the dynamically created Pydantic models into FastAPI's dependency injection system to validate simulation payloads in API endpoints.",
+            "dependencies": [
+              "9.3"
+            ],
+            "details": "Integrate the dynamically created Pydantic models into FastAPI's dependency injection system to validate simulation payloads in API endpoints, ensuring that incoming data adheres to the defined constraints.",
+            "status": "pending",
+            "testStrategy": "Develop test cases that send various simulation payloads to the API endpoints, verifying that valid data is accepted and invalid data results in appropriate 422 errors with detailed messages."
+          },
+          {
+            "id": 5,
+            "title": "Handle Validation Errors with Detailed Responses",
+            "description": "Configure FastAPI to return 422 status codes with detailed error messages when simulation payloads violate validation constraints defined by the dynamically created Pydantic models.",
+            "dependencies": [
+              "9.4"
+            ],
+            "details": "Set up FastAPI to handle validation errors by returning 422 status codes along with detailed error messages, providing clear feedback to clients regarding validation issues in simulation payloads.",
+            "status": "pending",
+            "testStrategy": "Implement test cases that send invalid simulation payloads to the API endpoints, ensuring that the system responds with 422 status codes and detailed error messages as expected."
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Frontend Zod Schemas Autogenerated from Keywords",
+        "description": "Fetch /api/meta/keywords on app init and build Zod schema mirroring backend constraints for client-side validation.",
+        "details": "• Use zod-to-json-schema 3.20 to map.\n• Cache in Redux; react-hook-form uses `resolver=zodResolver(schema)`.\n• Show inline error tooltips.",
+        "testStrategy": "Cypress: type invalid value, Run button disabled; valid value enables.",
+        "priority": "medium",
+        "dependencies": [
+          9
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Fetch Keywords from Backend",
+            "description": "Implement functionality to fetch the list of keywords from the backend endpoint `/api/meta/keywords` during the application's initialization phase.",
+            "dependencies": [],
+            "details": "Utilize the `fetch` API to send a GET request to `/api/meta/keywords` and handle the response to retrieve the list of keywords. Ensure proper error handling and data parsing to handle potential issues during the fetch operation.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Generate Zod Schema from Keywords",
+            "description": "Create a Zod schema that mirrors the backend constraints based on the fetched keywords, ensuring consistency between frontend and backend validation rules.",
+            "dependencies": [],
+            "details": "Use the `zod-to-json-schema` library to convert the Zod schema into a JSON Schema representation. This conversion facilitates the integration of Zod with React Hook Form by providing a compatible validation schema. Ensure that the generated JSON Schema accurately reflects the validation rules defined in the Zod schema.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Integrate Zod Schema with React Hook Form",
+            "description": "Integrate the generated Zod schema with React Hook Form to enable client-side validation that aligns with the backend constraints.",
+            "dependencies": [],
+            "details": "Install the necessary dependencies: `react-hook-form`, `@hookform/resolvers`, and `zod`. Configure React Hook Form to use the Zod resolver by passing the generated Zod schema to the `resolver` option in the `useForm` hook. This setup ensures that form validation is handled by Zod, providing type safety and consistent validation rules across the application. Refer to the integration guide for detailed implementation steps. ([refine.dev](https://refine.dev/blog/zod-typescript/?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Inline Error Tooltips",
+            "description": "Develop functionality to display inline error tooltips for form fields, providing immediate feedback to users on validation errors.",
+            "dependencies": [],
+            "details": "Utilize React's state management to track validation errors and conditionally render error messages adjacent to the corresponding form fields. Ensure that error messages are clear, concise, and provide guidance on how to correct the input. Implement styling to distinguish error messages from other content, enhancing the user experience. Refer to the React Hook Form documentation for best practices on error handling and display. ([github.com](https://github.com/licarth/react-hook-form-resolvers?utm_source=openai))",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Test Client-Side Validation",
+            "description": "Develop and execute tests to verify that the client-side validation correctly mirrors the backend constraints, ensuring data integrity and consistency.",
+            "dependencies": [],
+            "details": "Use testing frameworks such as Jest and React Testing Library to create unit and integration tests for the form components. Simulate user interactions with the form, inputting both valid and invalid data, and assert that the validation behaves as expected. Ensure that error messages are displayed appropriately for invalid inputs and that valid inputs are accepted. Implement tests to verify that the form submission process correctly handles valid data and appropriately rejects invalid data, maintaining alignment with backend validation rules.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "VTU Result Parser & Compressed Streaming",
+        "description": "Implement `/api/simulations/{id}/result` that reads VTU with meshio, converts to dict, gzip compresses and streams.",
+        "details": "• Use meshio.read → dict(list()) to ensure JSON serializable.\n• Limit payload: decimate point_data if >50 k nodes (numpy slicing).\n• Set `Content-Encoding: gzip`.",
+        "testStrategy": "pytest: request endpoint, gunzip response, assert keys points/cells/point_data exist and length>0.",
+        "priority": "medium",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "Frontend 3D Results Visualization",
+        "description": "Build <ResultVisualization> using Plotly.js mesh3d to display temperature or stress contours.",
+        "details": "• `useSimulationResult` hook fetches & decompresses gzip via fetch + Response.arrayBuffer.\n• Map intensity array to color scale Viridis.\n• Add dropdown to switch displayed variable.",
+        "testStrategy": "Jest + jsdom-three: load mock data, ensure Plotly newPlot called with correct traces. Manual: run sim and visually inspect.",
+        "priority": "medium",
+        "dependencies": [
+          11
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 13,
+        "title": "PDF Report Generation Service",
+        "description": "Create async `generate_report(sim_id, student)` producing PDF via ReportLab with mesh & result screenshots.",
+        "details": "• Use pyppeteer to render hidden Three.js & Plotly screenshots (canvas.toDataURL) saved to /tmp.\n• Insert images + tables into SimpleDocTemplate.\n• Cache PDFs for 24 h.",
+        "testStrategy": "pytest: generate report, open with PyPDF2, assert page count≥3 & contains ‘Simulation Summary’. File size <5 MB.",
+        "priority": "medium",
+        "dependencies": [
+          11
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "Frontend Report Download & Actions Panel",
+        "description": "Add buttons on ResultPage to download PDF report and start new sim.",
+        "details": "• `apiClient.getBlob('/api/simulations/{id}/report')` then `file-saver` to download.\n• Disable until backend report ready (poll /report/status).",
+        "testStrategy": "Cypress: complete sim → click download → file exists & size >0.",
+        "priority": "medium",
+        "dependencies": [
+          13
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "Comprehensive Unit Test Suites (Backend & Frontend)",
+        "description": "Achieve ≥80 % coverage with pytest + coverage.py and Jest + Testing Library.",
+        "details": "• Backend: tests for mesh generation wrapper, validation, report service.\n• Frontend: tests for hooks, reducers, components.\n• Configure coverage thresholds in pyproject.toml and jest.config.mjs.",
+        "testStrategy": "CI fails if coverage <80 %. Local `npm test --coverage` and `pytest --cov` pass.",
+        "priority": "medium",
+        "dependencies": [
+          12
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 16,
+        "title": "GitHub Actions CI/CD Pipeline",
+        "description": "Create multi-job workflow building images, running tests, pushing to GHCR and attaching release artifacts.",
+        "details": "• Jobs: frontend-tests, backend-tests, integration, build-and-publish.\n• Use caching for pnpm and Poetry.\n• Use docker/setup-buildx-action for multi-platform builds.",
+        "testStrategy": "Push to develop branch triggers pipeline; green badge on README.",
+        "priority": "medium",
+        "dependencies": [
+          15
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 17,
+        "title": "Redux Toolkit Workflow Slice",
+        "description": "Implement simulationSlice with actions startSimulation, updateProgress, setMeshData, setResults, setError.",
+        "details": "• Use createSlice; persist via redux-persist localStorage.\n• Thunks: launchSimulation async dispatching progress events.\nPseudo:\n```\nexport const launchSimulation = (params)=>async(dispatch)=>{\n  const {jobId}= await api.post('/simulations',params);\n  dispatch(startSimulation({jobId,params}));\n}\n```",
+        "testStrategy": "Jest: dispatch actions, expect state transitions. Integration: run workflow, inspect Redux devtools.",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 18,
+        "title": "Accessibility & ARIA Enhancement",
+        "description": "Audit pages with axe-core, add ARIA labels, keyboard navigation and high-contrast focus styles.",
+        "details": "• Use eslint-plugin-jsx-a11y.\n• Ensure buttons have aria-label, progress bar has role=\"progressbar\" aria-valuenow.\n• Add focus-visible ring styles in Tailwind config.",
+        "testStrategy": "Run `npm run test:a11y` using jest-axe; zero critical violations. Keyboard tab sequence E2E passes.",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 19,
+        "title": "Performance Optimisation: Mesh & Rendering",
+        "description": "Benchmark mesh generation and Plotly render; optimise Fortran loops and enable requestAnimationFrame throttling.",
+        "details": "• Add gfortran -O3 -march=native flags.\n• In Three.js, use BufferGeometry and set `geometry.setDrawRange` for initial render.\n• Memoise Plotly data arrays with useMemo.",
+        "testStrategy": "Vitest performance test ensures mesh ≤2 s, FPS ≥60 for 10k elements using performance.now().",
+        "priority": "medium",
+        "dependencies": [
+          7,
+          12
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 20,
+        "title": "Educational Content Pages Infrastructure",
+        "description": "Create `UnderstandingFEA` section using MDX files loaded via Vite dynamic import.",
+        "details": "• Install @mdx-js/react 3.0.\n• Add sidebar navigation tree.\n• Render math via KaTeX 0.16.",
+        "testStrategy": "Jest: render MDX doc, check headings exist. Cypress: navigate to /learn, ensure content loads offline.",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 21,
+        "title": "Interactive Quiz System",
+        "description": "Develop quiz engine with question pool JSON, randomiser, scoring & PDF export of attempts.",
+        "details": "• Backend: none (local only) or optional store in IndexedDB.\n• Frontend: Context provider maintaining current quiz.\n• PDF via pdf-make 0.2 client side.",
+        "testStrategy": "Unit: answer questions, expect score calculation. Cypress: complete quiz, view results, download PDF.",
+        "priority": "medium",
+        "dependencies": [
+          20
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 22,
+        "title": "Success Metrics Telemetry (Local Only)",
+        "description": "Instrument frontend to log metrics (timeToFirstSimulation, completionRate) to in-browser IndexedDB and downloadable CSV.",
+        "details": "• Use performance.now() timestamp markers.\n• Provide ‘Download Analytics’ button in Settings.",
+        "testStrategy": "Jest: simulate journey, expect metrics object stored. Manual: download CSV, open to verify rows.",
+        "priority": "medium",
+        "dependencies": [
+          7,
+          12
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 23,
+        "title": "Repository Documentation Overhaul",
+        "description": "Add README.md, developer guide, user guide, troubleshooting per PRD section 7.3.",
+        "details": "• Include architecture diagrams using Mermaid.\n• Add quick-start, dev-setup, contribution guidelines.\n• Generate API docs via `poetry run mkdocs build`.",
+        "testStrategy": "Markdown-lint passes; run `npm run docs:build` without errors; links not broken (markdown-link-check).",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          12
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 24,
+        "title": "Release Packaging & Versioning",
+        "description": "Create script `scripts/create-release.sh` that tags git, builds images, pushes to GHCR and creates GitHub release with changelog.",
+        "details": "• Use semantic-release 21 for automatic version bump.\n• Attach Docker image digests to release notes.",
+        "testStrategy": "Run script on main branch; verify GitHub release created, images elmerfem-edu/*:vX.Y pushed.",
+        "priority": "medium",
+        "dependencies": [
+          16
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 25,
+        "title": "CAD File Import Pipeline (STL/STEP/OBJ)",
+        "description": "Enable students to upload CAD, convert to manageable mesh using trimesh + pyvista then run FEA.",
+        "details": "• Endpoint `/api/geometry/upload` accepts multipart ≤50 MB.\n• Use trimesh.load + pv.wrap; decimate if cells>100k.\n• Store GeometryData json; expose preview endpoint.\n• Frontend Dropzone component with Three.js preview.",
+        "testStrategy": "Integration: upload sample stl (gear.stl) → preview renders; simulation launched with converted mesh completes successfully.",
+        "priority": "medium",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-27T09:26:48.776Z",
+      "updated": "2025-07-27T09:28:03.457Z",
+      "description": "Tasks for final-prd context"
     }
   }
 }

@@ -52,34 +52,28 @@ function MaterialLibrary() {
           <div key={material.id} className="card-neumorphic hover:shadow-neumorphic-hover transition-all">
             <h3 className="text-xl font-bold mb-3">{material.name}</h3>
             <dl className="space-y-2 text-sm">
-              {material.properties.E && (
+              {material.E && (
                 <div className="flex justify-between">
                   <dt className="text-gray-600">Young's Modulus:</dt>
-                  <dd className="font-mono">{formatScientific(material.properties.E)} Pa</dd>
+                  <dd className="font-mono">{formatScientific(material.E)} Pa</dd>
                 </div>
               )}
-              {material.properties.nu !== undefined && (
+              {material.nu !== undefined && (
                 <div className="flex justify-between">
                   <dt className="text-gray-600">Poisson's Ratio:</dt>
-                  <dd className="font-mono">{material.properties.nu}</dd>
+                  <dd className="font-mono">{material.nu}</dd>
                 </div>
               )}
-              {material.properties.rho && (
+              {material.rho && (
                 <div className="flex justify-between">
                   <dt className="text-gray-600">Density:</dt>
-                  <dd className="font-mono">{material.properties.rho} kg/m³</dd>
+                  <dd className="font-mono">{material.rho} kg/m³</dd>
                 </div>
               )}
-              {material.properties.k && (
+              {material.k && (
                 <div className="flex justify-between">
                   <dt className="text-gray-600">Thermal Conductivity:</dt>
-                  <dd className="font-mono">{material.properties.k} W/m·K</dd>
-                </div>
-              )}
-              {material.properties.C && (
-                <div className="flex justify-between">
-                  <dt className="text-gray-600">Specific Heat:</dt>
-                  <dd className="font-mono">{material.properties.C} J/kg·K</dd>
+                  <dd className="font-mono">{material.k} W/m·K</dd>
                 </div>
               )}
             </dl>

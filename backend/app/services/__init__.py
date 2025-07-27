@@ -3,5 +3,6 @@
 from .docker_wrapper import DockerWrapper
 from .educational_mesh_service import EducationalMeshService
 from .sif_generator import SIFGenerator
+from .materials_service import materials_service
 
-__all__ = ["DockerWrapper", "EducationalMeshService", "SIFGenerator"] 
+__all__ = ["DockerWrapper", "EducationalMeshService", "SIFGenerator", "materials_service"] 

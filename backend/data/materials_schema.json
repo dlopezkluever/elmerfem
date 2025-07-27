@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ElmerFEM Materials Database Schema",
+  "description": "JSON Schema for validating the structure of materials data for the ElmerFEM educational platform",
+  "type": "object",
+  "required": ["materials"],
+  "properties": {
+    "materials": {
+      "type": "array",
+      "description": "Array of material definitions",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "E", "nu", "k", "rho"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the material",
+            "pattern": "^[a-z_]+$"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the material",
+            "minLength": 1
+          },
+          "E": {
+            "type": "number",
+            "description": "Young's Modulus in Pa",
+            "exclusiveMinimum": 0
+          },
+          "nu": {
+            "type": "number",
+            "description": "Poisson's Ratio (dimensionless)",
+            "minimum": -1.0,
+            "maximum": 0.5
+          },
+          "k": {
+            "type": "number",
+            "description": "Thermal Conductivity in W/(m·K)",
+            "exclusiveMinimum": 0
+          },
+          "rho": {
+            "type": "number",
+            "description": "Density in kg/m³",
+            "exclusiveMinimum": 0
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description of the material"
+          },
+          "units": {
+            "type": "object",
+            "description": "Optional units information for clarity",
+            "properties": {
+              "E": { "type": "string" },
+              "nu": { "type": "string" },
+              "k": { "type": "string" },
+              "rho": { "type": "string" }
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+} 

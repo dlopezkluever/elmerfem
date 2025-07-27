@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { simulationApi } from '../api';
-import { Material } from '../types/api';
+import { materialsApi, Material } from '../api';
 
 export function useMaterials() {
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -15,8 +14,8 @@ export function useMaterials() {
     try {
       setLoading(true);
       setError(null);
-      const response = await simulationApi.getMaterials();
-      setMaterials(response.materials);
+      const response = await materialsApi.getAll();
+      setMaterials(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load materials');
     } finally {
@@ -24,7 +23,7 @@ export function useMaterials() {
     }
   };
 
-  const getMaterialById = (id: number) => {
+  const getMaterialById = (id: string) => {
     return materials.find(m => m.id === id);
   };
 

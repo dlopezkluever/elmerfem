@@ -26,6 +26,7 @@ interface STLMeshLoaderProps {
   color?: string;
   wireframe?: boolean;
   useMockData?: boolean;
+  showMeshOutline?: boolean;
 }
 
 /**
@@ -38,7 +39,8 @@ export const STLMeshLoader: React.FC<STLMeshLoaderProps> = ({
   onMeshLoaded,
   color = '#65c3c8',
   wireframe = false,
-  useMockData = false
+  useMockData = false,
+  showMeshOutline = false
 }) => {
   const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,8 +48,9 @@ export const STLMeshLoader: React.FC<STLMeshLoaderProps> = ({
   const meshRef = useRef<THREE.Mesh>(null);
 
   // Animation for loading state
-  useFrame((state) => {
-    if (meshRef.current && loading) {
+  useFrame(() => {
+    if (loading && meshRef.current) {
+      meshRef.current.rotation.x += 0.01;
       meshRef.current.rotation.y += 0.01;
     }
   });
@@ -185,18 +188,47 @@ export const STLMeshLoader: React.FC<STLMeshLoaderProps> = ({
     loadMesh();
   }, [meshId, onMeshLoaded, useMockData]);
 
-  if (!geometry) {
-    return null;
+  if (loading) {
+    return (
+      <mesh>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshBasicMaterial color="#CCCCCC" wireframe />
+      </mesh>
+    );
+  }
+
+  if (error || !geometry) {
+    return (
+      <mesh>
+        <boxGeometry args={[2, 2, 2]} />
+        <meshBasicMaterial color="#FF0000" wireframe />
+      </mesh>
+    );
   }
 
   return (
-    <mesh ref={meshRef} geometry={geometry}>
-      <meshStandardMaterial 
-        color={color} 
-        wireframe={wireframe}
-        metalness={0.3}
-        roughness={0.4}
-      />
-    </mesh>
+    <>
+      {/* Main mesh */}
+      <mesh ref={meshRef} geometry={geometry} castShadow receiveShadow>
+        <meshStandardMaterial 
+          color={color} 
+          wireframe={wireframe}
+          metalness={0.3}
+          roughness={0.7}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      
+      {/* Black wireframe overlay when outline is enabled */}
+      {showMeshOutline && geometry && (
+        <mesh geometry={geometry}>
+          <meshBasicMaterial 
+            color="#000000" 
+            wireframe={true}
+            wireframeLinewidth={2}
+          />
+        </mesh>
+      )}
+    </>
   );
 }; 

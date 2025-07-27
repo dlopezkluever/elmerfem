@@ -16,34 +16,36 @@ class SimulationType(str, Enum):
     HEAT_TRANSFER = "heat_transfer"
     STRUCTURAL_MECHANICS = "structural_mechanics"
     # Future: Add more physics types
-
-
-class JobStatus(str, Enum):
-    """Job status states"""
-    PENDING = "pending"
-    RUNNING = "running"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
+    # FLUID_DYNAMICS = "fluid_dynamics"
+    # ELECTROMAGNETICS = "electromagnetics"
 
 
 class MaterialProperties(BaseModel):
-    """Material properties for simulation"""
-    E: Optional[float] = Field(None, description="Young's Modulus (Pa)", gt=0)
-    nu: Optional[float] = Field(None, description="Poisson's Ratio", ge=0, le=0.5)
-    rho: Optional[float] = Field(None, description="Density (kg/m³)", gt=0)
-    k: Optional[float] = Field(None, description="Thermal Conductivity (W/mK)", gt=0)
-    C: Optional[float] = Field(None, description="Heat Capacity (J/kgK)", gt=0)
+    """Material properties for custom materials"""
+    E: Optional[float] = Field(None, description="Young's Modulus (Pa)")
+    nu: Optional[float] = Field(None, description="Poisson's Ratio")
+    rho: Optional[float] = Field(None, description="Density (kg/m³)")
+    k: Optional[float] = Field(None, description="Thermal Conductivity (W/mK)")
+    C: Optional[float] = Field(None, description="Heat Capacity (J/kgK)")
 
 
 class BoundaryCondition(BaseModel):
-    """Boundary condition specification"""
-    type: str = Field(..., description="Type of boundary condition")
-    value: float = Field(..., description="Value of the boundary condition")
-    location: str = Field(..., description="Location identifier")
-    surface_id: Optional[int] = Field(None, description="Surface ID for mesh boundary")
-    component: Optional[int] = Field(None, description="Component (1, 2, or 3) for vector BC")
-    name: Optional[str] = Field(None, description="Optional name for the boundary condition")
+    """Boundary condition definition"""
+    type: str = Field(..., description="Type of BC (temperature, heat_flux, displacement, force, etc.)")
+    value: float = Field(..., description="BC value")
+    location: str = Field(..., description="Location (left, right, top, bottom, etc.)")
+    component: Optional[str] = Field(None, description="Component for vector BCs (x, y, z)")
+    name: Optional[str] = None
+    surface_id: Optional[int] = None
+    
+    @field_validator('type')
+    @classmethod
+    def validate_type(cls, v: str) -> str:
+        """Validate boundary condition type"""
+        valid_types = ["temperature", "heat_flux", "displacement", "force", "pressure", "fixed"]
+        if v not in valid_types:
+            raise ValueError(f"Invalid BC type: {v}. Must be one of {valid_types}")
+        return v
 
 
 class SimulationParamsDTO(BaseModel):
@@ -51,7 +53,7 @@ class SimulationParamsDTO(BaseModel):
     simulation_type: SimulationType
     type: Optional[SimulationType] = Field(None, description="Alias for simulation_type")
     geometry: Dict[str, Any] = Field(..., description="Geometry parameters")
-    material_id: Optional[int] = Field(None, description="Material library ID")
+    material_id: Optional[str] = Field(None, description="Material library ID")
     custom_material: Optional[MaterialProperties] = None
     material_properties: Optional[MaterialProperties] = Field(None, description="Alias for custom_material")
     boundary_conditions: List[BoundaryCondition] = Field(default_factory=list)
@@ -79,37 +81,62 @@ class SimulationParamsDTO(BaseModel):
             raise ValueError("Either material_id or custom_material must be provided")
             
         return self
+    
+    @field_validator('mesh_density')
+    @classmethod 
+    def validate_mesh_density(cls, v: float) -> float:
+        """Validate mesh density"""
+        # Allow string values like "medium", "fine", etc. by converting to float
+        if isinstance(v, str):
+            density_map = {
+                "coarse": 0.5,
+                "medium": 1.0,
+                "fine": 2.0,
+                "very_fine": 3.0
+            }
+            if v.lower() in density_map:
+                return density_map[v.lower()]
+            else:
+                raise ValueError(f"Invalid mesh density: {v}. Must be a number or one of {list(density_map.keys())}")
+        return v
 
 
-class SimulationCreateResponseDTO(BaseModel):
-    """Response after creating a simulation"""
-    id: UUID
-    status: JobStatus
-    created_at: datetime
-    message: str = "Simulation job created successfully"
+class JobStatus(str, Enum):
+    """Simulation job status"""
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
 
 
 class SimulationStatusDTO(BaseModel):
-    """Current status of a simulation"""
+    """Status information for a running simulation"""
     id: UUID
     status: JobStatus
-    progress: float = Field(0.0, ge=0, le=100, description="Progress percentage")
+    progress: float = Field(0.0, ge=0, le=100)
     message: Optional[str] = None
+    current_step: Optional[str] = None
     created_at: datetime
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
-    error_message: Optional[str] = None
-    current_step: Optional[str] = None
-    total_steps: Optional[int] = None
 
 
 class SimulationResultDTO(BaseModel):
-    """Simulation result information"""
+    """Result information for a completed simulation"""
     id: UUID
     status: JobStatus
     result_files: List[str] = Field(default_factory=list)
-    output_directory: Optional[Path] = None
-    summary: Optional[Dict[str, Any]] = None
     vtk_file: Optional[str] = None
     log_file: Optional[str] = None
-    sif_file: Optional[str] = None 
+    error_message: Optional[str] = None
+    created_at: datetime
+    completed_at: datetime
+    execution_time: float = Field(..., description="Execution time in seconds")
+
+
+class SimulationCreateResponseDTO(BaseModel):
+    """Response for simulation creation"""
+    id: UUID
+    status: JobStatus
+    message: str = "Simulation job created successfully" 

@@ -11,6 +11,7 @@ from ..models import (
     SimulationParamsDTO,
     SimulationType,
 )
+from ..services.materials_service import materials_service
 from .units import convert_temperature, convert_force
 
 logger = logging.getLogger(__name__)
@@ -84,12 +85,46 @@ def _build_solver_settings(params: SimulationParamsDTO) -> Dict[str, Any]:
 
 def _build_material_context(params: SimulationParamsDTO) -> Dict[str, Any]:
     """Build material properties context"""
-    # Get material properties from custom material or use defaults
+    
+    # First, check if we have a material_id and try to load from materials service
+    if params.material_id:
+        logger.info(f"Loading material properties for material_id: {params.material_id}")
+        try:
+            material_data = materials_service.get_material_by_id(params.material_id)
+            if material_data:
+                logger.info(f"Found material: {material_data['name']}")
+                # Build context from materials database
+                material_context = {
+                    "name": f"Material 1 - {material_data['name']}",
+                    "from_library": True,
+                    "library_id": params.material_id,
+                }
+                
+                # Add properties based on simulation type
+                if params.simulation_type == SimulationType.HEAT_TRANSFER:
+                    material_context.update({
+                        "thermal_conductivity": material_data["k"],
+                        "density": material_data["rho"],
+                        "heat_capacity": material_data.get("C", 1.0),  # C might not be in our materials.json yet
+                    })
+                elif params.simulation_type == SimulationType.STRUCTURAL_MECHANICS:
+                    material_context.update({
+                        "youngs_modulus": material_data["E"],
+                        "poisson_ratio": material_data["nu"],
+                        "density": material_data["rho"],
+                    })
+                
+                return material_context
+        except Exception as e:
+            logger.warning(f"Failed to load material from library: {e}. Falling back to custom/default.")
+    
+    # Fall back to custom material or defaults
     mat_props = params.custom_material or params.material_properties or MaterialProperties()
     
     # Build context based on simulation type
     material_context = {
         "name": f"Material {params.material_id}" if params.material_id else "Custom Material",
+        "from_library": False,
     }
     
     if params.simulation_type == SimulationType.HEAT_TRANSFER:
