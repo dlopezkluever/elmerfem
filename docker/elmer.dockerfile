@@ -22,9 +22,11 @@ RUN apt update -o Acquire::CompressionTypes::Order::=gz && apt upgrade -y && apt
 	mpich \
 	sudo \
 	less \
-        unzip \
-        zip \
-        curl
+	unzip \
+	zip \
+	curl \
+	python3 \
+	python3-minimal
 
 # Clone the ElmerIce source code and compile Elmer/Ice
 RUN git clone https://www.github.com/ElmerCSC/elmerfem elmer \

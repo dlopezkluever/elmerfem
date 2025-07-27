@@ -3,55 +3,47 @@ import {
   SimulationParams,
   SimulationStatus,
   SimulationResult,
-  MaterialsResponse,
 } from '../types/api';
 
-// Simulation API endpoints
 export const simulationApi = {
   // Create a new simulation
   async createSimulation(params: SimulationParams): Promise<SimulationStatus> {
-    const { data } = await apiClient.post<SimulationStatus>('/api/simulations', params);
+    const { data } = await apiClient.post<SimulationStatus>('/api/v1/simulations', params);
     return data;
   },
 
   // Get simulation status
   async getSimulationStatus(id: string): Promise<SimulationStatus> {
-    const { data } = await apiClient.get<SimulationStatus>(`/api/simulations/${id}/status`);
+    const { data } = await apiClient.get<SimulationStatus>(`/api/v1/simulations/${id}/status`);
     return data;
   },
 
   // Get simulation result
   async getSimulationResult(id: string): Promise<SimulationResult> {
-    const { data } = await apiClient.get<SimulationResult>(`/api/simulations/${id}/result`);
+    const { data } = await apiClient.get<SimulationResult>(`/api/v1/simulations/${id}/result`);
     return data;
   },
 
   // Get simulation logs
   async getSimulationLogs(id: string): Promise<string> {
-    const { data } = await apiClient.get(`/api/simulations/${id}/logs`, {
-      responseType: 'text',
+    const { data } = await apiClient.get(`/api/v1/simulations/${id}/logs`, {
+      responseType: 'text'
     });
     return data;
   },
 
-  // Download a specific file
-  async downloadFile(id: string, filename: string): Promise<Blob> {
-    const { data } = await apiClient.get(`/api/simulations/${id}/files/${filename}`, {
-      responseType: 'blob',
+  // Download result file
+  async downloadResultFile(id: string, filename: string): Promise<Blob> {
+    const { data } = await apiClient.get(`/api/v1/simulations/${id}/files/${filename}`, {
+      responseType: 'blob'
     });
     return data;
   },
 
   // Cancel a running simulation
   async cancelSimulation(id: string): Promise<void> {
-    await apiClient.delete(`/api/simulations/${id}`);
-  },
-
-  // Get available materials
-  async getMaterials(): Promise<MaterialsResponse> {
-    const { data } = await apiClient.get<MaterialsResponse>('/api/materials');
-    return data;
-  },
+    await apiClient.delete(`/api/v1/simulations/${id}`);
+  }
 };
 
 // Helper function to download file with proper filename
@@ -61,7 +53,7 @@ export const downloadFileHelper = async (
   suggestedName?: string
 ) => {
   try {
-    const blob = await simulationApi.downloadFile(simulationId, filename);
+    const blob = await simulationApi.downloadResultFile(simulationId, filename);
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

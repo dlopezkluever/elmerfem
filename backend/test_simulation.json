@@ -1,0 +1,23 @@
+{
+  "simulation_type": "heat_transfer",
+  "geometry": {
+    "type": "box",
+    "length": 1.0,
+    "width": 1.0,
+    "height": 1.0
+  },
+  "material_id": "steel",
+  "mesh_density": 1.0,
+  "boundary_conditions": [
+    {
+      "type": "temperature",
+      "location": "left",
+      "value": 100.0
+    },
+    {
+      "type": "temperature",
+      "location": "right",
+      "value": 20.0
+    }
+  ]
+} 

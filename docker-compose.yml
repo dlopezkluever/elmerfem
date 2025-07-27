@@ -1,58 +1,91 @@
+version: '3.8'
+
 services:
+  # Backend runs INSIDE Docker network
   backend:
-    build: ./backend
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    image: elmerfem-edu/backend:0.1
     working_dir: /app
     ports:
       - "8000:8000"
     environment:
       - ENVIRONMENT=development
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - WORKSPACE_PATH=/workspace
+      - ELMERFEM_WORKSPACE_BASE_DIR=/workspace
+      - ELMERFEM_DOCKER_COMPOSE_PROJECT=elmerfem
+      - ELMERFEM_ELMER_CONTAINER_NAME=elmer
+      - ELMERFEM_ELMER_WORK_DIR=/workspace
+      - ELMER_API_URL=http://elmer:8080
     volumes:
       - workspace:/workspace
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./docker-compose.yml:/docker-compose.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./backend:/app  # For development hot-reload
     networks:
       - simnet
+    depends_on:
+      elmer:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
+      interval: 10s
       timeout: 5s
       retries: 3
-    restart: unless-stopped
+      start_period: 30s
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
+  # Frontend with proper build process
   frontend:
-    image: node:lts-alpine
-    working_dir: /app
-    command: sh -c "npm install -g pnpm && pnpm install && pnpm dev --host"
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development  # Use development stage
+    image: elmerfem-edu/frontend:0.1
     ports:
-      - "5173:5173"
+      - "3000:5173"
     environment:
-      - BACKEND_URL=http://backend:8000
+      - VITE_BACKEND_URL=http://localhost:8000
     volumes:
       - ./frontend:/app
+      - /app/node_modules  # Prevent node_modules overlap
     depends_on:
       - backend
     networks:
       - simnet
-    restart: unless-stopped
+    command: ["npm", "run", "dev", "--", "--host"]
 
+  # ElmerFEM with proper workspace access and API server
   elmer:
     build:
       context: .
       dockerfile: docker/elmer.dockerfile
-    entrypoint: sh -c "tail -f /dev/null"
+      args:
+        - ENABLE_PROGRESS_OUTPUT=true
+    image: elmerfem-edu/solver:0.1
     volumes:
-      - workspace:/usr/src/elmerfem/work
+      - workspace:/workspace
+      - ./elmer/share:/usr/local/share/elmerfem  # Material library access
+      - ./elmer:/elmer  # Mount elmer directory for API server
+    working_dir: /workspace
+    environment:
+      - ELMER_API_PORT=8080
+    expose:
+      - "8080"  # Expose internally for container-to-container communication
     networks:
       - simnet
     healthcheck:
-      test: ["CMD", "ElmerSolver", "--version"]
-      interval: 1m
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
       timeout: 10s
       retries: 3
-    restart: unless-stopped
+    # Run the API server
+    command: ["python3", "/elmer/elmer_api_server.py"]
 
 volumes:
   workspace:
+    driver: local
 
 networks:
   simnet:

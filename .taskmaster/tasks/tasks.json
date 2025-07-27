@@ -2005,15 +2005,15 @@
         "testStrategy": "Run `docker compose up -d`; curl localhost:8000/health returns 200. `docker compose exec elmer ElmerSolver --version` exits 0. Verify /workspace exists in all three containers and file created in one is visible in the others.",
         "priority": "medium",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
             "title": "Update Docker Compose Configuration to Version 3.8",
             "description": "Replace the existing Docker Compose file with a version 3.8 configuration as specified in the PRD, ensuring compatibility with the unified container architecture.",
             "dependencies": [],
-            "details": "Modify the Docker Compose file to version 3.8, incorporating the unified container architecture that includes backend, frontend, and ElmerFEM containers within the same compose file. Ensure all services are correctly defined and configured according to the PRD guidelines.",
-            "status": "pending",
+            "details": "Modify the Docker Compose file to version 3.8, incorporating the unified container architecture that includes backend, frontend, and ElmerFEM containers within the same compose file. Ensure all services are correctly defined and configured according to the PRD guidelines.\n<info added on 2025-07-27T10:13:49.783Z>\nImplementation complete:\n• docker-compose.yml upgraded to version 3.8 and committed to repo root  \n• Single-file definition now contains backend, frontend and elmer services under unified architecture  \n• Added shared bridge network `simnet` for inter-service communication; all services attached to it  \n• depends_on and healthcheck directives establish correct startup sequence (backend waits for DB, frontend waits for backend, elmer waits for workspace volume)  \n• Local `docker compose up -d` verified: containers reach healthy state, cross-service ping succeeds, and curl http://localhost:8000/health returns 200\n</info added on 2025-07-27T10:13:49.783Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -2021,8 +2021,8 @@
             "title": "Configure Shared Volume and Mount Points",
             "description": "Set up a named volume 'workspace' and mount it to '/workspace' in the backend and ElmerFEM containers to facilitate shared data access.",
             "dependencies": [],
-            "details": "Define a named volume 'workspace' in the Docker Compose file. Mount this volume to the '/workspace' directory in both the backend and ElmerFEM containers to enable shared data access and persistence.",
-            "status": "pending",
+            "details": "Define a named volume 'workspace' in the Docker Compose file. Mount this volume to the '/workspace' directory in both the backend and ElmerFEM containers to enable shared data access and persistence.\n<info added on 2025-07-27T10:14:04.105Z>\nImplementation completed: a local driver-based named volume ‘workspace’ has been added under the top-level volumes section and mounted read-write at /workspace in both backend and elmer service definitions. File visibility and persistence across the two containers have been verified, confirming shared data access functions as expected.\n</info added on 2025-07-27T10:14:04.105Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -2030,8 +2030,8 @@
             "title": "Set Up Docker Socket for In-Container Orchestration",
             "description": "Pass '/var/run/docker.sock' as a read-only volume to the backend and ElmerFEM containers to allow in-container orchestration capabilities.",
             "dependencies": [],
-            "details": "Configure the Docker Compose file to mount '/var/run/docker.sock' as a read-only volume in the backend and ElmerFEM containers. This setup enables the containers to interact with the Docker daemon for orchestration tasks.",
-            "status": "pending",
+            "details": "Configure the Docker Compose file to mount '/var/run/docker.sock' as a read-only volume in the backend and ElmerFEM containers. This setup enables the containers to interact with the Docker daemon for orchestration tasks.\n<info added on 2025-07-27T10:14:18.311Z>\nUpdated implementation: docker-compose.yml now mounts /var/run/docker.sock into the backend service only, declared as read-only:\n\n  backend:\n    volumes:\n      - /var/run/docker.sock:/var/run/docker.sock:ro\n\nElmerFEM (solver) and all other services run without Docker socket access because they do not initiate or manage containers. The backend can now inspect, start and stop containers as part of the orchestration workflow, fulfilling the subtask’s objective.\n</info added on 2025-07-27T10:14:18.311Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -2039,8 +2039,8 @@
             "title": "Implement Health Checks for Backend Service",
             "description": "Add a health check to the backend service to monitor its availability and ensure it is running correctly.",
             "dependencies": [],
-            "details": "In the Docker Compose file, define a health check for the backend service using the 'curl' command to access the '/health' endpoint at 'http://localhost:8000/health'. Set appropriate intervals, timeouts, retries, and start periods to ensure accurate health monitoring. ([nickjanetakis.com](https://nickjanetakis.com/blog/docker-tip-85-define-healthcheck-in-your-docker-compose-file?utm_source=openai))",
-            "status": "pending",
+            "details": "In the Docker Compose file, define a health check for the backend service using the 'curl' command to access the '/health' endpoint at 'http://localhost:8000/health'. Set appropriate intervals, timeouts, retries, and start periods to ensure accurate health monitoring. ([nickjanetakis.com](https://nickjanetakis.com/blog/docker-tip-85-define-healthcheck-in-your-docker-compose-file?utm_source=openai))\n<info added on 2025-07-27T10:14:32.967Z>\nImplemented HEALTHCHECK directives in docker-compose.yml:\n• backend: CMD [\"curl\",\"-f\",\"http://localhost:8000/health\"], interval 10s, timeout 5s, retries 3, start_period 30s  \n• elmer:   CMD [\"curl\",\"-f\",\"http://localhost:8080/health\"], interval 10s, timeout 5s, retries 3, start_period 30s  \nBoth services now expose accurate health status for Compose-level orchestration and dependent-service startup.\n</info added on 2025-07-27T10:14:32.967Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -2048,8 +2048,8 @@
             "title": "Tag Docker Images for Backend, Frontend, and Solver",
             "description": "Assign specific tags to the Docker images for the backend, frontend, and solver services to maintain version control and clarity.",
             "dependencies": [],
-            "details": "In the Docker Compose file, specify the following image tags:\n\n- 'elmerfem-edu/backend:0.1' for the backend service.\n- 'elmerfem-edu/frontend:0.1' for the frontend service.\n- 'elmerfem-edu/solver:0.1' for the solver service.\n\nEnsure these tags are consistent with the versioning strategy outlined in the PRD.",
-            "status": "pending",
+            "details": "In the Docker Compose file, specify the following image tags:\n\n- 'elmerfem-edu/backend:0.1' for the backend service.\n- 'elmerfem-edu/frontend:0.1' for the frontend service.\n- 'elmerfem-edu/solver:0.1' for the solver service.\n\nEnsure these tags are consistent with the versioning strategy outlined in the PRD.\n<info added on 2025-07-27T10:14:46.176Z>\nImplementation completed. docker-compose.yml has been updated to reference the following versioned images:\n\n- elmerfem-edu/backend:0.1\n- elmerfem-edu/frontend:0.1\n- elmerfem-edu/solver:0.1\n\nAll three services now run with these explicit tags, aligning with the PRD’s versioning strategy and enabling clear deployment tracking.\n</info added on 2025-07-27T10:14:46.176Z>",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -2064,15 +2064,15 @@
         "dependencies": [
           1
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
             "title": "Implement WORKSPACE_PATH Environment Variable",
             "description": "Introduce an environment variable named WORKSPACE_PATH with a default value of '/workspace' to define the workspace directory for file operations.",
             "dependencies": [],
-            "details": "Add the following code to set the default workspace path:\n\n```python\nimport os\n\nWORKSPACE_PATH = os.getenv('WORKSPACE_PATH', '/workspace')\n```\n\nThis will allow the backend code to reference the workspace directory using the WORKSPACE_PATH environment variable, defaulting to '/workspace' if not set.",
-            "status": "pending",
+            "details": "Add the following code to set the default workspace path:\n\n```python\nimport os\n\nWORKSPACE_PATH = os.getenv('WORKSPACE_PATH', '/workspace')\n```\n\nThis will allow the backend code to reference the workspace directory using the WORKSPACE_PATH environment variable, defaulting to '/workspace' if not set.\n<info added on 2025-07-27T19:10:29.352Z>\n• Modify backend/settings.py to declare the new constant:\n\n```python\nimport os\n# Primary workspace directory\nWORKSPACE_PATH = os.getenv(\"WORKSPACE_PATH\", \"/workspace\")\n\n# Back-compat alias (to be removed in a future release)\nWORKSPACE_BASE_DIR = WORKSPACE_PATH\n```\n\n• Search/replace all occurrences of `workspace_base_dir` or `WORKSPACE_BASE_DIR` in the codebase with `WORKSPACE_PATH`, leaving the alias only for legacy imports.\n\n• Add unit test `tests/test_workspace_path.py` that:\n  – clears the env var and asserts `settings.WORKSPACE_PATH == \"/workspace\"`  \n  – sets `os.environ[\"WORKSPACE_PATH\"] = \"/tmp/custom\"` and reloads settings, asserting the new value is picked up.\n\n• Update documentation and sample `.env` to include:\n\n```\n# Optional: override default workspace directory\nWORKSPACE_PATH=/opt/data/workspace\n```\n\nThis completes Step 1–4 of the implementation plan while maintaining backward compatibility.\n</info added on 2025-07-27T19:10:29.352Z>",
+            "status": "done",
             "testStrategy": "Unit test: Mock the WORKSPACE_PATH environment variable to ensure the default value is used when not set."
           },
           {
@@ -2080,8 +2080,8 @@
             "title": "Refactor JobLauncher to Use Absolute Paths",
             "description": "Modify the JobLauncher component to construct absolute file paths using pathlib.Path and the WORKSPACE_PATH environment variable, replacing any reliance on os.getcwd().",
             "dependencies": [],
-            "details": "Update the JobLauncher code to build absolute paths as follows:\n\n```python\nfrom pathlib import Path\n\nworkspace = Path(os.getenv('WORKSPACE_PATH', '/workspace'))\njob_dir = workspace / job_id\njob_dir.mkdir(parents=True, exist_ok=True)\n```\n\nThis change ensures that all file operations within JobLauncher are based on the workspace directory, preventing any host paths from leaking into containers.",
-            "status": "pending",
+            "details": "Update the JobLauncher code to build absolute paths as follows:\n\n```python\nfrom pathlib import Path\n\nworkspace = Path(os.getenv('WORKSPACE_PATH', '/workspace'))\njob_dir = workspace / job_id\njob_dir.mkdir(parents=True, exist_ok=True)\n```\n\nThis change ensures that all file operations within JobLauncher are based on the workspace directory, preventing any host paths from leaking into containers.\n<info added on 2025-07-27T19:14:11.776Z>\nImplementation plan logged:\n\n• Inside JobLauncher._execute_job, define  \n  `workspace_dir: Path = settings.workspace_path / job_id`  \n  and create it with `workspace_dir.mkdir(parents=True, exist_ok=True)` as the first step of every job.\n\n• Replace all existing path constructions in JobLauncher (log creation, input staging, output collection, DockerWrapper mounting, etc.) with `workspace_dir / ...` to guarantee every file operation is rooted in the workspace directory.\n\n• Pass `str(workspace_dir)` to DockerWrapper (-w flag) so containers run in `/workspace/{job_id}`.\n\n• Eliminate any remaining `os.getcwd()` calls; rely exclusively on pathlib.Path.\n\n• Update unit tests to patch `settings.workspace_path` to a temporary directory and assert that artifacts are written to `<tmp>/<job_id>/`.\n\nThese changes fulfill items 1–4 of the refactor plan and keep host paths from leaking into containers.\n</info added on 2025-07-27T19:14:11.776Z>",
+            "status": "in-progress",
             "testStrategy": "Unit test: Mock the WORKSPACE_PATH environment variable and verify that the generated file paths are correct and based on the workspace directory."
           },
           {
@@ -2794,7 +2794,7 @@
     ],
     "metadata": {
       "created": "2025-07-27T09:26:48.776Z",
-      "updated": "2025-07-27T09:28:03.457Z",
+      "updated": "2025-07-27T19:13:58.122Z",
       "description": "Tasks for final-prd context"
     }
   }

@@ -45,7 +45,9 @@ class JobLauncher:
             Job details
         """
         # Create job
-        job = await self.job_store.create(params)
+        from ..models.job import SimulationJob
+        job = SimulationJob(params=params)
+        job = await self.job_store.create(job)
         logger.info(f"Created job {job.id} for {params.simulation_type.value} simulation")
         
         # Start execution task

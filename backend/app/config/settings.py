@@ -2,6 +2,7 @@
 Application settings and configuration
 """
 
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -21,10 +22,19 @@ class Settings(BaseSettings):
     port: int = 8000
     
     # Docker and workspace settings
-    workspace_base_dir: Path = Path("/workspace")
+    # Primary workspace directory - configurable via ELMERFEM_WORKSPACE_PATH env var
+    workspace_path: Path = Path(os.getenv("ELMERFEM_WORKSPACE_PATH", "/workspace"))
+    
+    # Backward compatibility alias (to be deprecated)
+    @property
+    def workspace_base_dir(self) -> Path:
+        """Backward compatibility property for workspace_base_dir"""
+        return self.workspace_path
+    
     docker_compose_project: str = "elmerfem"
     elmer_container_name: str = "elmer"
     elmer_work_dir: Path = Path("/usr/src/elmerfem/work")
+    elmer_api_url: str = "http://elmer:8080"  # For container-to-container communication
     
     # Job settings
     job_timeout_seconds: int = 3600  # 1 hour
@@ -52,8 +62,8 @@ class Settings(BaseSettings):
     
     def get_workspace_path(self) -> Path:
         """Get the workspace directory path, creating it if it doesn't exist"""
-        self.workspace_base_dir.mkdir(parents=True, exist_ok=True)
-        return self.workspace_base_dir
+        self.workspace_path.mkdir(parents=True, exist_ok=True)
+        return self.workspace_path
 
 
 # Singleton instance
