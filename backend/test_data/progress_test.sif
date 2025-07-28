@@ -1,0 +1,73 @@
+! Test SIF file with PROGRESS output
+! This simulates a heat conduction problem with progress output
+
+Header
+  Mesh DB "." "test_mesh"
+  Include Path ""
+  Results Directory "results"
+End
+
+! Simulation settings with progress output
+Simulation
+  Coordinate System = Cartesian 2D
+  Simulation Type = Steady
+  Steady State Max Iterations = 1
+  Output Intervals = 1
+  
+  ! Progress output settings
+  Post File = "results.vtu"
+  
+  ! Custom progress messages (simulated)
+  ! In a real case, these would be output by ElmerSolver
+End
+
+! Test equation
+Equation 1
+  Active Solvers(1) = 1
+End
+
+! Simple heat solver for testing
+Solver 1
+  Equation = Heat Equation
+  Procedure = "HeatSolve" "HeatSolver"
+  Variable = Temperature
+  Variable DOFs = 1
+  
+  Linear System Solver = Direct
+  Linear System Direct Method = Umfpack
+  
+  Steady State Convergence Tolerance = 1.0e-5
+  
+  ! Progress output
+  Exec Solver = Always
+End
+
+! Material properties
+Material 1
+  Density = 1000.0
+  Heat Conductivity = 1.0
+  Heat Capacity = 1000.0
+End
+
+! Simple boundary conditions
+Boundary Condition 1
+  Target Boundaries(1) = 1
+  Temperature = 100
+End
+
+Boundary Condition 2
+  Target Boundaries(1) = 2
+  Temperature = 0
+End
+
+! Initial condition
+Initial Condition 1
+  Temperature = 20
+End
+
+! Body
+Body 1
+  Equation = 1
+  Material = 1
+  Initial Condition = 1
+End 

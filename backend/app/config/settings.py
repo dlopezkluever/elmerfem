@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     # Redis settings (optional, for future local use only)
     # If Redis is used, it must be local: redis://localhost:6379/0
     redis_url: Optional[str] = None
+    use_redis: bool = False  # Explicit flag to use Redis when available
     
     # CORS settings - Allow both localhost and Docker internal network access
     cors_allowed_origins: list[str] = [

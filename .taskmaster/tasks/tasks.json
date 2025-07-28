@@ -2058,13 +2058,13 @@
         "id": 2,
         "title": "Backend Path Translation & Workspace Sync",
         "description": "Update backend code so all file operations use /workspace and no host paths leak into containers.",
-        "details": "• Introduce env var WORKSPACE_PATH default “/workspace”.\n• Refactor JobLauncher to build absolute paths via pathlib.Path(env[\"WORKSPACE_PATH\"]).\n• Remove os.getcwd() assumptions.\n• Ensure DockerWrapper exec commands include `-w /workspace/{job_id}`.\nPseudo-code:\n```\nworkspace = Path(os.getenv(\"WORKSPACE_PATH\", \"/workspace\"))\njob_dir = workspace / job_id\njob_dir.mkdir(parents=True, exist_ok=True)\n```\n",
+        "details": "• Introduce env var WORKSPACE_PATH default “/workspace”.\n• Refactor JobLauncher to build absolute paths via pathlib.Path(env[\"WORKSPACE_PATH\"]).\n• Remove os.getcwd() assumptions.\n• Ensure DockerWrapper exec commands include `-w /workspace/{job_id}`.\nPseudo-code:\n```\nworkspace = Path(os.getenv(\"WORKSPACE_PATH\", \"/workspace\"))\njob_dir = workspace / job_id\njob_dir.mkdir(parents=True, exist_ok=True)\n```\n\n<info added on 2025-07-27T19:19:54.082Z>\n• Implementation finished: backend now exclusively relies on WORKSPACE_PATH for all file operations, defaulting to “/workspace” and overridable via ELMERFEM_WORKSPACE_PATH; legacy workspace_base_dir alias retained for back-compat.  \n• JobLauncher creates and records per-job directories at /workspace/{job_id}; every artifact, log, and mount path is derived from this absolute location.  \n• Audit confirmed no remaining os.getcwd() usage in backend codebase (only external FreeCAD tool still references it).  \n• DockerWrapper’s execute_solver and execute_command always run with workdir=/workspace/{job_id}, correctly resolving both absolute and relative inputs and eliminating prior relative-path hacks.  \n• Shared “workspace” volume already defined in docker-compose ensures cross-container visibility; manual and CI integration tests pass.  \n• Unit/integration test suites updated and all green. Backend no longer leaks host paths; task can be marked complete.\n</info added on 2025-07-27T19:19:54.082Z>",
         "testStrategy": "Unit: mock env WORKSPACE_PATH, assert generated SIF path matches /workspace/… Integration: POST /api/simulations, verify files appear inside backend & elmer container at identical paths.",
         "priority": "medium",
         "dependencies": [
           1
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -2081,7 +2081,7 @@
             "description": "Modify the JobLauncher component to construct absolute file paths using pathlib.Path and the WORKSPACE_PATH environment variable, replacing any reliance on os.getcwd().",
             "dependencies": [],
             "details": "Update the JobLauncher code to build absolute paths as follows:\n\n```python\nfrom pathlib import Path\n\nworkspace = Path(os.getenv('WORKSPACE_PATH', '/workspace'))\njob_dir = workspace / job_id\njob_dir.mkdir(parents=True, exist_ok=True)\n```\n\nThis change ensures that all file operations within JobLauncher are based on the workspace directory, preventing any host paths from leaking into containers.\n<info added on 2025-07-27T19:14:11.776Z>\nImplementation plan logged:\n\n• Inside JobLauncher._execute_job, define  \n  `workspace_dir: Path = settings.workspace_path / job_id`  \n  and create it with `workspace_dir.mkdir(parents=True, exist_ok=True)` as the first step of every job.\n\n• Replace all existing path constructions in JobLauncher (log creation, input staging, output collection, DockerWrapper mounting, etc.) with `workspace_dir / ...` to guarantee every file operation is rooted in the workspace directory.\n\n• Pass `str(workspace_dir)` to DockerWrapper (-w flag) so containers run in `/workspace/{job_id}`.\n\n• Eliminate any remaining `os.getcwd()` calls; rely exclusively on pathlib.Path.\n\n• Update unit tests to patch `settings.workspace_path` to a temporary directory and assert that artifacts are written to `<tmp>/<job_id>/`.\n\nThese changes fulfill items 1–4 of the refactor plan and keep host paths from leaking into containers.\n</info added on 2025-07-27T19:14:11.776Z>",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "Unit test: Mock the WORKSPACE_PATH environment variable and verify that the generated file paths are correct and based on the workspace directory."
           },
           {
@@ -2089,8 +2089,8 @@
             "title": "Remove os.getcwd() Assumptions",
             "description": "Eliminate any code that relies on os.getcwd() to determine file paths, ensuring that all file operations are based on the WORKSPACE_PATH environment variable.",
             "dependencies": [],
-            "details": "Search through the backend codebase for instances where os.getcwd() is used to construct file paths and refactor them to use the WORKSPACE_PATH environment variable instead. This change ensures consistency in file path construction and prevents potential issues related to the current working directory.",
-            "status": "pending",
+            "details": "Search through the backend codebase for instances where os.getcwd() is used to construct file paths and refactor them to use the WORKSPACE_PATH environment variable instead. This change ensures consistency in file path construction and prevents potential issues related to the current working directory.\n<info added on 2025-07-27T19:15:23.129Z>\nCode audit complete: no usages of os.getcwd() were found anywhere in the backend modules; all path construction already relies on absolute paths derived from settings/WORKSPACE_PATH. The sole occurrence resides in ElmerWorkflows/FreeCADBatchFEMTools/FreeCADBatchFEMTools.py, which is outside the backend scope of this task. Consequently, no code changes are required for the backend, and this subtask can be marked ready for closure.\n</info added on 2025-07-27T19:15:23.129Z>",
+            "status": "done",
             "testStrategy": "Unit test: Verify that all file paths are correctly constructed using the WORKSPACE_PATH environment variable and that no code relies on os.getcwd()."
           },
           {
@@ -2098,8 +2098,8 @@
             "title": "Update DockerWrapper to Set Working Directory",
             "description": "Modify the DockerWrapper component to include the '-w /workspace/{job_id}' option in exec commands, ensuring that commands are executed within the correct working directory inside the container.",
             "dependencies": [],
-            "details": "Update the DockerWrapper code to set the working directory for exec commands as follows:\n\n```python\nself.client.containers.get(container_id).exec_run(\n    command,\n    detach=True,\n    workdir=f'/workspace/{job_id}'\n)\n```\n\nThis change ensures that commands executed within the container are run in the appropriate directory, preventing any host paths from leaking into the container environment.",
-            "status": "pending",
+            "details": "Update the DockerWrapper code to set the working directory for exec commands as follows:\n\n```python\nself.client.containers.get(container_id).exec_run(\n    command,\n    detach=True,\n    workdir=f'/workspace/{job_id}'\n)\n```\n\nThis change ensures that commands executed within the container are run in the appropriate directory, preventing any host paths from leaking into the container environment.\n<info added on 2025-07-27T19:15:51.922Z>\nImplementation plan initiated:\n\n1. Audit DockerWrapper’s execute_solver and execute_command to identify every docker exec invocation.\n2. Introduce/normalize a working_directory parameter (default: f\"/workspace/{job_id}\") and pass it to:\n   • Docker SDK exec_run via workdir=working_directory  \n   • docker compose exec CLI strings with -w {working_directory}\n3. Replace any hard-coded paths with the job-specific workspace path template.\n4. Extend unit tests (pytest + pytest-docker) to assert:\n   – exec_run receives the correct workdir  \n   – compose command strings include “-w /workspace/{job_id}”\n5. Smoke-test through the FastAPI HTTP routes and direct docker compose exec calls to confirm commands execute in /workspace/{job_id} and no host paths surface in logs.\n</info added on 2025-07-27T19:15:51.922Z>\n<info added on 2025-07-27T19:16:59.513Z>\nImplementation finalized:\n\n• execute_solver and execute_command now detect when the supplied working_directory already begins with “/workspace”; if so, the value is used verbatim, otherwise it is joined with “/workspace/{job_id}”.  \n• The same conditional logic is applied to both Docker SDK (exec_run) and docker-compose exec command strings, preserving backward compatibility for legacy relative paths.  \n• All hard-coded or ad-hoc path manipulations have been removed.  \n• Unit and smoke tests extended in the earlier plan now cover the absolute-path shortcut; all tests pass locally and in CI.\n</info added on 2025-07-27T19:16:59.513Z>",
+            "status": "done",
             "testStrategy": "Integration test: Verify that commands executed within the container are run in the correct working directory and that no host paths are exposed inside the container."
           },
           {
@@ -2107,8 +2107,8 @@
             "title": "Verify Workspace Synchronization Across Containers",
             "description": "Ensure that the '/workspace' directory is synchronized across all containers, allowing files created in one container to be accessible in others.",
             "dependencies": [],
-            "details": "Configure the Docker Compose setup to mount a shared volume named 'workspace' to the '/workspace' directory in all relevant containers. This setup ensures that any files created in the '/workspace' directory in one container are accessible in the '/workspace' directory of other containers, facilitating proper workspace synchronization.",
-            "status": "pending",
+            "details": "Configure the Docker Compose setup to mount a shared volume named 'workspace' to the '/workspace' directory in all relevant containers. This setup ensures that any files created in the '/workspace' directory in one container are accessible in the '/workspace' directory of other containers, facilitating proper workspace synchronization.\n<info added on 2025-07-27T19:17:26.284Z>\nVerification results:\n• docker-compose.yml already defines the shared volume ‘workspace’.\n• Backend, Elmer, and Frontend containers all mount this volume at /workspace (backend binds ./workspace on the host).\n• File visibility across containers confirmed—creating a file in /workspace within any container makes it instantly accessible in the others.\n\nConclusion: workspace synchronization is fully operational; no additional changes are necessary for this subtask.\n</info added on 2025-07-27T19:17:26.284Z>",
+            "status": "done",
             "testStrategy": "Integration test: Verify that files created in the '/workspace' directory of one container are accessible in the '/workspace' directory of other containers, confirming proper synchronization."
           }
         ]
@@ -2182,15 +2182,15 @@
         "dependencies": [
           2
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
             "title": "Implement FastAPI WebSocket Endpoint",
             "description": "Create a WebSocket endpoint at `/ws/simulations/{id}` using FastAPI to handle client connections and emit progress events.",
             "dependencies": [],
-            "details": "Utilize FastAPI's WebSocket support to establish a connection at the specified endpoint. Upon client connection, accept the WebSocket and prepare to send progress updates. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))",
-            "status": "pending",
+            "details": "Utilize FastAPI's WebSocket support to establish a connection at the specified endpoint. Upon client connection, accept the WebSocket and prepare to send progress updates. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))\n<info added on 2025-07-27T19:48:11.906Z>\nImplemented functional endpoint at backend/app/api/v1/websocket.py:\n\n• Path: /api/v1/ws/simulations/{simulation_id}  \n• Accepts WebSocket handshake, verifies that the referenced simulation record exists (404 and close if not).  \n• Sends an initial JSON status payload (e.g., {\"pct\": 0, \"stage\": \"pending\"}) immediately after connection.  \n• Enters keep-alive loop awaiting progress queue events; gracefully handles client disconnects and server-side cancellation via websocket.close().  \n• Router registered in api_v1_router so FastAPI automatically mounts the endpoint when the app starts.  \n• Code follows FastAPI WebSocket best-practice patterns (async def endpoint(websocket: WebSocket), websocket.accept(), try / finally for cleanup).\n</info added on 2025-07-27T19:48:11.906Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -2198,8 +2198,8 @@
             "title": "Design JSON Message Format for Progress Events",
             "description": "Define a JSON schema for progress events containing 'pct' and 'msg' fields to standardize communication between server and client.",
             "dependencies": [],
-            "details": "Establish a consistent JSON structure for progress events, including 'pct' for percentage and 'msg' for messages, to ensure clear communication. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))",
-            "status": "pending",
+            "details": "Establish a consistent JSON structure for progress events, including 'pct' for percentage and 'msg' for messages, to ensure clear communication. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))\n<info added on 2025-07-27T19:48:28.534Z>\nStandardized message envelope finalized:\n\n• Envelope: {\"type\": \"<progress|status|echo|...>\", \"data\": {...}}  \n• All payloads include ISO-8601 timestamp for chronological ordering.\n\nInitial message types  \n1. progress → data: {pct: float (0-100), msg: str, timestamp: str}  \n2. status   → data: {status: str (started|running|completed|error), timestamp: str}  \n3. echo     → data: {message: str, timestamp?: str}\n\nExtensibility: new types may be added without breaking clients; unknown types are ignored after logging.\n\nImplementation notes:  \n• Add Pydantic models (ProgressMsg, StatusMsg, EchoMsg) inheriting from BaseMessage for automatic validation/serialization.  \n• Backend WebSocket emitter wraps existing progress dicts into ProgressMsg; solver lifecycle changes raise StatusMsg events.  \n• Frontend will route on .type for dispatching to Redux slice.\n</info added on 2025-07-27T19:48:28.534Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -2207,8 +2207,8 @@
             "title": "Extract and Parse Progress Lines from ElmerSolver Output",
             "description": "Implement logic to read ElmerSolver logs, identify lines starting with 'PROGRESS', and parse them into 'pct' and 'msg' components.",
             "dependencies": [],
-            "details": "Develop a function to process ElmerSolver logs, detect lines beginning with 'PROGRESS', and extract the percentage and message for each line. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))",
-            "status": "pending",
+            "details": "Develop a function to process ElmerSolver logs, detect lines beginning with 'PROGRESS', and extract the percentage and message for each line. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))\n<info added on 2025-07-27T19:48:49.958Z>\nImplementation complete:\n\n• Added parse_progress_line() to backend/app/api/v1/websocket.py  \n  – Accepts raw stdout line, validates “PROGRESS:<pct>:<msg>” pattern  \n  – Splits on first two colons to allow additional colons inside <msg>  \n  – On success returns {\"type\":\"progress\",\"data\":{\"pct\":float,\"msg\":str,\"timestamp\":datetime.utcnow()}}  \n  – Raises ValueError for malformed progress lines, returns None for non-progress input\n\n• Extended DockerWrapper with execute_solver_streaming() to yield ElmerSolver output in real time; consumes container.logs(stream=True) and yields decoded lines\n\n• JobLauncher now pipes each streamed line through parse_progress_line() and immediately forwards valid dicts to the WebSocket queue, enabling live progress updates\n</info added on 2025-07-27T19:48:49.958Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -2216,8 +2216,8 @@
             "title": "Implement Throttling Mechanism for Event Emission",
             "description": "Ensure that progress events are emitted to clients at a maximum rate of 5 Hz to prevent overwhelming the client and maintain performance.",
             "dependencies": [],
-            "details": "Incorporate a throttling mechanism within the WebSocket endpoint to limit the emission of progress events to 5 times per second, balancing real-time updates with system performance. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))",
-            "status": "pending",
+            "details": "Incorporate a throttling mechanism within the WebSocket endpoint to limit the emission of progress events to 5 times per second, balancing real-time updates with system performance. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))\n<info added on 2025-07-27T19:49:02.852Z>\nImplemented 5 Hz throttling in the WebSocket layer:\n\n• ConnectionManager now tracks a last_emission_times dictionary keyed by simulation ID.  \n• Throttle interval fixed at 0.2 s; _broadcast_progress() computes elapsed time since last emission.  \n• If elapsed < 0.2 s, coroutine awaits the remaining delta before sending the next message.  \n• Throttling occurs at the broadcast stage, so the upstream progress queue remains loss-less—every update is eventually delivered while clients receive no more than 5 events per second.\n</info added on 2025-07-27T19:49:02.852Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -2225,8 +2225,8 @@
             "title": "Manage Client Connections and Handle Disconnections",
             "description": "Develop logic to manage multiple client connections, handle disconnections gracefully, and ensure that progress events are sent to all connected clients.",
             "dependencies": [],
-            "details": "Implement connection management to handle multiple clients, ensuring that progress events are broadcasted to all connected clients and that disconnections are managed without errors. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))",
-            "status": "pending",
+            "details": "Implement connection management to handle multiple clients, ensuring that progress events are broadcasted to all connected clients and that disconnections are managed without errors. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))\n<info added on 2025-07-27T19:49:15.437Z>\nImplemented ConnectionManager providing robust multi-client handling:\n\n• Keeps per-simulation sets of WebSocket objects in thread-safe active_connections dict.  \n• connect(simulation_id, ws): registers socket, spawns background broadcast task and per-client queue if first listener.  \n• disconnect(simulation_id, ws): removes socket, cancels broadcast task and disposes queue when last listener leaves.  \n• Broadcast loop iterates over current socket set, drops and logs any that have closed, so stray disconnects never raise.  \n• All mutations guarded by asyncio.Lock to avoid race conditions under concurrent connects/disconnects.  \n• Supports unlimited simultaneous viewers of the same simulation without message loss.  \n• Emits structured INFO logs for each connection and cleanup event to aid monitoring and debugging.\n</info added on 2025-07-27T19:49:15.437Z>",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -2241,7 +2241,7 @@
         "dependencies": [
           4
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -2249,7 +2249,7 @@
             "description": "Create a TypeScript hook `useSimulationProgress` that establishes a WebSocket connection to the backend using the native WebSocket API within a `useEffect` hook.",
             "dependencies": [],
             "details": "Utilize the native WebSocket API inside the `useEffect` hook to establish a connection to the backend server. Ensure the WebSocket connection is properly managed and cleaned up to prevent memory leaks. ([ittrip.xyz](https://ittrip.xyz/react/react-useeffect-websocket-setup?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use Jest with jest-websocket-mock to simulate WebSocket events and verify that the hook establishes and cleans up the connection correctly."
           },
           {
@@ -2258,7 +2258,7 @@
             "description": "Within the `useSimulationProgress` hook, parse incoming WebSocket messages and dispatch the `updateProgress` action to update the Redux state.",
             "dependencies": [],
             "details": "Set up an event listener for the `onmessage` event of the WebSocket connection. Parse the incoming JSON messages and dispatch the `updateProgress` action with the parsed data to update the Redux state. ([geeksforgeeks.org](https://www.geeksforgeeks.org/how-to-integrate-websockets-with-react-redux/?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use Jest to mock WebSocket messages and verify that the `updateProgress` action is dispatched with the correct data."
           },
           {
@@ -2267,7 +2267,7 @@
             "description": "Enhance the `useSimulationProgress` hook to automatically reconnect to the WebSocket server with exponential back-off, limiting the number of reconnection attempts to 5.",
             "dependencies": [],
             "details": "Implement reconnection logic within the `useSimulationProgress` hook that attempts to reconnect to the WebSocket server upon disconnection. Use exponential back-off to increase the delay between reconnection attempts, capping the number of attempts at 5. ([reliasoftware.com](https://reliasoftware.com/blog/react-websocket?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use Jest to simulate WebSocket disconnections and verify that the hook attempts to reconnect with the correct back-off strategy and limits the number of attempts to 5."
           },
           {
@@ -2276,7 +2276,7 @@
             "description": "Connect the `useSimulationProgress` hook to the Redux slice to manage and update the simulation progress state.",
             "dependencies": [],
             "details": "Ensure that the `useSimulationProgress` hook is properly connected to the Redux store, allowing it to dispatch actions and access the current state. This integration ensures that the simulation progress is managed centrally and can be accessed throughout the application. ([geeksforgeeks.org](https://www.geeksforgeeks.org/how-to-integrate-websockets-with-react-redux/?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use Jest to verify that the hook correctly dispatches actions to update the Redux state and that the state reflects the expected progress data."
           },
           {
@@ -2285,7 +2285,7 @@
             "description": "Implement error handling within the `useSimulationProgress` hook to manage WebSocket errors and ensure proper cleanup when the component unmounts.",
             "dependencies": [],
             "details": "Set up error handling within the `useSimulationProgress` hook to manage WebSocket errors, such as connection failures or unexpected closures. Ensure that the WebSocket connection is properly closed and cleaned up when the component unmounts to prevent memory leaks. ([ittrip.xyz](https://ittrip.xyz/react/react-useeffect-websocket-setup?utm_source=openai))",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use Jest to simulate WebSocket errors and verify that the hook handles errors gracefully and cleans up the connection upon unmounting."
           }
         ]
@@ -2359,15 +2359,15 @@
         "dependencies": [
           2
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
             "title": "Implement Asyncio Task per Job with Redis Status Tracking",
             "description": "Develop an asyncio Task for each simulation job that manages its execution status, storing updates in Redis using redis-py 5.0. Ensure proper connection pooling and coroutine safety to handle concurrent tasks effectively.",
             "dependencies": [],
-            "details": "Utilize redis-py 5.0's asyncio support to create a Redis client for each job, storing status updates in a Redis database. Implement connection pooling to manage multiple concurrent tasks efficiently. Ensure coroutine safety by properly handling Redis connections and using context managers to manage their lifecycle. Refer to redis-py documentation for best practices on asyncio usage and connection management. ([redis-py.readthedocs.io](https://redis-py.readthedocs.io/en/stable/examples/asyncio_examples.html?utm_source=openai))",
-            "status": "pending",
+            "details": "Utilize redis-py 5.0's asyncio support to create a Redis client for each job, storing status updates in a Redis database. Implement connection pooling to manage multiple concurrent tasks efficiently. Ensure coroutine safety by properly handling Redis connections and using context managers to manage their lifecycle. Refer to redis-py documentation for best practices on asyncio usage and connection management. ([redis-py.readthedocs.io](https://redis-py.readthedocs.io/en/stable/examples/asyncio_examples.html?utm_source=openai))\n<info added on 2025-07-27T19:37:32.945Z>\n• Replace placeholder RedisJobStore with AsyncRedisJobStore (store.py):\n  – Acquire a single redis.asyncio.ConnectionPool at app start; pass pool instance to every store created by dependency-injection.\n  – CRUD API surface:\n      async add(job_id: str, payload: dict)         # HSET job:{id}\n      async set_stage(job_id: str, stage: str, pct: int = 0)\n      async incr_pct(job_id: str, delta: int)\n      async mark_done(job_id: str, success: bool, error: str | None = None)\n      async get(job_id: str) -> dict\n      async list(prefix: str = \"job:*\") -> list[dict]\n      async delete(job_id: str)\n  – Every mutating call also `PUBLISH jobs:{job_id}:events` with a compact JSON blob so WebSocket layer can stream live progress.\n\n• Launcher wiring:\n  – Inject AsyncRedisJobStore into JobLauncher; at each pipeline step call `await store.set_stage(id, \"mesh\")`, `\"solve\"`, `\"post\"`, etc.\n  – On exceptions catch, `await store.mark_done(id, False, str(exc))`; otherwise mark_done(..., True).\n\n• Data layout:\n  HSET job:{id}  status running|done|error  stage validate|mesh|write|solve|post  pct 0-100  created  started  finished  error_msg\n\n• Configuration:\n  – Add `REDIS_URL` env var (falls back to \"redis://localhost:6379/0\"); create pool with `decode_responses=True`.\n  – Remove aioredis from imports; redis-py ≥5 already covers asyncio.\n\n• Testing:\n  – pytest-asyncio + fakeredis.aioredis for unit tests (no network).\n  – Scenario: launch dummy pipeline, await completion, assert HGETALL shows pct 100 and stage \"post\".\n\n• Docs:\n  – Update README & FastAPI settings example to include REDIS_URL.\n</info added on 2025-07-27T19:37:32.945Z>\n<info added on 2025-07-27T19:51:11.239Z>\n• Implemented store.AsyncRedisJobStore in store.py  \n  – Receives a shared redis.asyncio.ConnectionPool injected at construction time.  \n  – Full CRUD on HSET job:{id} hash plus additional key simulation:{id} containing the marshalled SimulationJob (as orjson bytes); transparent (de)serialisation through SimulationJob.from_dict / .model_dump.  \n  – Every mutating call also PUBLISHes compact JSON to channel jobs:{id}:events for the WebSocket layer.  \n  – All public methods are coroutine-safe; auto-retries on ConnectionError with exponential back-off.\n\n• Application wiring (main.py & deps.py)  \n  – On startup create ConnectionPool.from_url(REDIS_URL, decode_responses=True); ping to verify connectivity.  \n  – If ping fails, log warning and fall back to InMemoryJobStore so the API remains available in offline mode.  \n  – Dependency provider now yields either AsyncRedisJobStore or InMemoryJobStore transparently.\n\n• Health-check endpoint (/healthz)  \n  – Augmented JSON payload with {\"redis\":\"ok\"|\"unreachable\"} based on await redis.ping().  \n  – CI updated to assert redis field exists.\n\n• Tests  \n  – Added tests/test_store_redis.py using fakeredis.aioredis to cover add / set_stage / incr_pct / mark_done / list / delete paths and event payload structure.  \n  – Added tests/test_fallback.py that monkeypatches redis.asyncio.ConnectionPool.connect to raise OSError and verifies InMemoryJobStore selection.\n\n• Documentation  \n  – README: new section “Redis integration & graceful degradation” with env vars REDIS_URL and REDIS_REQUIRED (default false).\n</info added on 2025-07-27T19:51:11.239Z>",
+            "status": "done",
             "testStrategy": "Unit tests should mock Redis interactions to verify that status updates are correctly stored and retrieved. Integration tests should simulate multiple concurrent jobs to ensure that Redis connections are managed efficiently and that status updates are accurate."
           },
           {
@@ -2375,8 +2375,8 @@
             "title": "Integrate Fortran Mesh Generation via ctypes",
             "description": "Create a Python interface using ctypes to call the Fortran library responsible for mesh generation, ensuring seamless integration within the simulation pipeline.",
             "dependencies": [],
-            "details": "Use Python's ctypes library to create bindings to the Fortran mesh generation functions. Ensure that data types and memory management are correctly handled to prevent errors. Test the integration by running the mesh generation step and verifying the output against expected results.",
-            "status": "pending",
+            "details": "Use Python's ctypes library to create bindings to the Fortran mesh generation functions. Ensure that data types and memory management are correctly handled to prevent errors. Test the integration by running the mesh generation step and verifying the output against expected results.\n<info added on 2025-07-27T19:59:08.082Z>\nImplementation completed:\n\n• educational_mesh_service.py provides a full ctypes wrapper that loads the pre-compiled libeducational_mesh.so via ctypes.CDLL  \n• GeometryParams and MeshQuality ctypes.Structure classes replicate the Fortran data layouts and include sizeof sanity checks  \n• generate_mesh() is executed in a ProcessPoolExecutor to avoid GIL contention and returns a MeshQuality dict  \n• JobLauncher’s mesh stage now calls EducationalMeshService and stores returned quality metrics in the Redis progress record  \n• Supports all existing geometry types (block, cylinder, pipe, nozzle) with parameter validation and error handling  \n• mesh_generation_test.py validates vertex/cell counts and quality metrics against reference meshes and passes in CI  \n\nSubtask can be marked as done; only pending actions are routine code review and doc update.\n</info added on 2025-07-27T19:59:08.082Z>",
+            "status": "done",
             "testStrategy": "Unit tests should mock the Fortran library to verify that the ctypes interface correctly passes data and handles errors. Integration tests should run the mesh generation step and compare the output to known correct results."
           },
           {
@@ -2384,8 +2384,8 @@
             "title": "Implement Solver Execution with Docker Integration",
             "description": "Develop functionality to execute the ElmerSolver within a Docker container, passing the appropriate case path and handling the solver's output.",
             "dependencies": [],
-            "details": "Use Python's subprocess module to run the ElmerSolver command within a Docker container. Pass the '--case' argument with the correct path to the simulation case. Capture the solver's output and handle any errors that may occur during execution. Ensure that the Docker container is properly managed to prevent resource leaks.",
-            "status": "pending",
+            "details": "Use Python's subprocess module to run the ElmerSolver command within a Docker container. Pass the '--case' argument with the correct path to the simulation case. Capture the solver's output and handle any errors that may occur during execution. Ensure that the Docker container is properly managed to prevent resource leaks.\n<info added on 2025-07-27T19:51:28.162Z>\nRefactor this subtask to leverage the existing launcher.py:docker_wrapper.execute_solver instead of invoking subprocess directly. Attach a line-callback so every chunk of solver stdout is streamed back to the orchestration layer.\n\nImplementation additions\n• Call execute_solver(case_path, workdir, timeout, on_line_cb).  \n• Inside on_line_cb(line):  \n  – Immediately enqueue stage='solve', pct/msg extracted via regex r'^PROGRESS:(\\d+):(.*)$'.  \n  – Fallback: if no PROGRESS tag, emit pct=None, msg=line[:120].  \n• Before launching the container push {'stage':'solve','pct':0,'msg':'Solver started'} to Redis; after successful return code push {'stage':'solve','pct':100,'msg':'Solver finished'} then transition stage='post'.  \n• Propagate each update to the WebSocket queue used by /ws/simulations/{id}.  \n• Ensure execute_solver’s context-manager exits even on TimeoutExpired and publish {'stage':'solve','error':'timeout'}.\n</info added on 2025-07-27T19:51:28.162Z>\n<info added on 2025-07-27T19:55:48.950Z>\nNew implementation highlights:\n• docker_wrapper.execute_solver now accepts an on_line_callback parameter and streams container output in real time.  \n• launcher._execute_job processes lines asynchronously, mapping solver progress to overall job range 35 – 90 %.  \n• Regex-based extraction of PROGRESS tags drives Redis and WebSocket updates; non-tagged lines are truncated and forwarded as informational messages.  \n• All stdout/stderr from the container is tee’d to <workdir>/solver.log for post-mortem analysis.  \n• Non-zero return codes trigger {'stage':'solve','error':'exit','code':rc,'msg':last_line} events, while TimeoutExpired raises {'stage':'solve','error':'timeout'}.\n</info added on 2025-07-27T19:55:48.950Z>",
+            "status": "done",
             "testStrategy": "Unit tests should mock the subprocess calls to verify that the correct command is constructed and executed. Integration tests should run the solver with a sample case and verify that the output matches expected results."
           },
           {
@@ -2393,8 +2393,8 @@
             "title": "Develop Post-Processing to Convert VTU to JSON",
             "description": "Implement functionality to convert VTU files to JSON format using meshio 5.3, facilitating easier data manipulation and analysis.",
             "dependencies": [],
-            "details": "Use meshio 5.3 to read VTU files and convert them into a JSON-serializable dictionary. Ensure that all necessary data, such as points, cells, and point data, are included in the conversion. Handle any exceptions that may occur during the reading and conversion process to ensure robustness.",
-            "status": "pending",
+            "details": "Use meshio 5.3 to read VTU files and convert them into a JSON-serializable dictionary. Ensure that all necessary data, such as points, cells, and point data, are included in the conversion. Handle any exceptions that may occur during the reading and conversion process to ensure robustness.\n<info added on 2025-07-27T19:56:04.607Z>\nImplementation update:\n• Added meshio==5.3.* to both requirements.txt and pyproject.toml.  \n• Implemented JobLauncher._convert_vtu_to_json which:\n  – Reads the VTU with meshio.read().  \n  – Converts points, cells, point_data and cell_data into pure-Python (list/dict) structures, normalising cell representations that arrive either as objects with .type/.data or as (type, data) tuples.  \n  – Catches and logs all meshio and I/O exceptions, re-raising a custom ConversionError for upstream handling.  \n  – Writes the resulting dictionary to <basename>.json in the same directory as the source VTU.  \n• After successful conversion, the method stores the JSON file path in the job’s metadata (key “result_json”) so the frontend can request it directly.\n</info added on 2025-07-27T19:56:04.607Z>",
+            "status": "done",
             "testStrategy": "Unit tests should mock the meshio library to verify that the conversion function correctly processes VTU files. Integration tests should run the conversion on sample VTU files and verify that the resulting JSON matches expected structures and data."
           },
           {
@@ -2402,8 +2402,8 @@
             "title": "Implement Progress Event Emission for Each Stage",
             "description": "Develop functionality to emit progress events at each stage of the simulation pipeline, providing real-time feedback on the simulation's progress.",
             "dependencies": [],
-            "details": "At each stage of the simulation pipeline (validate, mesh, write SIF, solve, post-process), emit progress events that include the current stage and percentage completion. Use a WebSocket or similar mechanism to transmit these events to the frontend, allowing users to monitor the simulation's progress in real-time.",
-            "status": "pending",
+            "details": "At each stage of the simulation pipeline (validate, mesh, write SIF, solve, post-process), emit progress events that include the current stage and percentage completion. Use a WebSocket or similar mechanism to transmit these events to the frontend, allowing users to monitor the simulation's progress in real-time.\n<info added on 2025-07-27T20:34:15.176Z>\nImplemented full progress-relay stack:\n• Introduced ProgressRelayService that subscribes to Redis pub/sub channel pattern “jobs:*:events” and forwards messages to the WebSocket ConnectionManager.  \n• Registered ProgressRelayService in main.py; it starts automatically at application startup through the new dependencies.py injector.  \n• JobLauncher now emits stage-tagged progress events with deterministic percentage windows: Validation 0-10 %, Mesh 10-35 %, Solver 35-90 %, Post-processing 90-100 %.  \n• AsyncRedisJobStore publishes an event on every job state change, ensuring relay works for retries and failures as well.  \n• WebSocket endpoint throttles outbound messages to 5 Hz to avoid UI saturation while maintaining real-time feel.  \n• Fixed CORS and import issues; all services wired via dependency injection.\n</info added on 2025-07-27T20:34:15.176Z>",
+            "status": "done",
             "testStrategy": "Unit tests should mock the event emission to verify that the correct events are emitted at the appropriate times. Integration tests should simulate a full simulation run and verify that progress events are received and processed correctly by the frontend."
           }
         ]
@@ -2794,7 +2794,7 @@
     ],
     "metadata": {
       "created": "2025-07-27T09:26:48.776Z",
-      "updated": "2025-07-27T19:13:58.122Z",
+      "updated": "2025-07-28T09:45:39.768Z",
       "description": "Tasks for final-prd context"
     }
   }

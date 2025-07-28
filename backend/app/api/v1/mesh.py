@@ -3,6 +3,7 @@ Mesh generation API endpoints
 """
 
 import asyncio
+import json
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -24,6 +25,8 @@ from ...services.educational_mesh_service import (
     LShapeGeometry,
 )
 from ...jobs.store import JobStore, InMemoryJobStore
+from ...dependencies import get_job_store
+from ...config.settings import settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/mesh", tags=["mesh"])
@@ -97,14 +100,6 @@ mesh_generation_tasks: Dict[UUID, asyncio.Task] = {}
 def get_mesh_service() -> EducationalMeshService:
     """Dependency to get mesh service instance"""
     return EducationalMeshService()
-
-
-# Dependency injection function
-def get_job_store() -> JobStore:
-    """Get job store instance"""
-    # This will be injected from the app factory
-    from ...main import job_store
-    return job_store
 
 
 @router.post("/generate", response_model=MeshGenerationResponseDTO)

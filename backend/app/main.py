@@ -2,19 +2,25 @@
 Main FastAPI application for ElmerFEM Educational Platform
 """
 
+import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+import redis.asyncio as redis
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api.v1 import simulations_router, mesh_router
+from .api.v1 import simulations_router, mesh_router, websocket_router
+from .api.v1.websocket import get_connection_manager
 from .api.simulations import router as simulations_legacy_router
 from .config.settings import settings
+from .dependencies import get_docker_wrapper
 from .jobs.launcher import JobLauncher
-from .jobs.store import InMemoryJobStore, JobStore
+from .jobs.store import InMemoryJobStore, AsyncRedisJobStore, JobStore
 from .services.docker_wrapper import DockerWrapper
 from .services.materials_service import materials_service
+from .services.progress_relay import ProgressRelayService
 
 # Configure logging
 logging.basicConfig(
@@ -24,129 +30,171 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-# Global instances for dependency injection
-job_store: JobStore = InMemoryJobStore()
-docker_wrapper: DockerWrapper = DockerWrapper()
-job_launcher: JobLauncher = JobLauncher(job_store, docker_wrapper)
+# Store the connection pool and progress relay globally
+redis_pool = None
+progress_relay = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Application lifespan manager
-    """
-    # Startup
-    logger.info("Starting ElmerFEM Educational Platform API")
+    """Manage application lifespan events"""
+    global redis_pool, progress_relay
     
-    # Check Docker and Elmer availability
-    if await docker_wrapper.check_elmer_health():
-        logger.info("Elmer container is healthy")
-        version = await docker_wrapper.test_elmer_version()
-        if version:
-            logger.info(f"Elmer version: {version}")
+    logger.info("Starting ElmerFEM Educational Platform backend...")
+    
+    # Initialize Redis connection pool if configured
+    if settings.redis_url and (settings.use_redis or os.getenv("USE_REDIS", "").lower() == "true"):
+        try:
+            logger.info(f"Connecting to Redis at {settings.redis_url}")
+            redis_pool = redis.ConnectionPool.from_url(
+                settings.redis_url,
+                decode_responses=True,
+                max_connections=10
+            )
+            
+            # Test the connection
+            async with redis.Redis(connection_pool=redis_pool) as r:
+                await r.ping()
+                logger.info("Redis connection successful")
+                
+                # Initialize and start progress relay service
+                ws_manager = get_connection_manager()
+                progress_relay = ProgressRelayService(redis_pool)
+                await progress_relay.start()
+                logger.info("Progress relay service started")
+                
+                # Connect WebSocket manager to progress relay
+                async def relay_to_websocket(job_id: str, progress_data: dict):
+                    await ws_manager.send_progress(job_id, progress_data)
+                
+                progress_relay.progress_callback = relay_to_websocket
+                
+        except Exception as e:
+            logger.warning(f"Redis connection failed: {e}. Using in-memory store.")
+            redis_pool = None
+            progress_relay = None
     else:
-        logger.warning("Elmer container is not healthy - some features may not work")
+        logger.info("Redis not configured. Using in-memory store.")
     
-    # Create workspace directory
-    settings.get_workspace_path()
-    logger.info(f"Workspace directory: {settings.workspace_base_dir}")
-    
-    # Load materials data
-    try:
-        materials = materials_service.get_all_materials()
-        logger.info(f"Loaded {len(materials)} materials")
-    except Exception as e:
-        logger.error(f"Failed to load materials: {e}")
+    # Store redis pool in app state
+    app.state.redis_pool = redis_pool
+    app.state.progress_relay = progress_relay
     
     yield
     
-    # Shutdown
-    logger.info("Shutting down ElmerFEM Educational Platform API")
+    # Cleanup
+    logger.info("Shutting down ElmerFEM Educational Platform backend...")
+    
+    # Stop progress relay service
+    if progress_relay:
+        await progress_relay.stop()
+        logger.info("Progress relay service stopped")
+    
+    # Close Redis connection pool
+    if redis_pool:
+        await redis_pool.disconnect()
+        logger.info("Redis connection pool closed")
 
 
-def create_app() -> FastAPI:
-    """
-    Create and configure the FastAPI application
-    """
-    app = FastAPI(
-        title=settings.app_name,
-        description="Backend API for the ElmerFEM educational web platform",
-        version=settings.app_version,
-        lifespan=lifespan
-    )
+# Create FastAPI app
+app = FastAPI(
+    title="ElmerFEM Educational Platform",
+    description="Educational FEM simulation platform with real-time progress tracking",
+    version="0.1.0",
+    lifespan=lifespan
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
+
+# Include routers
+app.include_router(simulations_router, prefix="/api/v1")
+app.include_router(mesh_router, prefix="/api/v1")
+app.include_router(websocket_router, prefix="/api/v1")
+app.include_router(simulations_legacy_router, prefix="/api")
+
+
+@app.get("/")
+async def root():
+    """Root endpoint"""
+    return {"message": "ElmerFEM Educational Platform API"}
+
+
+@app.get("/health")
+async def health():
+    """Health check endpoint"""
+    health_status = {
+        "status": "ok",
+        "service": "elmerfem-backend", 
+        "debug": settings.debug,
+    }
     
-    # Configure CORS
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.cors_allowed_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    
-    # Include routers
-    app.include_router(simulations_router, prefix="/api/v1")
-    app.include_router(mesh_router, prefix="/api/v1")
-    app.include_router(simulations_legacy_router)  # Already has /api/simulations prefix
-    
-    @app.get("/")
-    async def root():
-        """Root endpoint"""
-        return {
-            "message": settings.app_name,
-            "version": settings.app_version,
-            "status": "running"
-        }
-    
-    @app.get("/health")
-    async def health_check():
-        """Health check endpoint for Docker health checks"""
-        # Check if Elmer is available
-        elmer_healthy = await docker_wrapper.check_elmer_health()
-        
-        # Check if materials are loaded
+    # Check Redis connection
+    if redis_pool:
         try:
-            materials_count = len(materials_service.get_all_materials())
-            materials_loaded = True
-        except:
-            materials_count = 0
-            materials_loaded = False
-        
-        return {
-            "status": "healthy",
-            "elmer_available": elmer_healthy,
-            "active_jobs": await job_store.get_active_job_count(),
-            "materials_loaded": materials_loaded,
-            "materials_count": materials_count
-        }
-    
-    @app.get("/api/materials")
-    async def get_materials():
-        """Get available materials for simulations"""
-        try:
-            materials = materials_service.get_all_materials()
-            return {
-                "materials": materials,
-                "count": len(materials)
-            }
-        except FileNotFoundError as e:
-            logger.error(f"Materials file not found: {e}")
-            raise HTTPException(
-                status_code=500,
-                detail="Materials database not found. Please ensure materials.json is present."
-            )
+            async with redis.Redis(connection_pool=redis_pool) as r:
+                await r.ping()
+                health_status["redis"] = "connected"
         except Exception as e:
-            logger.error(f"Error loading materials: {e}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to load materials: {str(e)}"
-            )
+            health_status["redis"] = f"error: {str(e)}"
+    else:
+        health_status["redis"] = "not configured"
     
-    return app
+    # Don't check Elmer on every health request - it's too slow
+    # Just return the last known status
+    health_status["elmer"] = "check /api/elmer-status for detailed status"
+    
+    return health_status
 
 
-# Create the application instance
-app = create_app()
+@app.get("/api/elmer-status") 
+async def elmer_status(docker_wrapper: DockerWrapper = Depends(get_docker_wrapper)):
+    """Detailed Elmer/Docker status check (may be slow)"""
+    try:
+        # Use dependency injection to get docker_wrapper
+        elmer_available = await docker_wrapper.check_elmer_health()
+        return {
+            "elmer_available": elmer_available,
+            "docker_configured": True,
+            "message": "Elmer is available" if elmer_available else "Elmer container is not running"
+        }
+    except Exception as e:
+        logger.error(f"Error checking Elmer status: {e}")
+        return {
+            "elmer_available": False, 
+            "docker_configured": False,
+            "error": str(e)
+        }
+
+
+@app.get("/api/materials")
+async def get_materials():
+    """Get available materials for simulations"""
+    try:
+        materials = materials_service.get_all_materials()
+        return {
+            "materials": materials,
+            "count": len(materials)
+        }
+    except FileNotFoundError as e:
+        logger.error(f"Materials file not found: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Materials database not found. Please ensure materials.json is present."
+        )
+    except Exception as e:
+        logger.error(f"Error loading materials: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to load materials: {str(e)}"
+        )
 
 
 if __name__ == "__main__":

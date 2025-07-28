@@ -1,0 +1,23 @@
+version: '3.8'
+
+# Development override - Backend in Docker, Frontend in local dev mode
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up backend redis elmer
+
+services:
+  # Override frontend to not start automatically
+  frontend:
+    profiles:
+      - "full-stack"  # Only starts when explicitly requested
+
+  # Backend with additional dev settings
+  backend:
+    environment:
+      - LOG_LEVEL=DEBUG
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - ELMERFEM_REDIS_URL=redis://redis:6379
+      - ELMERFEM_USE_REDIS=true
+    # Ensure hot reload works properly
+    volumes:
+      - ./backend:/app
+      - /app/elmerfem_custom/mesh_generator/build  # Don't override compiled libraries 

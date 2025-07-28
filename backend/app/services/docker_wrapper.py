@@ -7,7 +7,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, AsyncGenerator
 
 import aiohttp
 
@@ -90,112 +90,198 @@ class DockerWrapper:
             logger.error(f"Error checking Elmer container health: {e}")
             return False
     
-    async def execute_solver(
+    async def execute_solver_streaming(
         self, 
         sif_file: str,
         working_directory: Path,
         timeout: Optional[int] = None
+    ) -> AsyncGenerator[str, None]:
+        """
+        Execute ElmerSolver and stream output line by line
+        
+        Args:
+            sif_file: Path to the SIF file (relative to working directory)
+            working_directory: Directory containing the SIF file
+            timeout: Execution timeout in seconds
+            
+        Yields:
+            Lines of output from ElmerSolver
+        """
+        try:
+            if self.running_in_docker:
+                # TODO: Implement streaming via Elmer API when available
+                logger.warning("Streaming not yet implemented for containerized environment")
+                return
+            
+            # Build the docker compose exec command
+            cmd = [
+                "docker", "compose",
+                "-f", str(self.compose_file),
+                "-p", self.compose_project,
+                "exec",
+                "-T"  # Disable pseudo-TTY
+            ]
+            
+            # The working_directory should already be within /workspace
+            if str(working_directory).startswith("/workspace"):
+                container_work_dir = working_directory
+            else:
+                # Legacy behavior: convert relative path
+                relative_path = working_directory.relative_to(settings.workspace_base_dir)
+                container_work_dir = self.work_dir / relative_path
+            
+            cmd.extend(["-w", str(container_work_dir)])
+            cmd.extend([self.elmer_container, "ElmerSolver", sif_file])
+            
+            logger.info(f"Executing solver with streaming: {' '.join(cmd)}")
+            
+            # Create subprocess
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT  # Combine stdout and stderr
+            )
+            
+            # Stream output line by line
+            start_time = asyncio.get_event_loop().time()
+            
+            try:
+                while True:
+                    if timeout and (asyncio.get_event_loop().time() - start_time) > timeout:
+                        process.kill()
+                        await process.wait()
+                        yield "ERROR: Process timed out"
+                        break
+                    
+                    line = await asyncio.wait_for(
+                        process.stdout.readline(),
+                        timeout=1.0  # Read timeout
+                    )
+                    
+                    if not line:
+                        # End of stream
+                        break
+                    
+                    # Decode and yield the line
+                    decoded_line = line.decode('utf-8', errors='replace').strip()
+                    if decoded_line:
+                        yield decoded_line
+                        
+            except asyncio.TimeoutError:
+                # Read timeout - continue loop
+                pass
+            except Exception as e:
+                logger.error(f"Error reading solver output: {e}")
+                yield f"ERROR: {str(e)}"
+            
+            # Wait for process to complete
+            return_code = await process.wait()
+            
+            if return_code != 0:
+                yield f"ERROR: Solver exited with code {return_code}"
+                
+        except Exception as e:
+            logger.error(f"Error executing ElmerSolver with streaming: {e}", exc_info=True)
+            yield f"ERROR: {str(e)}"
+    
+    async def execute_solver(
+        self, 
+        sif_file: str,
+        working_directory: Path,
+        timeout: Optional[int] = None,
+        on_line_callback: Optional[callable] = None
     ) -> Tuple[int, str, str]:
         """
         Execute ElmerSolver
         
         Args:
-            sif_file: Name of the SIF file (relative to working directory)
+            sif_file: Path to the SIF file (relative to working directory)
             working_directory: Directory containing the SIF file
             timeout: Execution timeout in seconds
+            on_line_callback: Optional async callback to process output lines as they arrive
             
         Returns:
             Tuple of (return_code, stdout, stderr)
         """
         try:
-            # Ensure working directory exists
-            working_directory.mkdir(parents=True, exist_ok=True)
-            
             if self.running_in_docker:
-                # When running inside Docker, use the Elmer API
-                
-                # The working directory should be within /workspace
-                if not str(working_directory).startswith("/workspace"):
-                    logger.error(f"Working directory {working_directory} not in /workspace")
-                    return -1, "", "Working directory must be in /workspace"
-                
-                # Call the Elmer API to execute the solver
+                # When running inside Docker, make API call to Elmer service
                 async with aiohttp.ClientSession() as session:
                     try:
-                        payload = {
+                        # Prepare request data
+                        data = {
                             "sif_file": sif_file,
-                            "working_directory": str(working_directory),
-                            "timeout": timeout or settings.job_timeout_seconds
+                            "working_directory": str(working_directory)
                         }
                         
-                        logger.info(f"Calling Elmer API to solve: {payload}")
-                        
+                        # Submit job to Elmer API
                         async with session.post(
                             f"{self.elmer_api_url}/solve",
-                            json=payload,
-                            timeout=aiohttp.ClientTimeout(total=timeout or settings.job_timeout_seconds + 30)
+                            json=data,
+                            timeout=timeout or settings.job_timeout_seconds
                         ) as response:
                             if response.status == 200:
                                 result = await response.json()
                                 return (
-                                    result.get("returncode", -1),
+                                    result.get("return_code", 0),
                                     result.get("stdout", ""),
                                     result.get("stderr", "")
                                 )
                             else:
                                 error_text = await response.text()
-                                logger.error(f"Elmer API solve failed with status {response.status}: {error_text}")
+                                logger.error(f"Elmer API solve failed: {error_text}")
                                 return -1, "", f"Elmer API error: {error_text}"
                                 
                     except asyncio.TimeoutError:
                         logger.error("Elmer API solve request timed out")
-                        return -1, "", "Elmer API request timed out"
+                        return -1, "", "Solver request timed out"
                     except aiohttp.ClientError as e:
                         logger.error(f"Elmer API connection error: {e}")
-                        return -1, "", f"Elmer API connection error: {str(e)}"
-                
+                        return -1, "", f"Connection error: {str(e)}"
             else:
-                # Original implementation for running outside Docker
-                # Convert to relative path inside container
-                relative_path = working_directory.relative_to(settings.workspace_base_dir)
-                container_work_dir = self.work_dir / relative_path
-                
-                # Build the command
-                cmd = [
-                    "docker", "compose",
-                    "-f", str(self.compose_file),
-                    "-p", self.compose_project,
-                    "exec",
-                    "-T",  # Disable pseudo-TTY
-                    "-w", str(container_work_dir),  # Working directory
-                    self.elmer_container,
-                    "ElmerSolver", sif_file
-                ]
-                
-                logger.info(f"Executing command: {' '.join(cmd)}")
-                
-                # Create subprocess
-                process = await asyncio.create_subprocess_exec(
-                    *cmd,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                    cwd=str(working_directory)
-                )
-                
-                # Wait for completion with timeout
-                try:
-                    stdout, stderr = await asyncio.wait_for(
-                        process.communicate(),
-                        timeout=timeout or settings.job_timeout_seconds
+                # If on_line_callback is provided, use streaming execution
+                if on_line_callback:
+                    # Collect stdout and stderr
+                    stdout_lines = []
+                    stderr_lines = []
+                    returncode = 0
+                    
+                    # Use streaming execution to capture lines
+                    async for line in self.execute_solver_streaming(
+                        sif_file,
+                        working_directory,
+                        timeout
+                    ):
+                        # Check if line is an error
+                        if line.startswith("ERROR:") or line.startswith("STDERR:"):
+                            stderr_lines.append(line)
+                            # Extract error code if present
+                            if "EXIT CODE:" in line:
+                                try:
+                                    returncode = int(line.split("EXIT CODE:")[-1].strip())
+                                except:
+                                    returncode = -1
+                        else:
+                            stdout_lines.append(line)
+                            # Call the callback
+                            if on_line_callback:
+                                await on_line_callback(line)
+                    
+                    # Join lines
+                    stdout = "\n".join(stdout_lines)
+                    stderr = "\n".join(stderr_lines)
+                    
+                    return returncode, stdout, stderr
+                else:
+                    # Original docker compose exec implementation
+                    returncode, stdout, stderr = await self.execute_command(
+                        ["ElmerSolver", sif_file],
+                        working_directory=working_directory,
+                        timeout=timeout
                     )
-                except asyncio.TimeoutError:
-                    # Kill the process on timeout
-                    process.kill()
-                    await process.wait()
-                    return -1, "", "Process timed out"
+                    
+                    return returncode, stdout, stderr
                 
-                return process.returncode, stdout.decode(), stderr.decode()
-            
         except Exception as e:
             logger.error(f"Error executing ElmerSolver: {e}", exc_info=True)
             return -1, "", str(e)
@@ -251,8 +337,14 @@ class DockerWrapper:
                 
                 # Add working directory if specified
                 if working_directory:
-                    relative_path = working_directory.relative_to(settings.workspace_base_dir)
-                    container_work_dir = self.work_dir / relative_path
+                    # The working_directory should already be within /workspace
+                    if str(working_directory).startswith("/workspace"):
+                        # Already an absolute path within container
+                        container_work_dir = working_directory
+                    else:
+                        # Legacy behavior: convert relative path
+                        relative_path = working_directory.relative_to(settings.workspace_base_dir)
+                        container_work_dir = self.work_dir / relative_path
                     cmd.extend(["-w", str(container_work_dir)])
                 
                 # Add container name and command
@@ -317,6 +409,126 @@ class DockerWrapper:
         except Exception as e:
             logger.error(f"Error testing Elmer version: {e}")
             return None
+    
+    async def execute_solver_streaming(
+        self, 
+        sif_filename: str, 
+        work_dir: Path,
+        timeout: int = 300
+    ) -> AsyncGenerator[str, None]:
+        """
+        Execute ElmerSolver and stream output lines
+        
+        Args:
+            sif_filename: Name of the SIF file to execute
+            work_dir: Working directory containing the SIF file
+            timeout: Maximum execution time in seconds
+            
+        Yields:
+            Output lines from ElmerSolver
+        """
+        if self.running_in_docker:
+            # Execute via Elmer API with streaming
+            async with aiohttp.ClientSession() as session:
+                # Prepare the request data
+                with open(work_dir / sif_filename, 'r') as f:
+                    sif_content = f.read()
+                
+                data = {
+                    "sif_filename": sif_filename,
+                    "sif_content": sif_content,
+                    "timeout": timeout,
+                    "stream": True  # Enable streaming response
+                }
+                
+                try:
+                    async with session.post(
+                        f"{self.elmer_api_url}/execute",
+                        json=data,
+                        timeout=aiohttp.ClientTimeout(total=timeout + 10)
+                    ) as response:
+                        if response.status != 200:
+                            error_text = await response.text()
+                            logger.error(f"Elmer API execution failed: {error_text}")
+                            yield f"ERROR: Elmer API execution failed with status {response.status}"
+                            return
+                        
+                        # Stream the response line by line
+                        async for line in response.content:
+                            decoded_line = line.decode('utf-8').strip()
+                            if decoded_line:
+                                yield decoded_line
+                                
+                except asyncio.TimeoutError:
+                    logger.error(f"ElmerSolver execution timed out after {timeout} seconds")
+                    yield f"ERROR: Execution timed out after {timeout} seconds"
+                except Exception as e:
+                    logger.error(f"Error during streaming execution: {e}")
+                    yield f"ERROR: {str(e)}"
+        else:
+            # Execute directly using subprocess with streaming output
+            cmd = [
+                "ElmerSolver",
+                str(sif_filename)
+            ]
+            
+            try:
+                process = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    cwd=str(work_dir),
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.STDOUT,  # Combine stdout and stderr
+                    env=self._get_env()
+                )
+                
+                # Set up timeout
+                start_time = asyncio.get_event_loop().time()
+                
+                while True:
+                    try:
+                        # Read line with short timeout to check overall timeout
+                        line = await asyncio.wait_for(
+                            process.stdout.readline(),
+                            timeout=1.0
+                        )
+                        
+                        if not line:
+                            # Process has finished
+                            break
+                        
+                        # Decode and yield the line
+                        decoded_line = line.decode('utf-8').strip()
+                        if decoded_line:
+                            yield decoded_line
+                        
+                        # Check overall timeout
+                        if asyncio.get_event_loop().time() - start_time > timeout:
+                            logger.warning(f"ElmerSolver execution exceeded timeout of {timeout}s, terminating")
+                            process.terminate()
+                            await asyncio.sleep(0.1)
+                            if process.returncode is None:
+                                process.kill()
+                            yield f"ERROR: Execution timed out after {timeout} seconds"
+                            break
+                            
+                    except asyncio.TimeoutError:
+                        # Short timeout for readline, continue
+                        continue
+                    except Exception as e:
+                        logger.error(f"Error reading solver output: {e}")
+                        yield f"ERROR: Error reading output: {str(e)}"
+                        break
+                
+                # Wait for process to complete
+                await process.wait()
+                
+                if process.returncode != 0:
+                    logger.warning(f"ElmerSolver exited with code {process.returncode}")
+                    yield f"WARNING: ElmerSolver exited with code {process.returncode}"
+                    
+            except Exception as e:
+                logger.error(f"Error executing ElmerSolver: {e}")
+                yield f"ERROR: Failed to execute ElmerSolver: {str(e)}"
 
 
 # Global docker wrapper instance getter

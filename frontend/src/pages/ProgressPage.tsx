@@ -2,214 +2,239 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { simulationApi } from '../api';
 import { SimulationStatus, JobStatus } from '../types/api';
+import { useSimulationProgress } from '../hooks/useSimulationProgress';
+import { WebSocketConnectionState } from '../types/websocket';
 
 function ProgressPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [status, setStatus] = useState<SimulationStatus | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [initialStatus, setInitialStatus] = useState<SimulationStatus | null>(null);
+  const [initialError, setInitialError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!id) {
-      navigate('/');
-      return;
+  // Use WebSocket hook for real-time progress
+  const {
+    isConnected,
+    connectionState,
+    status,
+    progress,
+    currentMessage,
+    progressMessages,
+    error,
+    reconnect,
+    disconnect
+  } = useSimulationProgress({
+    simulationId: id || '',
+    onComplete: () => {
+      // Navigate to results after a short delay
+      setTimeout(() => {
+        navigate(`/result/${id}`);
+      }, 1500);
+    },
+    onError: (err) => {
+      console.error('Simulation error:', err);
     }
+  });
 
-    // Poll for status updates
-    const pollInterval = setInterval(async () => {
+  // Fetch initial status
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchInitialStatus = async () => {
       try {
-        const result = await simulationApi.getSimulationStatus(id);
-        setStatus(result);
-
-        // Navigate to results if completed
-        if (result.status === JobStatus.COMPLETED) {
-          clearInterval(pollInterval);
-          navigate(`/result/${id}`);
-        } else if (result.status === JobStatus.FAILED) {
-          clearInterval(pollInterval);
-          setError(result.error_message || 'Simulation failed');
-        }
+        const response = await simulationApi.getSimulationStatus(id);
+        setInitialStatus(response.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to get status');
+        setInitialError('Failed to load simulation status');
       }
-    }, 3000); // Poll every 3 seconds
+    };
 
-    // Initial fetch
-    simulationApi.getSimulationStatus(id)
-      .then(setStatus)
-      .catch(err => setError(err instanceof Error ? err.message : 'Failed to get status'));
-
-    return () => clearInterval(pollInterval);
-  }, [id, navigate]);
+    fetchInitialStatus();
+  }, [id]);
 
   const handleCancel = async () => {
     if (!id || cancelling) return;
     
+    setCancelling(true);
     try {
-      setCancelling(true);
       await simulationApi.cancelSimulation(id);
+      disconnect();
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to cancel simulation');
+      console.error('Failed to cancel simulation:', err);
     } finally {
       setCancelling(false);
     }
   };
 
-  if (error) {
-    return (
-      <div className="max-w-2xl mx-auto text-center">
-        <div className="card-neumorphic">
-          <h1 className="text-3xl font-bold mb-4 text-red-600">Error</h1>
-          <p className="text-lg mb-6">{error}</p>
-          <button
-            onClick={() => navigate('/')}
-            className="btn-neumorphic-primary"
-          >
-            Back to Home
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const handleRetryConnection = () => {
+    reconnect();
+  };
 
-  if (!status) {
-    return (
-      <div className="max-w-2xl mx-auto text-center">
-        <div className="card-neumorphic">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-300 rounded mb-4"></div>
-            <div className="h-4 bg-gray-300 rounded"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const getStatusColor = () => {
-    switch (status.status) {
-      case JobStatus.PENDING:
-        return 'text-yellow-600';
-      case JobStatus.RUNNING:
-        return 'text-blue-600';
-      case JobStatus.COMPLETED:
-        return 'text-green-600';
-      case JobStatus.FAILED:
-        return 'text-red-600';
-      case JobStatus.CANCELLED:
-        return 'text-gray-600';
+  const getConnectionStatusIcon = () => {
+    switch (connectionState) {
+      case WebSocketConnectionState.CONNECTED:
+        return <span className="text-success">●</span>;
+      case WebSocketConnectionState.CONNECTING:
+      case WebSocketConnectionState.RECONNECTING:
+        return <span className="text-warning animate-pulse">●</span>;
       default:
-        return 'text-gray-600';
+        return <span className="text-error">●</span>;
     }
   };
 
-  const getStatusMessage = () => {
-    switch (status.status) {
+  const getProgressPercentage = () => {
+    // If WebSocket is connected, use its progress
+    if (isConnected && progress > 0) return progress;
+    
+    // Otherwise, estimate based on status
+    switch (status || initialStatus?.status) {
       case JobStatus.PENDING:
-        return 'Preparing simulation...';
+        return 5;
       case JobStatus.RUNNING:
-        return status.current_step || 'Running simulation...';
+        return progress || 50;
       case JobStatus.COMPLETED:
-        return 'Simulation completed!';
+        return 100;
       case JobStatus.FAILED:
-        return 'Simulation failed';
       case JobStatus.CANCELLED:
-        return 'Simulation cancelled';
+        return 0;
       default:
-        return 'Unknown status';
+        return 0;
     }
   };
+
+  const progressPercentage = getProgressPercentage();
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-4xl font-bold mb-8">Simulation Progress</h1>
+    <div className="max-w-4xl mx-auto py-8">
+      <div className="card-neumorphic p-8 mb-6">
+        <h1 className="text-3xl font-bold mb-2">Simulation Progress</h1>
+        <p className="text-gray-600">Simulation ID: {id}</p>
+      </div>
 
-      <div className="card-neumorphic mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Status</h2>
-          <span className={`text-xl font-semibold ${getStatusColor()}`}>
-            {status.status.toUpperCase()}
-          </span>
-        </div>
-
-        <div className="space-y-4">
-          {/* Progress Bar */}
-          <div>
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>{getStatusMessage()}</span>
-              <span>{Math.round(status.progress)}%</span>
-            </div>
-            <div className="progress-neumorphic">
-              <div
-                className="progress-bar"
-                style={{ width: `${status.progress}%` }}
-              />
-            </div>
+      {/* Connection Status */}
+      <div className="card-neumorphic p-6 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-semibold">Connection Status</span>
+            {getConnectionStatusIcon()}
+            <span className="text-sm text-gray-600">
+              {connectionState.replace('_', ' ').toLowerCase()}
+            </span>
           </div>
-
-          {/* Steps Information */}
-          {status.current_step && (
-            <div className="bg-gray-100 rounded-lg p-4">
-              <p className="text-sm font-medium text-gray-700">Current Step:</p>
-              <p className="text-lg">{status.current_step}</p>
-              {status.total_steps && (
-                <p className="text-sm text-gray-600 mt-1">
-                  Step {Math.ceil(status.progress / (100 / status.total_steps))} of {status.total_steps}
-                </p>
-              )}
-            </div>
+          {connectionState === WebSocketConnectionState.ERROR && (
+            <button
+              onClick={handleRetryConnection}
+              className="btn-neumorphic-primary text-sm"
+            >
+              Retry Connection
+            </button>
           )}
+        </div>
+      </div>
 
-          {/* Time Information */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-gray-600">Started:</p>
-              <p className="font-medium">
-                {status.started_at 
-                  ? new Date(status.started_at).toLocaleTimeString()
-                  : 'Not started'}
-              </p>
-            </div>
-            <div>
-              <p className="text-gray-600">Elapsed Time:</p>
-              <p className="font-medium">
-                {status.started_at
-                  ? formatElapsedTime(new Date(status.started_at))
-                  : 'N/A'}
-              </p>
-            </div>
+      {/* Main Progress Section */}
+      <div className="card-neumorphic p-8 mb-6">
+        <h2 className="text-2xl font-semibold mb-6">
+          Status: {currentMessage || status || initialStatus?.status || 'Starting simulation...'}
+        </h2>
+        
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Progress</span>
+            <span>{progressPercentage}%</span>
+          </div>
+          <div className="progress-neumorphic">
+            <div 
+              className="progress-bar"
+              style={{ width: `${progressPercentage}%` }}
+            />
           </div>
         </div>
+
+        {/* Error Display */}
+        {(error || initialError) && (
+          <div className="bg-error/10 border border-error/20 rounded-xl p-4 mb-6">
+            <p className="text-error font-semibold mb-1">Error</p>
+            <p className="text-sm">{error || initialError}</p>
+          </div>
+        )}
+
+        {/* Progress Messages */}
+        {progressMessages.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold mb-3">Activity Log</h3>
+            <div className="bg-neumorphic-bg rounded-xl shadow-neumorphic-inset p-4 max-h-64 overflow-y-auto">
+              {progressMessages.map((msg, index) => (
+                <div key={index} className="text-sm text-gray-700 py-1">
+                  {msg}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-4">
-        <button
-          onClick={handleCancel}
-          disabled={cancelling || status.status !== JobStatus.RUNNING}
-          className="btn-neumorphic text-red-600 hover:text-red-700"
-        >
-          {cancelling ? 'Cancelling...' : 'Cancel Simulation'}
-        </button>
+      <div className="flex gap-4 justify-center">
+        {status !== JobStatus.COMPLETED && status !== JobStatus.FAILED && (
+          <button
+            onClick={handleCancel}
+            disabled={cancelling}
+            className="btn-neumorphic px-8 py-3 text-error font-semibold"
+          >
+            {cancelling ? 'Cancelling...' : 'Cancel Simulation'}
+          </button>
+        )}
+        
+        {(status === JobStatus.FAILED || connectionState === WebSocketConnectionState.ERROR) && (
+          <button
+            onClick={() => navigate('/')}
+            className="btn-neumorphic-primary px-8 py-3"
+          >
+            Back to Home
+          </button>
+        )}
+      </div>
+
+      {/* Connection Error Modal */}
+      {connectionState === WebSocketConnectionState.ERROR && 
+       !isConnected && 
+       progressMessages.length === 0 && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="card-neumorphic p-8 max-w-md">
+            <div className="text-center">
+
+              <h2 className="text-2xl font-bold mb-4">Connection Error</h2>
+              <p className="text-gray-600 mb-6">
+                Failed to connect after multiple attempts
+              </p>
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={() => navigate('/')}
+                  className="btn-neumorphic px-6 py-3"
+                >
+                  Back to Home
+                </button>
+                <button
+                  onClick={handleRetryConnection}
+                  className="btn-neumorphic-primary px-6 py-3"
+                >
+                  Retry Connection
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Simulation Started Time */}
+      <div className="text-center mt-6 text-sm text-gray-600">
+        Simulation started at {new Date().toLocaleTimeString()}
       </div>
     </div>
   );
-}
-
-function formatElapsedTime(startTime: Date): string {
-  const elapsed = Date.now() - startTime.getTime();
-  const seconds = Math.floor(elapsed / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-
-  if (hours > 0) {
-    return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
-  } else if (minutes > 0) {
-    return `${minutes}m ${seconds % 60}s`;
-  } else {
-    return `${seconds}s`;
-  }
 }
 
 export default ProgressPage; 

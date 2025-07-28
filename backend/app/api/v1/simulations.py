@@ -1,35 +1,29 @@
 """
-Simulation API endpoints
+Simulation management endpoints with enhanced job tracking
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, BackgroundTasks, Query, status
 from fastapi.responses import FileResponse, JSONResponse
 
+from ...dependencies import get_job_store, get_job_launcher
 from ...jobs.launcher import JobLauncher
-from ...jobs.store import JobStore, get_job_store
+from ...jobs.store import JobStore
 from ...models import (
-    JobStatus,
-    SimulationCreateResponseDTO,
+    SimulationJob,
     SimulationParamsDTO,
-    SimulationResultDTO,
+    SimulationCreateResponseDTO,
     SimulationStatusDTO,
+    SimulationResultDTO,
+    JobStatus
 )
-from ...services.docker_wrapper import DockerWrapper, get_docker_wrapper
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/simulations", tags=["simulations"])
-
-
-def get_job_launcher(
-    job_store: JobStore = Depends(get_job_store),
-    docker_wrapper: DockerWrapper = Depends(get_docker_wrapper)
-) -> JobLauncher:
-    """Dependency to get job launcher instance"""
-    return JobLauncher(job_store, docker_wrapper)
 
 
 @router.post("/", response_model=SimulationCreateResponseDTO)

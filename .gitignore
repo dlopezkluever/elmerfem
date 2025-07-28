@@ -6,6 +6,9 @@ tags
 *.swp
 *.so
 
+.cursor/
+gemini_run/
+
 # build stuff
 build/*
 CMakeFiles

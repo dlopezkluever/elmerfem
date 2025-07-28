@@ -1,18 +1,20 @@
 """
-Simulation API endpoints
+Legacy simulation endpoints for backward compatibility
 """
 
 import logging
-from typing import Optional
+from pathlib import Path
+from typing import Dict, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Response
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse, JSONResponse
 
-from ..config.settings import settings
+from ..dependencies import get_job_store, get_job_launcher
 from ..jobs.launcher import JobLauncher
 from ..jobs.store import JobStore
 from ..models import (
+    JobStatus,
     SimulationCreateResponseDTO,
     SimulationParamsDTO,
     SimulationResultDTO,
@@ -20,23 +22,7 @@ from ..models import (
 )
 
 logger = logging.getLogger(__name__)
-
-router = APIRouter(prefix="/api/simulations", tags=["simulations"])
-
-
-# Dependency injection functions
-def get_job_store() -> JobStore:
-    """Get job store instance"""
-    # This will be injected from the app factory
-    from ..main import job_store
-    return job_store
-
-
-def get_job_launcher() -> JobLauncher:
-    """Get job launcher instance"""
-    # This will be injected from the app factory
-    from ..main import job_launcher
-    return job_launcher
+router = APIRouter(prefix="/api/simulations", tags=["simulations-legacy"])
 
 
 @router.post("", response_model=SimulationCreateResponseDTO, status_code=201)
@@ -128,7 +114,7 @@ async def get_simulation_result(
 async def get_simulation_logs(
     job_id: UUID,
     job_launcher: JobLauncher = Depends(get_job_launcher)
-) -> Response:
+) -> FileResponse:
     """
     Get simulation log file
     
@@ -138,7 +124,7 @@ async def get_simulation_logs(
     if logs is None:
         raise HTTPException(status_code=404, detail="Logs not found")
     
-    return Response(
+    return FileResponse(
         content=logs,
         media_type="text/plain",
         headers={
@@ -152,7 +138,7 @@ async def download_result_file(
     job_id: UUID,
     filename: str,
     job_store: JobStore = Depends(get_job_store)
-) -> StreamingResponse:
+) -> FileResponse:
     """
     Download a specific result file
     
@@ -189,12 +175,8 @@ async def download_result_file(
     elif file_path.suffix == ".sif":
         content_type = "text/plain"
     
-    def iterfile():
-        with open(file_path, "rb") as f:
-            yield from f
-    
-    return StreamingResponse(
-        iterfile(),
+    return FileResponse(
+        content=file_path.open("rb"),
         media_type=content_type,
         headers={
             "Content-Disposition": f"attachment; filename={filename}"

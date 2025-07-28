@@ -8,4 +8,5 @@ aiofiles>=23.2.1
 redis>=5.0.0
 aioredis>=2.0.1
 numpy>=1.24.0
-jsonschema>=4.0.0 
+jsonschema>=4.0.0
+meshio==5.3.* 

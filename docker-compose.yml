@@ -1,6 +1,21 @@
 version: '3.8'
 
 services:
+  # Redis for job management and pub/sub
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - simnet
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - redis_data:/data
+
   # Backend runs INSIDE Docker network
   backend:
     build: 
@@ -19,6 +34,8 @@ services:
       - ELMERFEM_ELMER_CONTAINER_NAME=elmer
       - ELMERFEM_ELMER_WORK_DIR=/workspace
       - ELMER_API_URL=http://elmer:8080
+      - ELMERFEM_REDIS_URL=redis://redis:6379
+      - ELMERFEM_USE_REDIS=true
     volumes:
       - workspace:/workspace
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -27,6 +44,8 @@ services:
       - simnet
     depends_on:
       elmer:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -85,6 +104,8 @@ services:
 
 volumes:
   workspace:
+    driver: local
+  redis_data:
     driver: local
 
 networks:

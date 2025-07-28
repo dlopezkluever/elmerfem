@@ -2,11 +2,11 @@ import axios, { AxiosError } from 'axios';
 
 // Create axios instance with base configuration
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:8001',
+  baseURL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000',
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30 seconds timeout
+  timeout: 10000, // 10 seconds timeout
 });
 
 // Request interceptor
