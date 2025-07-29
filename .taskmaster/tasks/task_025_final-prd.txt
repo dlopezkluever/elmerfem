@@ -1,0 +1,14 @@
+# Task ID: 25
+# Title: CAD File Import Pipeline (STL/STEP/OBJ)
+# Status: pending
+# Dependencies: 7
+# Priority: medium
+# Description: Enable students to upload CAD, convert to manageable mesh using trimesh + pyvista then run FEA.
+# Details:
+• Endpoint `/api/geometry/upload` accepts multipart ≤50 MB.
+• Use trimesh.load + pv.wrap; decimate if cells>100k.
+• Store GeometryData json; expose preview endpoint.
+• Frontend Dropzone component with Three.js preview.
+
+# Test Strategy:
+Integration: upload sample stl (gear.stl) → preview renders; simulation launched with converted mesh completes successfully.

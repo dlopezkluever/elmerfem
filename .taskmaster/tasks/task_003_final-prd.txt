@@ -1,0 +1,47 @@
+# Task ID: 3
+# Title: Automated Integration Test: End-to-End Heat-Transfer Simulation
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Provide pytest + AsyncClient test that spins up compose, submits standard heat-transfer job and asserts completion.
+# Details:
+• Use testcontainers-python ≥0.11 to start compose programmatically.
+• Wait until backend health passes.
+• POST simulation payload.
+• Poll /status until completed.
+• Assert result files exist and .result_ok flag present.
+
+# Test Strategy:
+CI step runs test; success == exit 0 & ElmerSolver log contains ‘ELMER SOLVER FINISHED’ string.
+
+# Subtasks:
+## 1. Initialize Docker Compose Environment [pending]
+### Dependencies: None
+### Description: Set up a Docker Compose environment using testcontainers-python ≥0.11 to programmatically start the necessary services for the heat-transfer simulation.
+### Details:
+Utilize the testcontainers-python library to create and start the required Docker containers for the simulation environment. Ensure that all services are correctly configured and running before proceeding to the next step. Refer to the testcontainers-python documentation for guidance on setting up and managing Docker containers in Python tests. ([testcontainers-python.readthedocs.io](https://testcontainers-python.readthedocs.io/?utm_source=openai))
+
+## 2. Verify Backend Health Status [pending]
+### Dependencies: None
+### Description: Implement a mechanism to wait until the backend services are healthy and ready to handle requests.
+### Details:
+After starting the Docker Compose environment, monitor the health status of the backend services to ensure they are operational. This may involve sending periodic health check requests to the backend and waiting for a successful response before proceeding. Refer to the testcontainers-python documentation for managing container lifecycles and health checks. ([testcontainers-python.readthedocs.io](https://testcontainers-python.readthedocs.io/?utm_source=openai))
+
+## 3. Submit Simulation Payload [pending]
+### Dependencies: None
+### Description: Create and send a POST request with the standard heat-transfer simulation payload to the backend service.
+### Details:
+Use an asynchronous HTTP client, such as httpx.AsyncClient, to send a POST request containing the simulation payload to the backend service. Ensure that the payload is correctly formatted and includes all necessary parameters for the simulation. Refer to the FastAPI documentation on async testing for examples of using AsyncClient in tests. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/async-tests/?utm_source=openai))
+
+## 4. Monitor Simulation Status [pending]
+### Dependencies: None
+### Description: Poll the /status endpoint until the simulation reaches completion, indicating that the results are ready.
+### Details:
+Implement a polling mechanism that periodically sends requests to the /status endpoint of the backend service to check the progress of the simulation. Continue polling until the simulation is complete, as indicated by the backend's response. This approach is commonly used in asynchronous testing scenarios to monitor the state of long-running operations. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/async-tests/?utm_source=openai))
+
+## 5. Validate Simulation Results [pending]
+### Dependencies: None
+### Description: Verify the existence of result files and the presence of the .result_ok flag to confirm successful completion of the simulation.
+### Details:
+After the simulation has completed, check the backend service for the presence of the expected result files and ensure that the .result_ok flag is set, indicating a successful simulation. This step is crucial for confirming that the integration test has passed and that the heat-transfer simulation has been executed correctly. Refer to the FastAPI documentation on async testing for examples of validating asynchronous operations. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/async-tests/?utm_source=openai))
+

@@ -1,0 +1,45 @@
+# Task ID: 13
+# Title: PDF Report Generation Service
+# Status: pending
+# Dependencies: 11
+# Priority: medium
+# Description: Create async `generate_report(sim_id, student)` producing PDF via ReportLab with mesh & result screenshots.
+# Details:
+• Use pyppeteer to render hidden Three.js & Plotly screenshots (canvas.toDataURL) saved to /tmp.
+• Insert images + tables into SimpleDocTemplate.
+• Cache PDFs for 24 h.
+
+# Test Strategy:
+pytest: generate report, open with PyPDF2, assert page count≥3 & contains ‘Simulation Summary’. File size <5 MB.
+
+# Subtasks:
+## 1. Install and Configure ReportLab Dependencies [pending]
+### Dependencies: None
+### Description: Add ReportLab library and necessary dependencies for PDF generation with proper styling and layout.
+### Details:
+Install reportlab, configure fonts, set up page templates with proper margins and styling for educational reports.
+
+## 2. Implement Mesh and Result Screenshot Capture [pending]
+### Dependencies: None
+### Description: Create service to capture screenshots of 3D mesh and results visualizations from multiple angles for report inclusion.
+### Details:
+Use matplotlib or plotly to generate static images of mesh and results from front, side, and isometric views. Save as high-quality PNG files.
+
+## 3. Create PDF Report Template Structure [pending]
+### Dependencies: None
+### Description: Design PDF template with cover page, input summary, visualizations, data tables, and educational notes sections.
+### Details:
+Use ReportLab's SimpleDocTemplate with proper sections: cover page with student name/date, parameter summary table, mesh visualization pages, results pages, key findings table.
+
+## 4. Implement Async Report Generation Function [pending]
+### Dependencies: None
+### Description: Create async generate_report(sim_id, student) function that compiles all data and generates complete PDF report.
+### Details:
+Gather simulation data, generate screenshots, compile into PDF with proper formatting, return PDF bytes for download.
+
+## 5. Add Report Download API Endpoint [pending]
+### Dependencies: None
+### Description: Create FastAPI endpoint `/api/simulations/{id}/report` to generate and download PDF reports.
+### Details:
+Implement POST endpoint accepting student name, generate report asynchronously, return PDF with proper headers for download.
+

@@ -1,0 +1,45 @@
+# Task ID: 15
+# Title: Comprehensive Unit Test Suites (Backend & Frontend)
+# Status: pending
+# Dependencies: 12
+# Priority: medium
+# Description: Achieve ≥80 % coverage with pytest + coverage.py and Jest + Testing Library.
+# Details:
+• Backend: tests for mesh generation wrapper, validation, report service.
+• Frontend: tests for hooks, reducers, components.
+• Configure coverage thresholds in pyproject.toml and jest.config.mjs.
+
+# Test Strategy:
+CI fails if coverage <80 %. Local `npm test --coverage` and `pytest --cov` pass.
+
+# Subtasks:
+## 1. Setup Backend Testing Infrastructure [pending]
+### Dependencies: None
+### Description: Configure pytest with coverage.py, fixtures, and test database setup for comprehensive backend testing.
+### Details:
+Install pytest, pytest-asyncio, coverage.py, pytest-mock. Create conftest.py with fixtures for test client, mock containers, and database setup.
+
+## 2. Implement Backend API Unit Tests [pending]
+### Dependencies: None
+### Description: Create unit tests for all FastAPI endpoints including simulations, materials, mesh generation, and report APIs.
+### Details:
+Test all API endpoints with AsyncClient, mock dependencies, test success/error responses, validate request/response schemas with proper assertions.
+
+## 3. Create Backend Service Layer Tests [pending]
+### Dependencies: None
+### Description: Test core services like SIF generation, mesh processing, job orchestration, and VTU parsing with comprehensive coverage.
+### Details:
+Unit test SIFEngine, MeshService, JobLauncher, DockerWrapper with mocked dependencies. Test error handling, edge cases, and data validation.
+
+## 4. Setup Frontend Testing Infrastructure [pending]
+### Dependencies: None
+### Description: Configure Jest, React Testing Library, MSW for API mocking, and coverage reporting for comprehensive frontend testing.
+### Details:
+Install @testing-library/react, @testing-library/jest-dom, MSW for API mocking. Configure Jest with coverage thresholds and proper setup files.
+
+## 5. Implement Frontend Component Tests [pending]
+### Dependencies: None
+### Description: Create unit tests for all React components including forms, visualizations, progress tracking, and navigation with ≥80% coverage.
+### Details:
+Test ParameterForm, MeshPreview, ResultVisualization, ProgressPage with proper mocking, user interactions, and state management testing.
+

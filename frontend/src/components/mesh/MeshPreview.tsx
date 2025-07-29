@@ -3,10 +3,12 @@ import { useFrame } from '@react-three/fiber';
 import { MeshScene } from './MeshScene';
 import { STLMeshLoader } from './STLMeshLoader';
 import { MeshHeatMap } from './MeshHeatMap';
+import { GeometryParams } from '../../types/api';
 import * as THREE from 'three';
 
 interface MeshPreviewProps {
   meshId?: string;
+  geometry?: GeometryParams;
   qualityMetrics?: {
     total_nodes: number;
     total_elements: number;
@@ -31,6 +33,7 @@ interface MeshPreviewProps {
  */
 export const MeshPreview: React.FC<MeshPreviewProps> = React.memo(({
   meshId = 'default-mesh',
+  geometry,
   qualityMetrics,
   className = '',
   showHeatMap = false,
@@ -60,6 +63,7 @@ export const MeshPreview: React.FC<MeshPreviewProps> = React.memo(({
             wireframe={false}
             useMockData={useMockData}
             showMeshOutline={showMeshOutline}
+            geometry={geometry}
           />
           
           {/* Heat map visualization overlay */}

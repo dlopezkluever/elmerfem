@@ -1,0 +1,45 @@
+# Task ID: 11
+# Title: VTU Result Parser & Compressed Streaming
+# Status: pending
+# Dependencies: 7
+# Priority: medium
+# Description: Implement `/api/simulations/{id}/result` that reads VTU with meshio, converts to dict, gzip compresses and streams.
+# Details:
+• Use meshio.read → dict(list()) to ensure JSON serializable.
+• Limit payload: decimate point_data if >50 k nodes (numpy slicing).
+• Set `Content-Encoding: gzip`.
+
+# Test Strategy:
+pytest: request endpoint, gunzip response, assert keys points/cells/point_data exist and length>0.
+
+# Subtasks:
+## 1. Implement meshio VTU File Reading [pending]
+### Dependencies: None
+### Description: Create function to read VTU files using meshio library, extracting points, cells, and field data from ElmerFEM simulation results.
+### Details:
+Use meshio.read() to parse VTU files from ElmerFEM output. Extract mesh.points, mesh.cells_dict, mesh.point_data, and mesh.cell_data into structured format.
+
+## 2. Convert VTU Data to JSON Dictionary [pending]
+### Dependencies: None
+### Description: Transform meshio data structures into JSON-serializable dictionaries with proper type conversion for frontend consumption.
+### Details:
+Convert numpy arrays to lists, organize data into points, cells, point_data, and cell_data structure. Handle temperature, stress, displacement fields appropriately.
+
+## 3. Implement Gzip Compression [pending]
+### Dependencies: None
+### Description: Add gzip compression to reduce payload size for large mesh result data before streaming to frontend.
+### Details:
+Use Python's gzip module to compress JSON data. Set appropriate Content-Encoding headers for decompression on frontend.
+
+## 4. Create FastAPI Streaming Response Endpoint [pending]
+### Dependencies: None
+### Description: Implement `/api/simulations/{id}/result` endpoint that streams compressed VTU data using FastAPI's StreamingResponse.
+### Details:
+Create GET endpoint that locates result.vtu file, parses with meshio, compresses, and streams with proper headers and error handling.
+
+## 5. Add Error Handling and Validation [pending]
+### Dependencies: None
+### Description: Implement robust error handling for missing files, corrupted VTU data, and compression failures with appropriate HTTP responses.
+### Details:
+Check file existence, validate VTU format, handle meshio exceptions, and return meaningful error messages with proper status codes.
+

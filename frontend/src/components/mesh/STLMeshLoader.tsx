@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { GeometryParams } from '../../types/api';
 import * as THREE from 'three';
 
 interface MeshPreviewData {
@@ -22,6 +23,7 @@ interface MeshPreviewData {
 
 interface STLMeshLoaderProps {
   meshId: string;
+  geometry?: GeometryParams;
   onMeshLoaded?: (geometry: THREE.BufferGeometry) => void;
   color?: string;
   wireframe?: boolean;
@@ -32,10 +34,11 @@ interface STLMeshLoaderProps {
 /**
  * Task 25.2: Load and Display Mesh
  * Fetches mesh data from the preview endpoint and converts it to Three.js geometry.
- * Supports both triangular and quadrilateral elements.
+ * Now supports generating geometry from simulation parameters.
  */
 export const STLMeshLoader: React.FC<STLMeshLoaderProps> = ({ 
   meshId, 
+  geometry: geometryParams,
   onMeshLoaded,
   color = '#65c3c8',
   wireframe = false,
@@ -54,6 +57,39 @@ export const STLMeshLoader: React.FC<STLMeshLoaderProps> = ({
       meshRef.current.rotation.y += 0.01;
     }
   });
+
+  // Create Three.js geometry from simulation geometry parameters
+  const createGeometryFromParams = (geometryParams: GeometryParams): THREE.BufferGeometry => {
+    const { type, dimensions } = geometryParams;
+    
+    switch (type) {
+      case 'box':
+        return new THREE.BoxGeometry(
+          dimensions.length || 2,
+          dimensions.width || 2,
+          dimensions.height || 2
+        );
+      
+      case 'cylinder':
+        return new THREE.CylinderGeometry(
+          dimensions.radius || 1,
+          dimensions.radius || 1,
+          dimensions.height || 2,
+          32
+        );
+      
+      case 'sphere':
+        return new THREE.SphereGeometry(
+          dimensions.radius || 1,
+          32,
+          16
+        );
+      
+      default:
+        // Fallback to a box if unknown type
+        return new THREE.BoxGeometry(2, 2, 2);
+    }
+  };
 
   // Create mock mesh data for testing
   const createMockMeshData = (): MeshPreviewData => {
@@ -153,21 +189,31 @@ export const STLMeshLoader: React.FC<STLMeshLoaderProps> = ({
         setLoading(true);
         setError(null);
 
-        let meshData: MeshPreviewData;
-        
-        if (useMockData) {
+        let newGeometry: THREE.BufferGeometry;
+
+        if (geometryParams && !useMockData) {
+          // Use geometry parameters from simulation to create the 3D shape
+          newGeometry = createGeometryFromParams(geometryParams);
+        } else if (useMockData) {
           // Use mock data for testing
-          meshData = createMockMeshData();
+          const meshData = createMockMeshData();
+          newGeometry = createGeometryFromMeshData(meshData);
         } else {
-          // Fetch from API
-          const response = await fetch(`/api/v1/mesh/preview/${meshId}`);
-          if (!response.ok) {
-            throw new Error(`Failed to load mesh: ${response.statusText}`);
+          // Fallback: try to fetch from API
+          try {
+            const response = await fetch(`/api/v1/mesh/preview/${meshId}`);
+            if (!response.ok) {
+              throw new Error(`Failed to load mesh: ${response.statusText}`);
+            }
+            const meshData = await response.json();
+            newGeometry = createGeometryFromMeshData(meshData);
+          } catch (apiError) {
+            console.warn('API fetch failed, using fallback geometry:', apiError);
+            // Create a fallback cube geometry
+            newGeometry = new THREE.BoxGeometry(2, 2, 2);
           }
-          meshData = await response.json();
         }
 
-        const newGeometry = createGeometryFromMeshData(meshData);
         setGeometry(newGeometry);
         
         if (onMeshLoaded) {
@@ -186,7 +232,7 @@ export const STLMeshLoader: React.FC<STLMeshLoaderProps> = ({
     };
 
     loadMesh();
-  }, [meshId, onMeshLoaded, useMockData]);
+  }, [meshId, geometryParams, onMeshLoaded, useMockData]);
 
   if (loading) {
     return (

@@ -1,0 +1,46 @@
+# Task ID: 8
+# Title: Fortran MaterialLib.F90 with JSON FSON Parsing
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Create module allowing ElmerSolver to read material properties from shared JSON, enabling material selector to affect physics.
+# Details:
+• Add FSON v1.5 (https://github.com/josephalevin/fson) as git submodule.
+• Implement `LoadMaterial(name)` returning type(Material).
+• Extend ElmerSolver.F90: on SectionRead if line=="Material = <name>" then call LoadMaterial.
+• Rebuild solver Docker image with ENABLE_PROGRESS_OUTPUT & MaterialLib.
+
+# Test Strategy:
+Fortran unit (pFUnit) loads steel.json, assert E==210e9. Integration: run simulation with material ‘copper’ → output Young’s modulus 115e9.
+
+# Subtasks:
+## 1. Integrate FSON v1.5 as a Git Submodule [pending]
+### Dependencies: None
+### Description: Add FSON v1.5 as a Git submodule to the project repository to enable JSON parsing capabilities in Fortran.
+### Details:
+Clone the FSON v1.5 repository from GitHub and add it as a submodule to the project's Git repository. Ensure that the submodule is correctly initialized and updated to the latest version. Verify that the FSON module is accessible within the project's Fortran codebase.
+
+## 2. Implement LoadMaterial Function [pending]
+### Dependencies: None
+### Description: Develop the LoadMaterial function to read material properties from a JSON file and return a Material type in Fortran.
+### Details:
+Utilize the FSON module to parse JSON files containing material properties. Define a Fortran derived type 'Material' to store properties such as Young's modulus, density, and thermal conductivity. Implement the LoadMaterial function to read a JSON file, extract relevant properties, and populate a Material instance. Handle potential errors gracefully, such as missing or malformed JSON data.
+
+## 3. Extend ElmerSolver.F90 to Utilize LoadMaterial [pending]
+### Dependencies: None
+### Description: Modify ElmerSolver.F90 to call LoadMaterial when a material is specified in the input file, enabling dynamic material property assignment.
+### Details:
+In ElmerSolver.F90, locate the section of code that reads input lines. Implement a conditional check to identify lines defining materials (e.g., 'Material = <name>'). When such a line is encountered, extract the material name and call the LoadMaterial function to retrieve the corresponding Material instance. Ensure that the material properties are correctly assigned to the relevant variables or data structures within the solver.
+
+## 4. Rebuild Solver Docker Image with New Dependencies [pending]
+### Dependencies: None
+### Description: Update the solver's Docker image to include the FSON module and enable progress output, ensuring the solver operates with the new material handling capabilities.
+### Details:
+Modify the Dockerfile to include the FSON submodule and any necessary build steps to compile and link it with the solver code. Set the ENABLE_PROGRESS_OUTPUT flag to true to enable progress reporting during solver execution. Rebuild the Docker image and test the solver to confirm that it functions correctly with the new material handling features.
+
+## 5. Validate Material Handling with Unit and Integration Tests [pending]
+### Dependencies: None
+### Description: Ensure the new material handling functionality is robust by conducting unit and integration tests, confirming correct behavior across different scenarios.
+### Details:
+Develop comprehensive unit tests to validate the LoadMaterial function's ability to parse various JSON files and handle different material properties. Create integration tests to simulate real-world scenarios, such as running simulations with multiple materials and verifying that the solver applies the correct properties during computation. Address any issues identified during testing to ensure the reliability of the material handling system.
+

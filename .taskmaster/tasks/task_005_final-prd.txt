@@ -1,0 +1,45 @@
+# Task ID: 5
+# Title: Frontend WebSocket Hook & Progress State
+# Status: done
+# Dependencies: 4
+# Priority: medium
+# Description: Create TypeScript hook `useSimulationProgress` connecting to backend WebSocket and updating Redux slice.
+# Details:
+• Use native WebSocket API inside useEffect.
+• On message JSON.parse and dispatch `updateProgress`.
+• Auto-reconnect with exponential back-off ≤5 tries.
+
+# Test Strategy:
+Jest with jest-websocket-mock: send fake progress events, expect store updated correctly and hook cleans up on unmount.
+
+# Subtasks:
+## 1. Implement `useSimulationProgress` Hook with WebSocket Connection [done]
+### Dependencies: None
+### Description: Create a TypeScript hook `useSimulationProgress` that establishes a WebSocket connection to the backend using the native WebSocket API within a `useEffect` hook.
+### Details:
+Utilize the native WebSocket API inside the `useEffect` hook to establish a connection to the backend server. Ensure the WebSocket connection is properly managed and cleaned up to prevent memory leaks. ([ittrip.xyz](https://ittrip.xyz/react/react-useeffect-websocket-setup?utm_source=openai))
+
+## 2. Parse Incoming Messages and Dispatch `updateProgress` Action [done]
+### Dependencies: None
+### Description: Within the `useSimulationProgress` hook, parse incoming WebSocket messages and dispatch the `updateProgress` action to update the Redux state.
+### Details:
+Set up an event listener for the `onmessage` event of the WebSocket connection. Parse the incoming JSON messages and dispatch the `updateProgress` action with the parsed data to update the Redux state. ([geeksforgeeks.org](https://www.geeksforgeeks.org/how-to-integrate-websockets-with-react-redux/?utm_source=openai))
+
+## 3. Implement Auto-Reconnect with Exponential Back-Off [done]
+### Dependencies: None
+### Description: Enhance the `useSimulationProgress` hook to automatically reconnect to the WebSocket server with exponential back-off, limiting the number of reconnection attempts to 5.
+### Details:
+Implement reconnection logic within the `useSimulationProgress` hook that attempts to reconnect to the WebSocket server upon disconnection. Use exponential back-off to increase the delay between reconnection attempts, capping the number of attempts at 5. ([reliasoftware.com](https://reliasoftware.com/blog/react-websocket?utm_source=openai))
+
+## 4. Integrate `useSimulationProgress` Hook with Redux Slice [done]
+### Dependencies: None
+### Description: Connect the `useSimulationProgress` hook to the Redux slice to manage and update the simulation progress state.
+### Details:
+Ensure that the `useSimulationProgress` hook is properly connected to the Redux store, allowing it to dispatch actions and access the current state. This integration ensures that the simulation progress is managed centrally and can be accessed throughout the application. ([geeksforgeeks.org](https://www.geeksforgeeks.org/how-to-integrate-websockets-with-react-redux/?utm_source=openai))
+
+## 5. Handle WebSocket Errors and Cleanup on Unmount [done]
+### Dependencies: None
+### Description: Implement error handling within the `useSimulationProgress` hook to manage WebSocket errors and ensure proper cleanup when the component unmounts.
+### Details:
+Set up error handling within the `useSimulationProgress` hook to manage WebSocket errors, such as connection failures or unexpected closures. Ensure that the WebSocket connection is properly closed and cleaned up when the component unmounts to prevent memory leaks. ([ittrip.xyz](https://ittrip.xyz/react/react-useeffect-websocket-setup?utm_source=openai))
+

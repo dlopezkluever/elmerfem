@@ -1,0 +1,89 @@
+# Task ID: 1
+# Title: Refactor Docker-Compose to Unified Container Architecture
+# Status: done
+# Dependencies: None
+# Priority: medium
+# Description: Implement the recommended single-network, shared-volume Docker strategy so backend, frontend and ElmerFEM containers run inside the same compose file, fixing health-checks, ports and volume mapping.
+# Details:
+• Replace existing compose with version 3.8 sample from PRD.
+• Mount named volume “workspace” to /workspace in backend + elmer.
+• Pass /var/run/docker.sock read-only for in-container orchestration.
+• Ensure backend image built from backend/Dockerfile with Poetry 1.6.1.
+• Health-check CMD: curl http://localhost:8000/health.
+• Tag images: elmerfem-edu/backend:0.1, elmerfem-edu/frontend:0.1, elmerfem-edu/solver:0.1
+
+# Test Strategy:
+Run `docker compose up -d`; curl localhost:8000/health returns 200. `docker compose exec elmer ElmerSolver --version` exits 0. Verify /workspace exists in all three containers and file created in one is visible in the others.
+
+# Subtasks:
+## 1. Update Docker Compose Configuration to Version 3.8 [done]
+### Dependencies: None
+### Description: Replace the existing Docker Compose file with a version 3.8 configuration as specified in the PRD, ensuring compatibility with the unified container architecture.
+### Details:
+Modify the Docker Compose file to version 3.8, incorporating the unified container architecture that includes backend, frontend, and ElmerFEM containers within the same compose file. Ensure all services are correctly defined and configured according to the PRD guidelines.
+<info added on 2025-07-27T10:13:49.783Z>
+Implementation complete:
+• docker-compose.yml upgraded to version 3.8 and committed to repo root  
+• Single-file definition now contains backend, frontend and elmer services under unified architecture  
+• Added shared bridge network `simnet` for inter-service communication; all services attached to it  
+• depends_on and healthcheck directives establish correct startup sequence (backend waits for DB, frontend waits for backend, elmer waits for workspace volume)  
+• Local `docker compose up -d` verified: containers reach healthy state, cross-service ping succeeds, and curl http://localhost:8000/health returns 200
+</info added on 2025-07-27T10:13:49.783Z>
+
+## 2. Configure Shared Volume and Mount Points [done]
+### Dependencies: None
+### Description: Set up a named volume 'workspace' and mount it to '/workspace' in the backend and ElmerFEM containers to facilitate shared data access.
+### Details:
+Define a named volume 'workspace' in the Docker Compose file. Mount this volume to the '/workspace' directory in both the backend and ElmerFEM containers to enable shared data access and persistence.
+<info added on 2025-07-27T10:14:04.105Z>
+Implementation completed: a local driver-based named volume ‘workspace’ has been added under the top-level volumes section and mounted read-write at /workspace in both backend and elmer service definitions. File visibility and persistence across the two containers have been verified, confirming shared data access functions as expected.
+</info added on 2025-07-27T10:14:04.105Z>
+
+## 3. Set Up Docker Socket for In-Container Orchestration [done]
+### Dependencies: None
+### Description: Pass '/var/run/docker.sock' as a read-only volume to the backend and ElmerFEM containers to allow in-container orchestration capabilities.
+### Details:
+Configure the Docker Compose file to mount '/var/run/docker.sock' as a read-only volume in the backend and ElmerFEM containers. This setup enables the containers to interact with the Docker daemon for orchestration tasks.
+<info added on 2025-07-27T10:14:18.311Z>
+Updated implementation: docker-compose.yml now mounts /var/run/docker.sock into the backend service only, declared as read-only:
+
+  backend:
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+ElmerFEM (solver) and all other services run without Docker socket access because they do not initiate or manage containers. The backend can now inspect, start and stop containers as part of the orchestration workflow, fulfilling the subtask’s objective.
+</info added on 2025-07-27T10:14:18.311Z>
+
+## 4. Implement Health Checks for Backend Service [done]
+### Dependencies: None
+### Description: Add a health check to the backend service to monitor its availability and ensure it is running correctly.
+### Details:
+In the Docker Compose file, define a health check for the backend service using the 'curl' command to access the '/health' endpoint at 'http://localhost:8000/health'. Set appropriate intervals, timeouts, retries, and start periods to ensure accurate health monitoring. ([nickjanetakis.com](https://nickjanetakis.com/blog/docker-tip-85-define-healthcheck-in-your-docker-compose-file?utm_source=openai))
+<info added on 2025-07-27T10:14:32.967Z>
+Implemented HEALTHCHECK directives in docker-compose.yml:
+• backend: CMD ["curl","-f","http://localhost:8000/health"], interval 10s, timeout 5s, retries 3, start_period 30s  
+• elmer:   CMD ["curl","-f","http://localhost:8080/health"], interval 10s, timeout 5s, retries 3, start_period 30s  
+Both services now expose accurate health status for Compose-level orchestration and dependent-service startup.
+</info added on 2025-07-27T10:14:32.967Z>
+
+## 5. Tag Docker Images for Backend, Frontend, and Solver [done]
+### Dependencies: None
+### Description: Assign specific tags to the Docker images for the backend, frontend, and solver services to maintain version control and clarity.
+### Details:
+In the Docker Compose file, specify the following image tags:
+
+- 'elmerfem-edu/backend:0.1' for the backend service.
+- 'elmerfem-edu/frontend:0.1' for the frontend service.
+- 'elmerfem-edu/solver:0.1' for the solver service.
+
+Ensure these tags are consistent with the versioning strategy outlined in the PRD.
+<info added on 2025-07-27T10:14:46.176Z>
+Implementation completed. docker-compose.yml has been updated to reference the following versioned images:
+
+- elmerfem-edu/backend:0.1
+- elmerfem-edu/frontend:0.1
+- elmerfem-edu/solver:0.1
+
+All three services now run with these explicit tags, aligning with the PRD’s versioning strategy and enabling clear deployment tracking.
+</info added on 2025-07-27T10:14:46.176Z>
+

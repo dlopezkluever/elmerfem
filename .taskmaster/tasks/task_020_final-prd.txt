@@ -1,0 +1,45 @@
+# Task ID: 20
+# Title: Educational Content Pages Infrastructure
+# Status: pending
+# Dependencies: 6
+# Priority: medium
+# Description: Create `UnderstandingFEA` section using MDX files loaded via Vite dynamic import.
+# Details:
+• Install @mdx-js/react 3.0.
+• Add sidebar navigation tree.
+• Render math via KaTeX 0.16.
+
+# Test Strategy:
+Jest: render MDX doc, check headings exist. Cypress: navigate to /learn, ensure content loads offline.
+
+# Subtasks:
+## 1. Setup MDX Infrastructure with Vite [pending]
+### Dependencies: None
+### Description: Configure Vite to support MDX files for educational content with proper TypeScript support and dynamic imports.
+### Details:
+Install @mdx-js/rollup, configure Vite plugin, setup TypeScript declarations for MDX files, enable dynamic import support for content loading.
+
+## 2. Create UnderstandingFEA Navigation Component [pending]
+### Dependencies: None
+### Description: Build navigation structure for educational content with sections for FEA introduction, heat transfer, structural mechanics, and mesh quality.
+### Details:
+Create sidebar navigation, section organization, progress tracking, search functionality, responsive design for educational content browsing.
+
+## 3. Implement Dynamic Content Loading System [pending]
+### Dependencies: None
+### Description: Create system to dynamically load MDX content with proper error handling, loading states, and content organization.
+### Details:
+Implement React.lazy for MDX components, add loading spinners, error boundaries, content metadata management, and proper routing integration.
+
+## 4. Create Educational Content Templates [pending]
+### Dependencies: None
+### Description: Design MDX templates for different types of educational content including concepts, examples, interactive demonstrations, and assessments.
+### Details:
+Create reusable MDX components for equations, diagrams, code examples, interactive elements, callout boxes, and proper styling integration.
+
+## 5. Add Content Management and Authoring Tools [pending]
+### Dependencies: None
+### Description: Create tools for content organization, metadata management, and easy authoring of new educational materials.
+### Details:
+Implement content index generation, frontmatter parsing, content validation, preview system, and documentation for content authors.
+

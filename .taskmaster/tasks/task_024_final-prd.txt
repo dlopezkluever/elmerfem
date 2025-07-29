@@ -1,0 +1,12 @@
+# Task ID: 24
+# Title: Release Packaging & Versioning
+# Status: pending
+# Dependencies: 16
+# Priority: medium
+# Description: Create script `scripts/create-release.sh` that tags git, builds images, pushes to GHCR and creates GitHub release with changelog.
+# Details:
+• Use semantic-release 21 for automatic version bump.
+• Attach Docker image digests to release notes.
+
+# Test Strategy:
+Run script on main branch; verify GitHub release created, images elmerfem-edu/*:vX.Y pushed.

@@ -1,0 +1,12 @@
+# Task ID: 22
+# Title: Success Metrics Telemetry (Local Only)
+# Status: pending
+# Dependencies: 7, 12
+# Priority: medium
+# Description: Instrument frontend to log metrics (timeToFirstSimulation, completionRate) to in-browser IndexedDB and downloadable CSV.
+# Details:
+• Use performance.now() timestamp markers.
+• Provide ‘Download Analytics’ button in Settings.
+
+# Test Strategy:
+Jest: simulate journey, expect metrics object stored. Manual: download CSV, open to verify rows.

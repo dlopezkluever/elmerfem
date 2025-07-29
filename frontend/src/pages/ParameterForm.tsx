@@ -140,6 +140,9 @@ function HeatTransferForm({ materials }: { materials: any[] }) {
       // Create simulation
       const result = await simulationApi.createSimulation(params);
       
+      // Store geometry data for later use in simulation page
+      sessionStorage.setItem(`simulation_${result.id}_geometry`, JSON.stringify(params.geometry));
+      
       // Navigate to progress page
       navigate(`/progress/${result.id}`);
     } catch (error) {
@@ -385,6 +388,9 @@ function StructuralMechanicsForm({ materials }: { materials: any[] }) {
       
       // Create simulation
       const result = await simulationApi.createSimulation(params);
+      
+      // Store geometry data for later use in simulation page
+      sessionStorage.setItem(`simulation_${result.id}_geometry`, JSON.stringify(params.geometry));
       
       // Navigate to progress page
       navigate(`/progress/${result.id}`);

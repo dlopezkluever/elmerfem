@@ -1,0 +1,151 @@
+# Task ID: 7
+# Title: Simulation Orchestration Pipeline
+# Status: done
+# Dependencies: 2
+# Priority: medium
+# Description: Refactor backend JobLauncher to sequentially: validate→mesh→write SIF→solve→post-process; emit stage tags.
+# Details:
+• Implement asyncio Task per job storing status in Redis (redis-py 5.0).
+• Mesh step calls Fortran library via ctypes wrapper.
+• Solver step runs `docker exec elmer ElmerSolver` with `--case` path.
+• Post-process converts VTU to JSON via meshio 5.3.
+
+# Test Strategy:
+Unit: patch mesh & solver functions, assert stage order. Integration (depends task 3) verifies real output folders contain mesh, SIF, VTU.
+
+# Subtasks:
+## 1. Implement Asyncio Task per Job with Redis Status Tracking [done]
+### Dependencies: None
+### Description: Develop an asyncio Task for each simulation job that manages its execution status, storing updates in Redis using redis-py 5.0. Ensure proper connection pooling and coroutine safety to handle concurrent tasks effectively.
+### Details:
+Utilize redis-py 5.0's asyncio support to create a Redis client for each job, storing status updates in a Redis database. Implement connection pooling to manage multiple concurrent tasks efficiently. Ensure coroutine safety by properly handling Redis connections and using context managers to manage their lifecycle. Refer to redis-py documentation for best practices on asyncio usage and connection management. ([redis-py.readthedocs.io](https://redis-py.readthedocs.io/en/stable/examples/asyncio_examples.html?utm_source=openai))
+<info added on 2025-07-27T19:37:32.945Z>
+• Replace placeholder RedisJobStore with AsyncRedisJobStore (store.py):
+  – Acquire a single redis.asyncio.ConnectionPool at app start; pass pool instance to every store created by dependency-injection.
+  – CRUD API surface:
+      async add(job_id: str, payload: dict)         # HSET job:{id}
+      async set_stage(job_id: str, stage: str, pct: int = 0)
+      async incr_pct(job_id: str, delta: int)
+      async mark_done(job_id: str, success: bool, error: str | None = None)
+      async get(job_id: str) -> dict
+      async list(prefix: str = "job:*") -> list[dict]
+      async delete(job_id: str)
+  – Every mutating call also `PUBLISH jobs:{job_id}:events` with a compact JSON blob so WebSocket layer can stream live progress.
+
+• Launcher wiring:
+  – Inject AsyncRedisJobStore into JobLauncher; at each pipeline step call `await store.set_stage(id, "mesh")`, `"solve"`, `"post"`, etc.
+  – On exceptions catch, `await store.mark_done(id, False, str(exc))`; otherwise mark_done(..., True).
+
+• Data layout:
+  HSET job:{id}  status running|done|error  stage validate|mesh|write|solve|post  pct 0-100  created  started  finished  error_msg
+
+• Configuration:
+  – Add `REDIS_URL` env var (falls back to "redis://localhost:6379/0"); create pool with `decode_responses=True`.
+  – Remove aioredis from imports; redis-py ≥5 already covers asyncio.
+
+• Testing:
+  – pytest-asyncio + fakeredis.aioredis for unit tests (no network).
+  – Scenario: launch dummy pipeline, await completion, assert HGETALL shows pct 100 and stage "post".
+
+• Docs:
+  – Update README & FastAPI settings example to include REDIS_URL.
+</info added on 2025-07-27T19:37:32.945Z>
+<info added on 2025-07-27T19:51:11.239Z>
+• Implemented store.AsyncRedisJobStore in store.py  
+  – Receives a shared redis.asyncio.ConnectionPool injected at construction time.  
+  – Full CRUD on HSET job:{id} hash plus additional key simulation:{id} containing the marshalled SimulationJob (as orjson bytes); transparent (de)serialisation through SimulationJob.from_dict / .model_dump.  
+  – Every mutating call also PUBLISHes compact JSON to channel jobs:{id}:events for the WebSocket layer.  
+  – All public methods are coroutine-safe; auto-retries on ConnectionError with exponential back-off.
+
+• Application wiring (main.py & deps.py)  
+  – On startup create ConnectionPool.from_url(REDIS_URL, decode_responses=True); ping to verify connectivity.  
+  – If ping fails, log warning and fall back to InMemoryJobStore so the API remains available in offline mode.  
+  – Dependency provider now yields either AsyncRedisJobStore or InMemoryJobStore transparently.
+
+• Health-check endpoint (/healthz)  
+  – Augmented JSON payload with {"redis":"ok"|"unreachable"} based on await redis.ping().  
+  – CI updated to assert redis field exists.
+
+• Tests  
+  – Added tests/test_store_redis.py using fakeredis.aioredis to cover add / set_stage / incr_pct / mark_done / list / delete paths and event payload structure.  
+  – Added tests/test_fallback.py that monkeypatches redis.asyncio.ConnectionPool.connect to raise OSError and verifies InMemoryJobStore selection.
+
+• Documentation  
+  – README: new section “Redis integration & graceful degradation” with env vars REDIS_URL and REDIS_REQUIRED (default false).
+</info added on 2025-07-27T19:51:11.239Z>
+
+## 2. Integrate Fortran Mesh Generation via ctypes [done]
+### Dependencies: None
+### Description: Create a Python interface using ctypes to call the Fortran library responsible for mesh generation, ensuring seamless integration within the simulation pipeline.
+### Details:
+Use Python's ctypes library to create bindings to the Fortran mesh generation functions. Ensure that data types and memory management are correctly handled to prevent errors. Test the integration by running the mesh generation step and verifying the output against expected results.
+<info added on 2025-07-27T19:59:08.082Z>
+Implementation completed:
+
+• educational_mesh_service.py provides a full ctypes wrapper that loads the pre-compiled libeducational_mesh.so via ctypes.CDLL  
+• GeometryParams and MeshQuality ctypes.Structure classes replicate the Fortran data layouts and include sizeof sanity checks  
+• generate_mesh() is executed in a ProcessPoolExecutor to avoid GIL contention and returns a MeshQuality dict  
+• JobLauncher’s mesh stage now calls EducationalMeshService and stores returned quality metrics in the Redis progress record  
+• Supports all existing geometry types (block, cylinder, pipe, nozzle) with parameter validation and error handling  
+• mesh_generation_test.py validates vertex/cell counts and quality metrics against reference meshes and passes in CI  
+
+Subtask can be marked as done; only pending actions are routine code review and doc update.
+</info added on 2025-07-27T19:59:08.082Z>
+
+## 3. Implement Solver Execution with Docker Integration [done]
+### Dependencies: None
+### Description: Develop functionality to execute the ElmerSolver within a Docker container, passing the appropriate case path and handling the solver's output.
+### Details:
+Use Python's subprocess module to run the ElmerSolver command within a Docker container. Pass the '--case' argument with the correct path to the simulation case. Capture the solver's output and handle any errors that may occur during execution. Ensure that the Docker container is properly managed to prevent resource leaks.
+<info added on 2025-07-27T19:51:28.162Z>
+Refactor this subtask to leverage the existing launcher.py:docker_wrapper.execute_solver instead of invoking subprocess directly. Attach a line-callback so every chunk of solver stdout is streamed back to the orchestration layer.
+
+Implementation additions
+• Call execute_solver(case_path, workdir, timeout, on_line_cb).  
+• Inside on_line_cb(line):  
+  – Immediately enqueue stage='solve', pct/msg extracted via regex r'^PROGRESS:(\d+):(.*)$'.  
+  – Fallback: if no PROGRESS tag, emit pct=None, msg=line[:120].  
+• Before launching the container push {'stage':'solve','pct':0,'msg':'Solver started'} to Redis; after successful return code push {'stage':'solve','pct':100,'msg':'Solver finished'} then transition stage='post'.  
+• Propagate each update to the WebSocket queue used by /ws/simulations/{id}.  
+• Ensure execute_solver’s context-manager exits even on TimeoutExpired and publish {'stage':'solve','error':'timeout'}.
+</info added on 2025-07-27T19:51:28.162Z>
+<info added on 2025-07-27T19:55:48.950Z>
+New implementation highlights:
+• docker_wrapper.execute_solver now accepts an on_line_callback parameter and streams container output in real time.  
+• launcher._execute_job processes lines asynchronously, mapping solver progress to overall job range 35 – 90 %.  
+• Regex-based extraction of PROGRESS tags drives Redis and WebSocket updates; non-tagged lines are truncated and forwarded as informational messages.  
+• All stdout/stderr from the container is tee’d to <workdir>/solver.log for post-mortem analysis.  
+• Non-zero return codes trigger {'stage':'solve','error':'exit','code':rc,'msg':last_line} events, while TimeoutExpired raises {'stage':'solve','error':'timeout'}.
+</info added on 2025-07-27T19:55:48.950Z>
+
+## 4. Develop Post-Processing to Convert VTU to JSON [done]
+### Dependencies: None
+### Description: Implement functionality to convert VTU files to JSON format using meshio 5.3, facilitating easier data manipulation and analysis.
+### Details:
+Use meshio 5.3 to read VTU files and convert them into a JSON-serializable dictionary. Ensure that all necessary data, such as points, cells, and point data, are included in the conversion. Handle any exceptions that may occur during the reading and conversion process to ensure robustness.
+<info added on 2025-07-27T19:56:04.607Z>
+Implementation update:
+• Added meshio==5.3.* to both requirements.txt and pyproject.toml.  
+• Implemented JobLauncher._convert_vtu_to_json which:
+  – Reads the VTU with meshio.read().  
+  – Converts points, cells, point_data and cell_data into pure-Python (list/dict) structures, normalising cell representations that arrive either as objects with .type/.data or as (type, data) tuples.  
+  – Catches and logs all meshio and I/O exceptions, re-raising a custom ConversionError for upstream handling.  
+  – Writes the resulting dictionary to <basename>.json in the same directory as the source VTU.  
+• After successful conversion, the method stores the JSON file path in the job’s metadata (key “result_json”) so the frontend can request it directly.
+</info added on 2025-07-27T19:56:04.607Z>
+
+## 5. Implement Progress Event Emission for Each Stage [done]
+### Dependencies: None
+### Description: Develop functionality to emit progress events at each stage of the simulation pipeline, providing real-time feedback on the simulation's progress.
+### Details:
+At each stage of the simulation pipeline (validate, mesh, write SIF, solve, post-process), emit progress events that include the current stage and percentage completion. Use a WebSocket or similar mechanism to transmit these events to the frontend, allowing users to monitor the simulation's progress in real-time.
+<info added on 2025-07-27T20:34:15.176Z>
+Implemented full progress-relay stack:
+• Introduced ProgressRelayService that subscribes to Redis pub/sub channel pattern “jobs:*:events” and forwards messages to the WebSocket ConnectionManager.  
+• Registered ProgressRelayService in main.py; it starts automatically at application startup through the new dependencies.py injector.  
+• JobLauncher now emits stage-tagged progress events with deterministic percentage windows: Validation 0-10 %, Mesh 10-35 %, Solver 35-90 %, Post-processing 90-100 %.  
+• AsyncRedisJobStore publishes an event on every job state change, ensuring relay works for retries and failures as well.  
+• WebSocket endpoint throttles outbound messages to 5 Hz to avoid UI saturation while maintaining real-time feel.  
+• Fixed CORS and import issues; all services wired via dependency injection.
+</info added on 2025-07-27T20:34:15.176Z>
+

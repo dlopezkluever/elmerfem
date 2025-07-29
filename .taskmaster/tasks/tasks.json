@@ -2123,7 +2123,7 @@
         "dependencies": [
           2
         ],
-        "status": "pending",
+        "status": "deferred",
         "subtasks": [
           {
             "id": 1,
@@ -2604,7 +2604,53 @@
           7
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement meshio VTU File Reading",
+            "description": "Create function to read VTU files using meshio library, extracting points, cells, and field data from ElmerFEM simulation results.",
+            "details": "Use meshio.read() to parse VTU files from ElmerFEM output. Extract mesh.points, mesh.cells_dict, mesh.point_data, and mesh.cell_data into structured format.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 11
+          },
+          {
+            "id": 2,
+            "title": "Convert VTU Data to JSON Dictionary",
+            "description": "Transform meshio data structures into JSON-serializable dictionaries with proper type conversion for frontend consumption.",
+            "details": "Convert numpy arrays to lists, organize data into points, cells, point_data, and cell_data structure. Handle temperature, stress, displacement fields appropriately.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 11
+          },
+          {
+            "id": 3,
+            "title": "Implement Gzip Compression",
+            "description": "Add gzip compression to reduce payload size for large mesh result data before streaming to frontend.",
+            "details": "Use Python's gzip module to compress JSON data. Set appropriate Content-Encoding headers for decompression on frontend.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 11
+          },
+          {
+            "id": 4,
+            "title": "Create FastAPI Streaming Response Endpoint",
+            "description": "Implement `/api/simulations/{id}/result` endpoint that streams compressed VTU data using FastAPI's StreamingResponse.",
+            "details": "Create GET endpoint that locates result.vtu file, parses with meshio, compresses, and streams with proper headers and error handling.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 11
+          },
+          {
+            "id": 5,
+            "title": "Add Error Handling and Validation",
+            "description": "Implement robust error handling for missing files, corrupted VTU data, and compression failures with appropriate HTTP responses.",
+            "details": "Check file existence, validate VTU format, handle meshio exceptions, and return meaningful error messages with proper status codes.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 11
+          }
+        ]
       },
       {
         "id": 12,
@@ -2617,7 +2663,53 @@
           11
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create ResultVisualization React Component",
+            "description": "Build base React component structure for 3D results visualization with proper props interface and loading states.",
+            "details": "Create component with simulationId prop, loading spinner, error handling, and TypeScript interfaces for result data structure.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 12
+          },
+          {
+            "id": 2,
+            "title": "Implement Compressed Data Fetching Hook",
+            "description": "Create useSimulationResult hook to fetch and decompress gzipped result data from backend API.",
+            "details": "Use fetch with proper headers, decompress gzip response, parse JSON data, handle loading and error states with proper TypeScript types.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 12
+          },
+          {
+            "id": 3,
+            "title": "Integrate Plotly.js Mesh3D Visualization",
+            "description": "Implement Plotly.js mesh3d component to render 3D mesh with temperature or stress field data as contours.",
+            "details": "Use react-plotly.js with mesh3d trace type, map points/cells data, configure colorscale (Viridis), add colorbar with proper units.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 12
+          },
+          {
+            "id": 4,
+            "title": "Add Interactive Controls and View Modes",
+            "description": "Implement view mode toggles (Temperature, Heat Flux, Gradient for heat transfer) and interactive camera controls.",
+            "details": "Add buttons to switch between field types, configure Plotly layout with proper 3D scene settings, camera controls, and axis labels.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 12
+          },
+          {
+            "id": 5,
+            "title": "Add Educational Key Findings Panel",
+            "description": "Display numerical results summary with max/min values, educational explanations, and color gradient meaning.",
+            "details": "Extract key statistics from result data, format with proper units, add expandable educational content explaining what results mean.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 12
+          }
+        ]
       },
       {
         "id": 13,
@@ -2630,7 +2722,53 @@
           11
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install and Configure ReportLab Dependencies",
+            "description": "Add ReportLab library and necessary dependencies for PDF generation with proper styling and layout.",
+            "details": "Install reportlab, configure fonts, set up page templates with proper margins and styling for educational reports.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 13
+          },
+          {
+            "id": 2,
+            "title": "Implement Mesh and Result Screenshot Capture",
+            "description": "Create service to capture screenshots of 3D mesh and results visualizations from multiple angles for report inclusion.",
+            "details": "Use matplotlib or plotly to generate static images of mesh and results from front, side, and isometric views. Save as high-quality PNG files.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 13
+          },
+          {
+            "id": 3,
+            "title": "Create PDF Report Template Structure",
+            "description": "Design PDF template with cover page, input summary, visualizations, data tables, and educational notes sections.",
+            "details": "Use ReportLab's SimpleDocTemplate with proper sections: cover page with student name/date, parameter summary table, mesh visualization pages, results pages, key findings table.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 13
+          },
+          {
+            "id": 4,
+            "title": "Implement Async Report Generation Function",
+            "description": "Create async generate_report(sim_id, student) function that compiles all data and generates complete PDF report.",
+            "details": "Gather simulation data, generate screenshots, compile into PDF with proper formatting, return PDF bytes for download.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 13
+          },
+          {
+            "id": 5,
+            "title": "Add Report Download API Endpoint",
+            "description": "Create FastAPI endpoint `/api/simulations/{id}/report` to generate and download PDF reports.",
+            "details": "Implement POST endpoint accepting student name, generate report asynchronously, return PDF with proper headers for download.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 13
+          }
+        ]
       },
       {
         "id": 14,
@@ -2643,7 +2781,53 @@
           13
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design Results Page Action Panel UI",
+            "description": "Create action panel component with Download Report and New Simulation buttons using neumorphic design system.",
+            "details": "Design button layout, apply neumorphic styling with proper shadows and hover effects, ensure accessibility with ARIA labels.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 14
+          },
+          {
+            "id": 2,
+            "title": "Implement Student Name Input Modal",
+            "description": "Create modal dialog to capture student name before generating PDF report, with validation and proper form handling.",
+            "details": "Build modal with name input field, validation for required field, cancel/confirm actions, proper focus management and keyboard navigation.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 14
+          },
+          {
+            "id": 3,
+            "title": "Add PDF Download Functionality",
+            "description": "Implement PDF report download with progress indication and proper file handling for browser downloads.",
+            "details": "Call backend report API, show loading spinner, handle download blob response, trigger browser download with proper filename.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 14
+          },
+          {
+            "id": 4,
+            "title": "Implement New Simulation Navigation",
+            "description": "Add functionality to start new simulation, clearing current state and navigating back to parameter form.",
+            "details": "Clear Redux simulation state, reset form data, navigate to parameter selection page, confirm action if needed.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 14
+          },
+          {
+            "id": 5,
+            "title": "Add Simulation Summary Information",
+            "description": "Display simulation summary with status, runtime, convergence info, and key metrics on the results page.",
+            "details": "Extract simulation metadata, format runtime display, show convergence status, display element count and solver info in summary card.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 14
+          }
+        ]
       },
       {
         "id": 15,
@@ -2656,7 +2840,53 @@
           12
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Setup Backend Testing Infrastructure",
+            "description": "Configure pytest with coverage.py, fixtures, and test database setup for comprehensive backend testing.",
+            "details": "Install pytest, pytest-asyncio, coverage.py, pytest-mock. Create conftest.py with fixtures for test client, mock containers, and database setup.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 15
+          },
+          {
+            "id": 2,
+            "title": "Implement Backend API Unit Tests",
+            "description": "Create unit tests for all FastAPI endpoints including simulations, materials, mesh generation, and report APIs.",
+            "details": "Test all API endpoints with AsyncClient, mock dependencies, test success/error responses, validate request/response schemas with proper assertions.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 15
+          },
+          {
+            "id": 3,
+            "title": "Create Backend Service Layer Tests",
+            "description": "Test core services like SIF generation, mesh processing, job orchestration, and VTU parsing with comprehensive coverage.",
+            "details": "Unit test SIFEngine, MeshService, JobLauncher, DockerWrapper with mocked dependencies. Test error handling, edge cases, and data validation.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 15
+          },
+          {
+            "id": 4,
+            "title": "Setup Frontend Testing Infrastructure",
+            "description": "Configure Jest, React Testing Library, MSW for API mocking, and coverage reporting for comprehensive frontend testing.",
+            "details": "Install @testing-library/react, @testing-library/jest-dom, MSW for API mocking. Configure Jest with coverage thresholds and proper setup files.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 15
+          },
+          {
+            "id": 5,
+            "title": "Implement Frontend Component Tests",
+            "description": "Create unit tests for all React components including forms, visualizations, progress tracking, and navigation with ≥80% coverage.",
+            "details": "Test ParameterForm, MeshPreview, ResultVisualization, ProgressPage with proper mocking, user interactions, and state management testing.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 15
+          }
+        ]
       },
       {
         "id": 16,
@@ -2669,7 +2899,53 @@
           15
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Frontend Testing Workflow Job",
+            "description": "Setup GitHub Actions job for frontend testing with Node.js, dependency caching, and coverage reporting.",
+            "details": "Configure job with Node.js 18, npm/cache setup, run frontend tests with coverage, upload results to Codecov with frontend flag.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 16
+          },
+          {
+            "id": 2,
+            "title": "Create Backend Testing Workflow Job",
+            "description": "Setup GitHub Actions job for backend testing with Python, Poetry, and coverage reporting.",
+            "details": "Configure job with Python 3.11, Poetry installation, dependency caching, run pytest with coverage, upload to Codecov with backend flag.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 16
+          },
+          {
+            "id": 3,
+            "title": "Implement Integration Testing Job",
+            "description": "Create job that builds Docker images, runs integration tests, and validates educational simulation scenarios.",
+            "details": "Build docker compose images, wait for services, run integration tests, test heat transfer and structural simulation workflows with validation scripts.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 16
+          },
+          {
+            "id": 4,
+            "title": "Setup Docker Image Build and Push",
+            "description": "Configure Docker buildx, GHCR authentication, and multi-platform image building for production releases.",
+            "details": "Setup Docker buildx action, login to GitHub Container Registry, build and push images for linux/amd64 and linux/arm64 platforms.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 16
+          },
+          {
+            "id": 5,
+            "title": "Add Release Artifact Creation",
+            "description": "Create workflow step to generate release artifacts, changelogs, and upload release assets on main branch.",
+            "details": "Run create-release.sh script, generate changelog, create GitHub release with artifacts, tag commits properly for version tracking.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 16
+          }
+        ]
       },
       {
         "id": 17,
@@ -2682,7 +2958,53 @@
           6
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Simulation State Interface",
+            "description": "Create TypeScript interfaces for simulation state including currentJob, parameters, meshData, progress, results, and error states.",
+            "details": "Define SimulationState interface with proper types for job ID, parameters object, mesh data, progress state, results data, and error handling.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 17
+          },
+          {
+            "id": 2,
+            "title": "Implement startSimulation Action",
+            "description": "Create Redux action to initialize simulation with job ID and parameters, resetting progress and clearing previous results.",
+            "details": "Action that accepts jobId and parameters payload, sets currentJob, stores parameters, resets progress to initializing state, clears results and errors.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 17
+          },
+          {
+            "id": 3,
+            "title": "Implement updateProgress Action",
+            "description": "Create action to update simulation progress with percentage, stage, and messages from WebSocket events.",
+            "details": "Action accepting progress payload with percentage, stage (initializing, mesh, solving, complete), and optional message array updates.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 17
+          },
+          {
+            "id": 4,
+            "title": "Implement setMeshData and setResults Actions",
+            "description": "Create actions to store mesh preview data and final simulation results in the Redux state.",
+            "details": "setMeshData action for Three.js mesh data, setResults action for VTU results data, both with proper TypeScript typing and state updates.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 17
+          },
+          {
+            "id": 5,
+            "title": "Implement Error Handling and State Persistence",
+            "description": "Add setError action and configure Redux persist for simulation state across browser sessions.",
+            "details": "Create setError action with error message and stage info, configure redux-persist to save simulation state, add proper error recovery logic.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 17
+          }
+        ]
       },
       {
         "id": 18,
@@ -2695,7 +3017,53 @@
           6
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Setup axe-core Accessibility Testing",
+            "description": "Install and configure axe-core for automated accessibility testing and integrate with Jest test suite.",
+            "details": "Install @axe-core/react, jest-axe, configure accessibility testing in component tests, set up violation reporting and CI integration.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 18
+          },
+          {
+            "id": 2,
+            "title": "Add Comprehensive ARIA Labels",
+            "description": "Add proper ARIA labels, descriptions, and roles to all interactive elements including forms, buttons, and navigation.",
+            "details": "Add aria-label, aria-describedby, role attributes to parameter forms, material selector, mesh controls, progress indicators, and result visualizations.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 18
+          },
+          {
+            "id": 3,
+            "title": "Implement Full Keyboard Navigation",
+            "description": "Ensure all interactive elements are keyboard accessible with proper tab order and keyboard event handlers.",
+            "details": "Add tabIndex, onKeyDown handlers, focus management for modals, ensure form navigation, button activation with Enter/Space keys.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 18
+          },
+          {
+            "id": 4,
+            "title": "Add High-Contrast Focus Styles",
+            "description": "Implement visible focus indicators with high contrast styles that work with the neumorphic design system.",
+            "details": "Create focus rings with 3px outline, high contrast colors, ensure visibility on all backgrounds, maintain neumorphic aesthetic with proper shadows.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 18
+          },
+          {
+            "id": 5,
+            "title": "Implement Screen Reader Support",
+            "description": "Add proper headings hierarchy, skip links, and screen reader announcements for dynamic content and progress updates.",
+            "details": "Structure with h1-h6 hierarchy, add skip-to-content links, use aria-live regions for progress updates, add descriptive text for visualizations.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 18
+          }
+        ]
       },
       {
         "id": 19,
@@ -2709,7 +3077,53 @@
           12
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Benchmark Current Mesh Generation Performance",
+            "description": "Create performance benchmarks to measure current mesh generation times and identify bottlenecks in Fortran code.",
+            "details": "Add timing measurements to Fortran mesh generator, test with various mesh densities, profile memory usage, document baseline performance metrics.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 19
+          },
+          {
+            "id": 2,
+            "title": "Optimize Fortran Loop Performance",
+            "description": "Optimize critical loops in mesh generation code with proper vectorization, memory access patterns, and compiler optimizations.",
+            "details": "Review loop structures, optimize array access patterns, add compiler directives for vectorization, minimize memory allocations, use proper Fortran optimization flags.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 19
+          },
+          {
+            "id": 3,
+            "title": "Benchmark Plotly Rendering Performance",
+            "description": "Create performance tests for Plotly.js mesh3d rendering with different mesh sizes and measure frame rates.",
+            "details": "Test rendering performance with 1K, 10K, 50K element meshes, measure initial render time and interaction frame rates, identify performance thresholds.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 19
+          },
+          {
+            "id": 4,
+            "title": "Implement requestAnimationFrame Throttling",
+            "description": "Add proper frame rate throttling for UI updates and animations to maintain 60fps performance.",
+            "details": "Implement requestAnimationFrame for progress updates, throttle WebSocket event processing, optimize React re-renders with useMemo and useCallback.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 19
+          },
+          {
+            "id": 5,
+            "title": "Add Performance Monitoring and Metrics",
+            "description": "Implement performance monitoring for key operations with metrics collection and performance regression detection.",
+            "details": "Add Performance API timing measurements, create performance dashboard, set up alerts for regression detection, monitor mesh generation and rendering times.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 19
+          }
+        ]
       },
       {
         "id": 20,
@@ -2722,7 +3136,53 @@
           6
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Setup MDX Infrastructure with Vite",
+            "description": "Configure Vite to support MDX files for educational content with proper TypeScript support and dynamic imports.",
+            "details": "Install @mdx-js/rollup, configure Vite plugin, setup TypeScript declarations for MDX files, enable dynamic import support for content loading.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 20
+          },
+          {
+            "id": 2,
+            "title": "Create UnderstandingFEA Navigation Component",
+            "description": "Build navigation structure for educational content with sections for FEA introduction, heat transfer, structural mechanics, and mesh quality.",
+            "details": "Create sidebar navigation, section organization, progress tracking, search functionality, responsive design for educational content browsing.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 20
+          },
+          {
+            "id": 3,
+            "title": "Implement Dynamic Content Loading System",
+            "description": "Create system to dynamically load MDX content with proper error handling, loading states, and content organization.",
+            "details": "Implement React.lazy for MDX components, add loading spinners, error boundaries, content metadata management, and proper routing integration.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 20
+          },
+          {
+            "id": 4,
+            "title": "Create Educational Content Templates",
+            "description": "Design MDX templates for different types of educational content including concepts, examples, interactive demonstrations, and assessments.",
+            "details": "Create reusable MDX components for equations, diagrams, code examples, interactive elements, callout boxes, and proper styling integration.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 20
+          },
+          {
+            "id": 5,
+            "title": "Add Content Management and Authoring Tools",
+            "description": "Create tools for content organization, metadata management, and easy authoring of new educational materials.",
+            "details": "Implement content index generation, frontmatter parsing, content validation, preview system, and documentation for content authors.",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 20
+          }
+        ]
       },
       {
         "id": 21,
@@ -2794,7 +3254,7 @@
     ],
     "metadata": {
       "created": "2025-07-27T09:26:48.776Z",
-      "updated": "2025-07-28T09:45:39.768Z",
+      "updated": "2025-07-28T10:21:29.729Z",
       "description": "Tasks for final-prd context"
     }
   }

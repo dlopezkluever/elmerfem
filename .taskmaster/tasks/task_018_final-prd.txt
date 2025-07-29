@@ -1,0 +1,45 @@
+# Task ID: 18
+# Title: Accessibility & ARIA Enhancement
+# Status: pending
+# Dependencies: 6
+# Priority: medium
+# Description: Audit pages with axe-core, add ARIA labels, keyboard navigation and high-contrast focus styles.
+# Details:
+• Use eslint-plugin-jsx-a11y.
+• Ensure buttons have aria-label, progress bar has role="progressbar" aria-valuenow.
+• Add focus-visible ring styles in Tailwind config.
+
+# Test Strategy:
+Run `npm run test:a11y` using jest-axe; zero critical violations. Keyboard tab sequence E2E passes.
+
+# Subtasks:
+## 1. Setup axe-core Accessibility Testing [pending]
+### Dependencies: None
+### Description: Install and configure axe-core for automated accessibility testing and integrate with Jest test suite.
+### Details:
+Install @axe-core/react, jest-axe, configure accessibility testing in component tests, set up violation reporting and CI integration.
+
+## 2. Add Comprehensive ARIA Labels [pending]
+### Dependencies: None
+### Description: Add proper ARIA labels, descriptions, and roles to all interactive elements including forms, buttons, and navigation.
+### Details:
+Add aria-label, aria-describedby, role attributes to parameter forms, material selector, mesh controls, progress indicators, and result visualizations.
+
+## 3. Implement Full Keyboard Navigation [pending]
+### Dependencies: None
+### Description: Ensure all interactive elements are keyboard accessible with proper tab order and keyboard event handlers.
+### Details:
+Add tabIndex, onKeyDown handlers, focus management for modals, ensure form navigation, button activation with Enter/Space keys.
+
+## 4. Add High-Contrast Focus Styles [pending]
+### Dependencies: None
+### Description: Implement visible focus indicators with high contrast styles that work with the neumorphic design system.
+### Details:
+Create focus rings with 3px outline, high contrast colors, ensure visibility on all backgrounds, maintain neumorphic aesthetic with proper shadows.
+
+## 5. Implement Screen Reader Support [pending]
+### Dependencies: None
+### Description: Add proper headings hierarchy, skip links, and screen reader announcements for dynamic content and progress updates.
+### Details:
+Structure with h1-h6 hierarchy, add skip-to-content links, use aria-live regions for progress updates, add descriptive text for visualizations.
+

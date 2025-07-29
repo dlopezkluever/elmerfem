@@ -1,0 +1,13 @@
+# Task ID: 23
+# Title: Repository Documentation Overhaul
+# Status: pending
+# Dependencies: 1, 12
+# Priority: medium
+# Description: Add README.md, developer guide, user guide, troubleshooting per PRD section 7.3.
+# Details:
+• Include architecture diagrams using Mermaid.
+• Add quick-start, dev-setup, contribution guidelines.
+• Generate API docs via `poetry run mkdocs build`.
+
+# Test Strategy:
+Markdown-lint passes; run `npm run docs:build` without errors; links not broken (markdown-link-check).

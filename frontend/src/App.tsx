@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import ParameterForm from './pages/ParameterForm';
-import ProgressPage from './pages/ProgressPage';
+import SimulationPage from './pages/SimulationPage';
 import ResultPage from './pages/ResultPage';
 import MaterialLibrary from './pages/MaterialLibrary';
 import Help from './pages/Help';
@@ -19,7 +19,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/form" element={<ParameterForm />} />
-            <Route path="/progress/:id" element={<ProgressPage />} />
+            <Route path="/progress/:id" element={<SimulationPage />} />
             <Route path="/result/:id" element={<ResultPage />} />
             <Route path="/materials" element={<MaterialLibrary />} />
             <Route path="/help" element={<Help />} />

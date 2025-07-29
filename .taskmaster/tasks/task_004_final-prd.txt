@@ -1,0 +1,111 @@
+# Task ID: 4
+# Title: WebSocket Progress Streaming Endpoint
+# Status: done
+# Dependencies: 2
+# Priority: medium
+# Description: Expose `/ws/simulations/{id}` endpoint emitting JSON progress events from ElmerSolver instrumentation.
+# Details:
+• FastAPI WebSocket; subscribe to asyncio.Queue populated by DockerWrapper log reader.
+• Parse progress lines `PROGRESS:<pct>:<msg>`.
+• Throttle emits to at most 5 Hz.
+```python
+async for line in container.logs(stream=True):
+   if line.startswith("PROGRESS"):
+       pct, msg = parse(line)
+       await queue.put({"pct": pct, "msg": msg})
+```
+
+# Test Strategy:
+pytest-asyncio: open websocket, launch dummy job, assert received ≥5 events finishing at pct==100.
+
+# Subtasks:
+## 1. Implement FastAPI WebSocket Endpoint [done]
+### Dependencies: None
+### Description: Create a WebSocket endpoint at `/ws/simulations/{id}` using FastAPI to handle client connections and emit progress events.
+### Details:
+Utilize FastAPI's WebSocket support to establish a connection at the specified endpoint. Upon client connection, accept the WebSocket and prepare to send progress updates. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))
+<info added on 2025-07-27T19:48:11.906Z>
+Implemented functional endpoint at backend/app/api/v1/websocket.py:
+
+• Path: /api/v1/ws/simulations/{simulation_id}  
+• Accepts WebSocket handshake, verifies that the referenced simulation record exists (404 and close if not).  
+• Sends an initial JSON status payload (e.g., {"pct": 0, "stage": "pending"}) immediately after connection.  
+• Enters keep-alive loop awaiting progress queue events; gracefully handles client disconnects and server-side cancellation via websocket.close().  
+• Router registered in api_v1_router so FastAPI automatically mounts the endpoint when the app starts.  
+• Code follows FastAPI WebSocket best-practice patterns (async def endpoint(websocket: WebSocket), websocket.accept(), try / finally for cleanup).
+</info added on 2025-07-27T19:48:11.906Z>
+
+## 2. Design JSON Message Format for Progress Events [done]
+### Dependencies: None
+### Description: Define a JSON schema for progress events containing 'pct' and 'msg' fields to standardize communication between server and client.
+### Details:
+Establish a consistent JSON structure for progress events, including 'pct' for percentage and 'msg' for messages, to ensure clear communication. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))
+<info added on 2025-07-27T19:48:28.534Z>
+Standardized message envelope finalized:
+
+• Envelope: {"type": "<progress|status|echo|...>", "data": {...}}  
+• All payloads include ISO-8601 timestamp for chronological ordering.
+
+Initial message types  
+1. progress → data: {pct: float (0-100), msg: str, timestamp: str}  
+2. status   → data: {status: str (started|running|completed|error), timestamp: str}  
+3. echo     → data: {message: str, timestamp?: str}
+
+Extensibility: new types may be added without breaking clients; unknown types are ignored after logging.
+
+Implementation notes:  
+• Add Pydantic models (ProgressMsg, StatusMsg, EchoMsg) inheriting from BaseMessage for automatic validation/serialization.  
+• Backend WebSocket emitter wraps existing progress dicts into ProgressMsg; solver lifecycle changes raise StatusMsg events.  
+• Frontend will route on .type for dispatching to Redux slice.
+</info added on 2025-07-27T19:48:28.534Z>
+
+## 3. Extract and Parse Progress Lines from ElmerSolver Output [done]
+### Dependencies: None
+### Description: Implement logic to read ElmerSolver logs, identify lines starting with 'PROGRESS', and parse them into 'pct' and 'msg' components.
+### Details:
+Develop a function to process ElmerSolver logs, detect lines beginning with 'PROGRESS', and extract the percentage and message for each line. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))
+<info added on 2025-07-27T19:48:49.958Z>
+Implementation complete:
+
+• Added parse_progress_line() to backend/app/api/v1/websocket.py  
+  – Accepts raw stdout line, validates “PROGRESS:<pct>:<msg>” pattern  
+  – Splits on first two colons to allow additional colons inside <msg>  
+  – On success returns {"type":"progress","data":{"pct":float,"msg":str,"timestamp":datetime.utcnow()}}  
+  – Raises ValueError for malformed progress lines, returns None for non-progress input
+
+• Extended DockerWrapper with execute_solver_streaming() to yield ElmerSolver output in real time; consumes container.logs(stream=True) and yields decoded lines
+
+• JobLauncher now pipes each streamed line through parse_progress_line() and immediately forwards valid dicts to the WebSocket queue, enabling live progress updates
+</info added on 2025-07-27T19:48:49.958Z>
+
+## 4. Implement Throttling Mechanism for Event Emission [done]
+### Dependencies: None
+### Description: Ensure that progress events are emitted to clients at a maximum rate of 5 Hz to prevent overwhelming the client and maintain performance.
+### Details:
+Incorporate a throttling mechanism within the WebSocket endpoint to limit the emission of progress events to 5 times per second, balancing real-time updates with system performance. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))
+<info added on 2025-07-27T19:49:02.852Z>
+Implemented 5 Hz throttling in the WebSocket layer:
+
+• ConnectionManager now tracks a last_emission_times dictionary keyed by simulation ID.  
+• Throttle interval fixed at 0.2 s; _broadcast_progress() computes elapsed time since last emission.  
+• If elapsed < 0.2 s, coroutine awaits the remaining delta before sending the next message.  
+• Throttling occurs at the broadcast stage, so the upstream progress queue remains loss-less—every update is eventually delivered while clients receive no more than 5 events per second.
+</info added on 2025-07-27T19:49:02.852Z>
+
+## 5. Manage Client Connections and Handle Disconnections [done]
+### Dependencies: None
+### Description: Develop logic to manage multiple client connections, handle disconnections gracefully, and ensure that progress events are sent to all connected clients.
+### Details:
+Implement connection management to handle multiple clients, ensuring that progress events are broadcasted to all connected clients and that disconnections are managed without errors. ([fastapi.tiangolo.com](https://fastapi.tiangolo.com/advanced/websockets/?utm_source=openai))
+<info added on 2025-07-27T19:49:15.437Z>
+Implemented ConnectionManager providing robust multi-client handling:
+
+• Keeps per-simulation sets of WebSocket objects in thread-safe active_connections dict.  
+• connect(simulation_id, ws): registers socket, spawns background broadcast task and per-client queue if first listener.  
+• disconnect(simulation_id, ws): removes socket, cancels broadcast task and disposes queue when last listener leaves.  
+• Broadcast loop iterates over current socket set, drops and logs any that have closed, so stray disconnects never raise.  
+• All mutations guarded by asyncio.Lock to avoid race conditions under concurrent connects/disconnects.  
+• Supports unlimited simultaneous viewers of the same simulation without message loss.  
+• Emits structured INFO logs for each connection and cleanup event to aid monitoring and debugging.
+</info added on 2025-07-27T19:49:15.437Z>
+

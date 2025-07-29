@@ -1,0 +1,45 @@
+# Task ID: 16
+# Title: GitHub Actions CI/CD Pipeline
+# Status: pending
+# Dependencies: 15
+# Priority: medium
+# Description: Create multi-job workflow building images, running tests, pushing to GHCR and attaching release artifacts.
+# Details:
+• Jobs: frontend-tests, backend-tests, integration, build-and-publish.
+• Use caching for pnpm and Poetry.
+• Use docker/setup-buildx-action for multi-platform builds.
+
+# Test Strategy:
+Push to develop branch triggers pipeline; green badge on README.
+
+# Subtasks:
+## 1. Create Frontend Testing Workflow Job [pending]
+### Dependencies: None
+### Description: Setup GitHub Actions job for frontend testing with Node.js, dependency caching, and coverage reporting.
+### Details:
+Configure job with Node.js 18, npm/cache setup, run frontend tests with coverage, upload results to Codecov with frontend flag.
+
+## 2. Create Backend Testing Workflow Job [pending]
+### Dependencies: None
+### Description: Setup GitHub Actions job for backend testing with Python, Poetry, and coverage reporting.
+### Details:
+Configure job with Python 3.11, Poetry installation, dependency caching, run pytest with coverage, upload to Codecov with backend flag.
+
+## 3. Implement Integration Testing Job [pending]
+### Dependencies: None
+### Description: Create job that builds Docker images, runs integration tests, and validates educational simulation scenarios.
+### Details:
+Build docker compose images, wait for services, run integration tests, test heat transfer and structural simulation workflows with validation scripts.
+
+## 4. Setup Docker Image Build and Push [pending]
+### Dependencies: None
+### Description: Configure Docker buildx, GHCR authentication, and multi-platform image building for production releases.
+### Details:
+Setup Docker buildx action, login to GitHub Container Registry, build and push images for linux/amd64 and linux/arm64 platforms.
+
+## 5. Add Release Artifact Creation [pending]
+### Dependencies: None
+### Description: Create workflow step to generate release artifacts, changelogs, and upload release assets on main branch.
+### Details:
+Run create-release.sh script, generate changelog, create GitHub release with artifacts, tag commits properly for version tracking.
+

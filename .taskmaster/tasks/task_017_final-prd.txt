@@ -1,0 +1,51 @@
+# Task ID: 17
+# Title: Redux Toolkit Workflow Slice
+# Status: pending
+# Dependencies: 6
+# Priority: medium
+# Description: Implement simulationSlice with actions startSimulation, updateProgress, setMeshData, setResults, setError.
+# Details:
+• Use createSlice; persist via redux-persist localStorage.
+• Thunks: launchSimulation async dispatching progress events.
+Pseudo:
+```
+export const launchSimulation = (params)=>async(dispatch)=>{
+  const {jobId}= await api.post('/simulations',params);
+  dispatch(startSimulation({jobId,params}));
+}
+```
+
+# Test Strategy:
+Jest: dispatch actions, expect state transitions. Integration: run workflow, inspect Redux devtools.
+
+# Subtasks:
+## 1. Define Simulation State Interface [pending]
+### Dependencies: None
+### Description: Create TypeScript interfaces for simulation state including currentJob, parameters, meshData, progress, results, and error states.
+### Details:
+Define SimulationState interface with proper types for job ID, parameters object, mesh data, progress state, results data, and error handling.
+
+## 2. Implement startSimulation Action [pending]
+### Dependencies: None
+### Description: Create Redux action to initialize simulation with job ID and parameters, resetting progress and clearing previous results.
+### Details:
+Action that accepts jobId and parameters payload, sets currentJob, stores parameters, resets progress to initializing state, clears results and errors.
+
+## 3. Implement updateProgress Action [pending]
+### Dependencies: None
+### Description: Create action to update simulation progress with percentage, stage, and messages from WebSocket events.
+### Details:
+Action accepting progress payload with percentage, stage (initializing, mesh, solving, complete), and optional message array updates.
+
+## 4. Implement setMeshData and setResults Actions [pending]
+### Dependencies: None
+### Description: Create actions to store mesh preview data and final simulation results in the Redux state.
+### Details:
+setMeshData action for Three.js mesh data, setResults action for VTU results data, both with proper TypeScript typing and state updates.
+
+## 5. Implement Error Handling and State Persistence [pending]
+### Dependencies: None
+### Description: Add setError action and configure Redux persist for simulation state across browser sessions.
+### Details:
+Create setError action with error message and stage info, configure redux-persist to save simulation state, add proper error recovery logic.
+

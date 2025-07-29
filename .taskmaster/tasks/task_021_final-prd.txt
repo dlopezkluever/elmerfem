@@ -1,0 +1,13 @@
+# Task ID: 21
+# Title: Interactive Quiz System
+# Status: pending
+# Dependencies: 20
+# Priority: medium
+# Description: Develop quiz engine with question pool JSON, randomiser, scoring & PDF export of attempts.
+# Details:
+• Backend: none (local only) or optional store in IndexedDB.
+• Frontend: Context provider maintaining current quiz.
+• PDF via pdf-make 0.2 client side.
+
+# Test Strategy:
+Unit: answer questions, expect score calculation. Cypress: complete quiz, view results, download PDF.

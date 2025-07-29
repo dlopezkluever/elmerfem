@@ -1,0 +1,45 @@
+# Task ID: 12
+# Title: Frontend 3D Results Visualization
+# Status: pending
+# Dependencies: 11
+# Priority: medium
+# Description: Build <ResultVisualization> using Plotly.js mesh3d to display temperature or stress contours.
+# Details:
+• `useSimulationResult` hook fetches & decompresses gzip via fetch + Response.arrayBuffer.
+• Map intensity array to color scale Viridis.
+• Add dropdown to switch displayed variable.
+
+# Test Strategy:
+Jest + jsdom-three: load mock data, ensure Plotly newPlot called with correct traces. Manual: run sim and visually inspect.
+
+# Subtasks:
+## 1. Create ResultVisualization React Component [pending]
+### Dependencies: None
+### Description: Build base React component structure for 3D results visualization with proper props interface and loading states.
+### Details:
+Create component with simulationId prop, loading spinner, error handling, and TypeScript interfaces for result data structure.
+
+## 2. Implement Compressed Data Fetching Hook [pending]
+### Dependencies: None
+### Description: Create useSimulationResult hook to fetch and decompress gzipped result data from backend API.
+### Details:
+Use fetch with proper headers, decompress gzip response, parse JSON data, handle loading and error states with proper TypeScript types.
+
+## 3. Integrate Plotly.js Mesh3D Visualization [pending]
+### Dependencies: None
+### Description: Implement Plotly.js mesh3d component to render 3D mesh with temperature or stress field data as contours.
+### Details:
+Use react-plotly.js with mesh3d trace type, map points/cells data, configure colorscale (Viridis), add colorbar with proper units.
+
+## 4. Add Interactive Controls and View Modes [pending]
+### Dependencies: None
+### Description: Implement view mode toggles (Temperature, Heat Flux, Gradient for heat transfer) and interactive camera controls.
+### Details:
+Add buttons to switch between field types, configure Plotly layout with proper 3D scene settings, camera controls, and axis labels.
+
+## 5. Add Educational Key Findings Panel [pending]
+### Dependencies: None
+### Description: Display numerical results summary with max/min values, educational explanations, and color gradient meaning.
+### Details:
+Extract key statistics from result data, format with proper units, add expandable educational content explaining what results mean.
+

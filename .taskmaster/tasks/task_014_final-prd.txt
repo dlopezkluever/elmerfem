@@ -1,0 +1,44 @@
+# Task ID: 14
+# Title: Frontend Report Download & Actions Panel
+# Status: pending
+# Dependencies: 13
+# Priority: medium
+# Description: Add buttons on ResultPage to download PDF report and start new sim.
+# Details:
+• `apiClient.getBlob('/api/simulations/{id}/report')` then `file-saver` to download.
+• Disable until backend report ready (poll /report/status).
+
+# Test Strategy:
+Cypress: complete sim → click download → file exists & size >0.
+
+# Subtasks:
+## 1. Design Results Page Action Panel UI [pending]
+### Dependencies: None
+### Description: Create action panel component with Download Report and New Simulation buttons using neumorphic design system.
+### Details:
+Design button layout, apply neumorphic styling with proper shadows and hover effects, ensure accessibility with ARIA labels.
+
+## 2. Implement Student Name Input Modal [pending]
+### Dependencies: None
+### Description: Create modal dialog to capture student name before generating PDF report, with validation and proper form handling.
+### Details:
+Build modal with name input field, validation for required field, cancel/confirm actions, proper focus management and keyboard navigation.
+
+## 3. Add PDF Download Functionality [pending]
+### Dependencies: None
+### Description: Implement PDF report download with progress indication and proper file handling for browser downloads.
+### Details:
+Call backend report API, show loading spinner, handle download blob response, trigger browser download with proper filename.
+
+## 4. Implement New Simulation Navigation [pending]
+### Dependencies: None
+### Description: Add functionality to start new simulation, clearing current state and navigating back to parameter form.
+### Details:
+Clear Redux simulation state, reset form data, navigate to parameter selection page, confirm action if needed.
+
+## 5. Add Simulation Summary Information [pending]
+### Dependencies: None
+### Description: Display simulation summary with status, runtime, convergence info, and key metrics on the results page.
+### Details:
+Extract simulation metadata, format runtime display, show convergence status, display element count and solver info in summary card.
+

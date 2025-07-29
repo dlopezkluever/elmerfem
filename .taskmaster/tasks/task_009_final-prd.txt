@@ -1,0 +1,46 @@
+# Task ID: 9
+# Title: Dynamic Backend Input Validation from KeywordsDump
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Generate JSON of Elmer keywords, build Pydantic models at startup to validate simulation payloads.
+# Details:
+• Compile KeywordsDump.F90 into util container, dump to /data/keywords.json.
+• At backend startup load and cache.
+• Use pydantic.create_model and FastAPI dependency injection.
+• Return 422 with detailed error if constraint violated.
+
+# Test Strategy:
+pytest: send temp=-10 expect 422, send 500 K expect 200.
+
+# Subtasks:
+## 1. Compile KeywordsDump.F90 into JSON [pending]
+### Dependencies: None
+### Description: Compile the KeywordsDump.F90 file into a utility container and generate a JSON file containing Elmer keywords, saving it to /data/keywords.json.
+### Details:
+Ensure that the KeywordsDump.F90 file is correctly compiled within the utility container, and that the resulting JSON file is accurately generated and saved to the specified path.
+
+## 2. Load and Cache Keywords at Startup [pending]
+### Dependencies: 9.1
+### Description: At backend startup, load the /data/keywords.json file and cache its contents for efficient access during simulation payload validation.
+### Details:
+Implement a mechanism to read the JSON file upon backend initialization and store its contents in a cache to optimize subsequent validation operations.
+
+## 3. Dynamically Create Pydantic Models [pending]
+### Dependencies: 9.2
+### Description: Utilize Pydantic's create_model function to dynamically generate models based on the cached Elmer keywords, facilitating flexible validation of simulation payloads.
+### Details:
+Use Pydantic's create_model function to define models that correspond to the structure and constraints of the Elmer keywords, allowing for dynamic validation based on the cached data.
+
+## 4. Integrate Validation into FastAPI Endpoints [pending]
+### Dependencies: 9.3
+### Description: Incorporate the dynamically created Pydantic models into FastAPI's dependency injection system to validate simulation payloads in API endpoints.
+### Details:
+Integrate the dynamically created Pydantic models into FastAPI's dependency injection system to validate simulation payloads in API endpoints, ensuring that incoming data adheres to the defined constraints.
+
+## 5. Handle Validation Errors with Detailed Responses [pending]
+### Dependencies: 9.4
+### Description: Configure FastAPI to return 422 status codes with detailed error messages when simulation payloads violate validation constraints defined by the dynamically created Pydantic models.
+### Details:
+Set up FastAPI to handle validation errors by returning 422 status codes along with detailed error messages, providing clear feedback to clients regarding validation issues in simulation payloads.
+

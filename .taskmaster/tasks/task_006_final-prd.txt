@@ -1,0 +1,45 @@
+# Task ID: 6
+# Title: Unified SimulationPage (Mesh + Progress)
+# Status: pending
+# Dependencies: 5
+# Priority: medium
+# Description: Merge MeshPreview and ProgressPage; conditional rendering of Three.js mesh then solver bar.
+# Details:
+• Component tree: <SimulationPage> → <MeshView /> + <ProgressPanel />.
+• When progress.stage=="mesh", show live mesh preview; else freeze preview & show solving bar.
+• Disable “See Results” button until pct===100.
+
+# Test Strategy:
+React Testing Library: simulate store changes, assert DOM switches between views, button enabled only at completion.
+
+# Subtasks:
+## 1. Merge MeshPreview and ProgressPage Components [pending]
+### Dependencies: None
+### Description: Combine the MeshPreview and ProgressPage components into a unified SimulationPage component, ensuring a cohesive structure and functionality.
+### Details:
+Refactor the existing MeshPreview and ProgressPage components to create a single SimulationPage component. This involves integrating their respective JSX structures and ensuring that their functionalities do not conflict. The new component should maintain the existing component tree hierarchy: <SimulationPage> → <MeshView /> + <ProgressPanel />. Ensure that the combined component is modular and maintainable, following React best practices for component composition.
+
+## 2. Implement Conditional Rendering Logic [pending]
+### Dependencies: None
+### Description: Develop logic to conditionally render the Three.js mesh preview or the solver progress bar based on the simulation stage.
+### Details:
+Utilize React's state management to track the current simulation stage. Implement conditional rendering within the SimulationPage component to display the live mesh preview when progress.stage equals 'mesh', and to display the solver progress bar when progress.stage is not 'mesh'. This requires setting up state variables and using conditional statements within the JSX to render the appropriate components. Ensure that the rendering logic is efficient and does not cause unnecessary re-renders.
+
+## 3. Integrate Three.js Mesh Display [pending]
+### Dependencies: None
+### Description: Incorporate a Three.js mesh display into the SimulationPage component to visualize the simulation mesh during the 'mesh' stage.
+### Details:
+Use React Three Fiber to integrate Three.js into the React application. Set up a <Canvas> component to render the 3D scene. Within this canvas, create a <mesh> component that represents the simulation mesh. Utilize appropriate Three.js geometries and materials to accurately represent the mesh. Ensure that the mesh is responsive and updates correctly based on the simulation data. Refer to the React Three Fiber documentation for guidance on setting up and rendering 3D scenes in React. ([r3f.docs.pmnd.rs](https://r3f.docs.pmnd.rs/getting-started/your-first-scene?utm_source=openai))
+
+## 4. Implement Progress Bar Integration [pending]
+### Dependencies: None
+### Description: Add a progress bar to the SimulationPage component to display the solver's progress during the simulation.
+### Details:
+Create a progress bar component that visually represents the solver's progress. The progress bar should be displayed when progress.stage is not 'mesh'. Implement accessibility features such as ARIA roles and properties to ensure the progress bar is usable by all users. Style the progress bar to match the application's design guidelines. Ensure that the progress bar updates in real-time as the solver progresses. For guidance on creating accessible progress indicators in React, refer to this resource: ([medium.com](https://medium.com/vzp-engineering/creating-accessible-progress-indicator-in-react-1ae7eca76633?utm_source=openai))
+
+## 5. Manage State Transitions Between Mesh and Progress Phases [pending]
+### Dependencies: None
+### Description: Ensure smooth state transitions between the mesh preview and progress bar phases, and disable the 'See Results' button until the simulation is complete.
+### Details:
+Implement state management to handle transitions between the mesh preview and progress bar phases. This involves updating the state variables that control the rendering of the mesh and progress bar based on the simulation's progress. Additionally, disable the 'See Results' button until the simulation reaches 100% completion. This requires monitoring the simulation's progress and updating the button's disabled state accordingly. Ensure that the state transitions are smooth and do not cause flickering or other visual issues.
+

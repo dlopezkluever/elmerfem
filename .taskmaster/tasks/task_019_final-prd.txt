@@ -1,0 +1,45 @@
+# Task ID: 19
+# Title: Performance Optimisation: Mesh & Rendering
+# Status: pending
+# Dependencies: 7, 12
+# Priority: medium
+# Description: Benchmark mesh generation and Plotly render; optimise Fortran loops and enable requestAnimationFrame throttling.
+# Details:
+• Add gfortran -O3 -march=native flags.
+• In Three.js, use BufferGeometry and set `geometry.setDrawRange` for initial render.
+• Memoise Plotly data arrays with useMemo.
+
+# Test Strategy:
+Vitest performance test ensures mesh ≤2 s, FPS ≥60 for 10k elements using performance.now().
+
+# Subtasks:
+## 1. Benchmark Current Mesh Generation Performance [pending]
+### Dependencies: None
+### Description: Create performance benchmarks to measure current mesh generation times and identify bottlenecks in Fortran code.
+### Details:
+Add timing measurements to Fortran mesh generator, test with various mesh densities, profile memory usage, document baseline performance metrics.
+
+## 2. Optimize Fortran Loop Performance [pending]
+### Dependencies: None
+### Description: Optimize critical loops in mesh generation code with proper vectorization, memory access patterns, and compiler optimizations.
+### Details:
+Review loop structures, optimize array access patterns, add compiler directives for vectorization, minimize memory allocations, use proper Fortran optimization flags.
+
+## 3. Benchmark Plotly Rendering Performance [pending]
+### Dependencies: None
+### Description: Create performance tests for Plotly.js mesh3d rendering with different mesh sizes and measure frame rates.
+### Details:
+Test rendering performance with 1K, 10K, 50K element meshes, measure initial render time and interaction frame rates, identify performance thresholds.
+
+## 4. Implement requestAnimationFrame Throttling [pending]
+### Dependencies: None
+### Description: Add proper frame rate throttling for UI updates and animations to maintain 60fps performance.
+### Details:
+Implement requestAnimationFrame for progress updates, throttle WebSocket event processing, optimize React re-renders with useMemo and useCallback.
+
+## 5. Add Performance Monitoring and Metrics [pending]
+### Dependencies: None
+### Description: Implement performance monitoring for key operations with metrics collection and performance regression detection.
+### Details:
+Add Performance API timing measurements, create performance dashboard, set up alerts for regression detection, monitor mesh generation and rendering times.
+
