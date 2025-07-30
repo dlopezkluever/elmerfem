@@ -3,6 +3,7 @@ Job launcher and execution management
 """
 
 import asyncio
+import gzip
 import json
 import logging
 from datetime import datetime
@@ -11,6 +12,7 @@ from typing import Dict, Optional, List, Any
 from uuid import UUID
 
 import meshio
+import numpy as np
 
 from ..config.settings import settings
 from ..models import SimulationJob, SimulationParamsDTO, JobStatus
@@ -292,20 +294,26 @@ class JobLauncher:
                     job.vtk_file_path = vtu_files[0]
                     
                     try:
-                        # Convert VTU to JSON
-                        json_path = await self._convert_vtu_to_json(vtu_files[0], job.workspace_dir)
-                        job.metadata['result_json'] = str(json_path.relative_to(job.workspace_dir))
+                        # Convert VTU to JSON (both compressed and uncompressed)
+                        result_paths = await self._convert_vtu_to_json(vtu_files[0], job.workspace_dir, compress=True)
+                        
+                        # Store paths in metadata
+                        job.metadata['result_json'] = str(result_paths["json"].relative_to(job.workspace_dir))
+                        if "gzip" in result_paths:
+                            job.metadata['result_json_gzip'] = str(result_paths["gzip"].relative_to(job.workspace_dir))
                         
                         logger.info(
-                            "Converted VTU to JSON",
+                            "Converted VTU to JSON with compression",
                             extra={
                                 "job_id": str(job_id),
                                 "vtu_file": vtu_files[0].name,
-                                "json_file": json_path.name
+                                "json_file": result_paths["json"].name,
+                                "compressed_file": result_paths.get("gzip", {}).get("name", "none")
                             }
                         )
                     except Exception as e:
-                        logger.warning(f"Failed to convert VTU to JSON: {e}")
+                        logger.error(f"Failed to convert VTU to JSON: {e}")
+                        job.metadata['conversion_error'] = str(e)
                 
                 await self._send_progress_update(job_id, 95, "Finalizing results...")
                 
@@ -360,52 +368,182 @@ class JobLauncher:
             await self.job_store.mark_job_failed(job_id, str(e))
             await self._send_status_update(job_id, JobStatus.FAILED)
     
-    async def _convert_vtu_to_json(self, vtu_path: Path, output_dir: Path) -> Path:
+    async def _convert_vtu_to_json(self, vtu_path: Path, output_dir: Path, compress: bool = True) -> Dict[str, Path]:
         """
-        Convert VTU file to JSON format using meshio
+        Convert VTU file to JSON format using meshio with optional gzip compression
         
         Args:
             vtu_path: Path to VTU file
             output_dir: Directory to save JSON file
+            compress: Whether to create compressed version
             
         Returns:
-            Path to created JSON file
+            Dictionary with 'json' and optionally 'gzip' keys pointing to file paths
         """
-        # Read VTU file
-        mesh = meshio.read(vtu_path)
+        try:
+            logger.info(f"Converting VTU file to JSON: {vtu_path}")
+            
+            # Read VTU file
+            mesh = meshio.read(vtu_path)
+            
+            # Validate mesh data
+            if mesh is None:
+                raise ValueError("Failed to read mesh data from VTU file")
+            
+            if mesh.points is None or len(mesh.points) == 0:
+                raise ValueError("VTU file contains no mesh points")
+            
+            # Create comprehensive JSON-serializable structure
+            mesh_data = {
+                "metadata": {
+                    "format": "vtu_converted",
+                    "source_file": vtu_path.name,
+                    "num_points": len(mesh.points),
+                    "num_cells": sum(len(cell.data) if hasattr(cell, 'data') else len(cell[1]) for cell in mesh.cells),
+                    "conversion_timestamp": datetime.utcnow().isoformat()
+                },
+                "points": self._convert_numpy_array(mesh.points),
+                "cells": {},
+                "point_data": {},
+                "cell_data": {},
+                "field_data": {}
+            }
+            
+            # Handle field data safely
+            if hasattr(mesh, 'field_data') and mesh.field_data is not None:
+                for key, value in mesh.field_data.items():
+                    if isinstance(value, (list, tuple)) and len(value) >= 2:
+                        mesh_data["field_data"][key] = {
+                            "id": int(value[0]),
+                            "dim": int(value[1])
+                        }
+                    else:
+                        mesh_data["field_data"][key] = value
+            
+            # Convert cells with better error handling
+            cell_count = 0
+            for cell_block in mesh.cells:
+                try:
+                    if hasattr(cell_block, 'type') and hasattr(cell_block, 'data'):
+                        # meshio CellBlock object
+                        cell_type = cell_block.type
+                        cell_data = cell_block.data
+                    elif isinstance(cell_block, tuple) and len(cell_block) == 2:
+                        # Legacy tuple format
+                        cell_type, cell_data = cell_block
+                    else:
+                        logger.warning(f"Unsupported cell block format: {type(cell_block)}")
+                        continue
+                    
+                    if cell_data is not None and len(cell_data) > 0:
+                        mesh_data["cells"][cell_type] = self._convert_numpy_array(cell_data)
+                        cell_count += len(cell_data)
+                        logger.debug(f"Converted {len(cell_data)} cells of type {cell_type}")
+                
+                except Exception as e:
+                    logger.warning(f"Failed to convert cell block: {e}")
+                    continue
+            
+            # Convert point data with validation
+            for key, data in mesh.point_data.items():
+                try:
+                    if data is not None:
+                        converted_data = self._convert_numpy_array(data)
+                        mesh_data["point_data"][key] = converted_data
+                        logger.debug(f"Converted point data '{key}' with shape {np.array(data).shape}")
+                except Exception as e:
+                    logger.warning(f"Failed to convert point data '{key}': {e}")
         
-        # Create JSON-serializable structure
-        mesh_data = {
-            "points": mesh.points.tolist(),
-            "cells": {},
-            "point_data": {},
-            "cell_data": {},
-            "field_data": mesh.field_data if hasattr(mesh, 'field_data') else {}
-        }
+            # Convert cell data with validation
+            for key, data_dict in mesh.cell_data.items():
+                try:
+                    mesh_data["cell_data"][key] = {}
+                    if isinstance(data_dict, dict):
+                        for cell_type, data in data_dict.items():
+                            if data is not None:
+                                mesh_data["cell_data"][key][cell_type] = self._convert_numpy_array(data)
+                    else:
+                        # Sometimes cell_data might be a direct array
+                        mesh_data["cell_data"][key] = self._convert_numpy_array(data_dict)
+                    logger.debug(f"Converted cell data '{key}'")
+                except Exception as e:
+                    logger.warning(f"Failed to convert cell data '{key}': {e}")
+            
+            # Update metadata with actual counts
+            mesh_data["metadata"]["num_cells"] = cell_count
+            mesh_data["metadata"]["point_data_fields"] = list(mesh_data["point_data"].keys())
+            mesh_data["metadata"]["cell_data_fields"] = list(mesh_data["cell_data"].keys())
         
-        # Convert cells
-        for cell_type in mesh.cells:
-            if hasattr(cell_type, 'type') and hasattr(cell_type, 'data'):
-                mesh_data["cells"][cell_type.type] = cell_type.data.tolist()
-            elif isinstance(cell_type, tuple) and len(cell_type) == 2:
-                mesh_data["cells"][cell_type[0]] = cell_type[1].tolist()
-        
-        # Convert point data
-        for key, data in mesh.point_data.items():
-            mesh_data["point_data"][key] = data.tolist()
-        
-        # Convert cell data
-        for key, data_dict in mesh.cell_data.items():
-            mesh_data["cell_data"][key] = {}
-            for cell_type, data in data_dict.items():
-                mesh_data["cell_data"][key][cell_type] = data.tolist()
-        
-        # Save to JSON
-        json_path = output_dir / f"{vtu_path.stem}.json"
-        with open(json_path, 'w') as f:
-            json.dump(mesh_data, f, indent=2)
-        
-        return json_path
+            # Save uncompressed JSON
+            json_path = output_dir / f"{vtu_path.stem}_result.json"
+            
+            # Use asyncio to avoid blocking
+            await asyncio.get_event_loop().run_in_executor(
+                None,
+                self._write_json_file,
+                json_path,
+                mesh_data
+            )
+            
+            result_paths = {"json": json_path}
+            
+            # Create compressed version if requested
+            if compress:
+                gzip_path = output_dir / f"{vtu_path.stem}_result.json.gz"
+                await asyncio.get_event_loop().run_in_executor(
+                    None,
+                    self._write_compressed_json_file,
+                    gzip_path,
+                    mesh_data
+                )
+                result_paths["gzip"] = gzip_path
+                
+                # Log compression ratio
+                original_size = json_path.stat().st_size
+                compressed_size = gzip_path.stat().st_size
+                compression_ratio = (1 - compressed_size / original_size) * 100
+                logger.info(f"Compressed JSON: {original_size} -> {compressed_size} bytes ({compression_ratio:.1f}% reduction)")
+            
+            logger.info(f"Successfully converted VTU to JSON: {json_path}")
+            return result_paths
+            
+        except Exception as e:
+            logger.error(f"Failed to convert VTU file {vtu_path}: {str(e)}")
+            raise ValueError(f"VTU conversion failed: {str(e)}") from e
+    
+    def _convert_numpy_array(self, data):
+        """Convert numpy array to JSON-serializable format with error handling"""
+        try:
+            if isinstance(data, np.ndarray):
+                # Handle different numpy dtypes
+                if data.dtype.kind in ('i', 'u'):  # Integer types
+                    return data.astype(int).tolist()
+                elif data.dtype.kind == 'f':  # Float types
+                    # Handle NaN and infinite values
+                    clean_data = np.nan_to_num(data, nan=0.0, posinf=1e10, neginf=-1e10)
+                    return clean_data.astype(float).tolist()
+                elif data.dtype.kind == 'b':  # Boolean
+                    return data.astype(bool).tolist()
+                else:
+                    return data.tolist()
+            elif isinstance(data, (list, tuple)):
+                return [self._convert_numpy_array(item) if isinstance(item, np.ndarray) else item for item in data]
+            else:
+                return data
+        except Exception as e:
+            logger.warning(f"Failed to convert numpy array: {e}")
+            return []
+    
+    def _write_json_file(self, path: Path, data: dict):
+        """Write JSON file synchronously (for use in executor)"""
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+    
+    def _write_compressed_json_file(self, path: Path, data: dict):
+        """Write gzip-compressed JSON file synchronously (for use in executor)"""
+        json_str = json.dumps(data, indent=None, separators=(',', ':'), ensure_ascii=False)
+        with gzip.open(path, 'wt', encoding='utf-8') as f:
+            f.write(json_str)
     
     async def cancel_job(self, job_id: UUID) -> bool:
         """

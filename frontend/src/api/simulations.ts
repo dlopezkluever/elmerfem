@@ -4,6 +4,7 @@ import {
   SimulationStatus,
   SimulationResult,
 } from '../types/api';
+import { VTUData } from '../types/visualization';
 
 export const simulationApi = {
   // Create a new simulation
@@ -21,6 +22,23 @@ export const simulationApi = {
   // Get simulation result
   async getSimulationResult(id: string): Promise<SimulationResult> {
     const { data } = await apiClient.get<SimulationResult>(`/api/v1/simulations/${id}/result`);
+    return data;
+  },
+
+  // Get simulation result data for visualization (uncompressed)
+  async getSimulationResultData(id: string): Promise<VTUData> {
+    const { data } = await apiClient.get<VTUData>(`/api/v1/simulations/${id}/result-data`);
+    return data;
+  },
+
+  // Get simulation result data as compressed stream
+  async getSimulationResultDataCompressed(id: string): Promise<ArrayBuffer> {
+    const { data } = await apiClient.get<ArrayBuffer>(`/api/v1/simulations/${id}/result-data/compressed`, {
+      responseType: 'arraybuffer',
+      headers: {
+        'Accept-Encoding': 'gzip',
+      }
+    });
     return data;
   },
 

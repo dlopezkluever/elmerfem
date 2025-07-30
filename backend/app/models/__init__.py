@@ -9,6 +9,7 @@ from .dtos import (
     SimulationResultDTO,
     SimulationStatusDTO,
     SimulationType,
+    VTUDataDTO,
 )
 from .job import SimulationJob
 from .mesh_dtos import (
@@ -32,6 +33,7 @@ __all__ = [
     "SimulationResultDTO",
     "SimulationStatusDTO",
     "SimulationType",
+    "VTUDataDTO",
     "GeometryType",
     "RectangleGeometry",
     "CircleGeometry",

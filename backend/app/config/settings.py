@@ -48,9 +48,13 @@ class Settings(BaseSettings):
     # CORS settings - Allow both localhost and Docker internal network access
     cors_allowed_origins: list[str] = [
         "http://localhost:5173",  # Direct local access
+        "http://localhost:5174",  # Vite alternative port
+        "http://localhost:5175",  # Another Vite alternative port
         "http://localhost:3000",  # Alternative frontend port
         "http://frontend:5173",   # Docker internal network
         "http://127.0.0.1:5173",  # Localhost alternative
+        "http://127.0.0.1:5174",  # Localhost alternative port
+        "http://127.0.0.1:5175",  # Localhost alternative port
         "http://127.0.0.1:3000"   # Alternative localhost port
     ]
     

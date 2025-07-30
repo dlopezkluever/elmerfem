@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { simulationApi, downloadFileHelper } from '../api';
 import { SimulationResult, SimulationStatus } from '../types/api';
 import { useRecentSimulations } from '../hooks/useRecentSimulations';
+import { ResultVisualization } from '../components/ResultVisualization';
 
 function ResultPage() {
   const { id } = useParams<{ id: string }>();
@@ -12,6 +13,7 @@ function ResultPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [visualizationError, setVisualizationError] = useState<string | null>(null);
   const { updateSimulation } = useRecentSimulations();
 
   useEffect(() => {
@@ -59,6 +61,10 @@ function ResultPage() {
     }
   };
 
+  const handleVisualizationError = (errorMessage: string) => {
+    setVisualizationError(errorMessage);
+  };
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto">
@@ -90,8 +96,13 @@ function ResultPage() {
     );
   }
 
+  // Check if simulation is completed and has result data
+  const isCompleted = result.status === 'completed';
+  // Always show visualization for completed simulations - let the component handle data loading
+  const hasVisualizationData = isCompleted;
+
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       <h1 className="text-4xl font-bold mb-8">Simulation Results</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -105,7 +116,10 @@ function ResultPage() {
             </div>
             <div className="flex justify-between">
               <dt className="text-gray-600">Status:</dt>
-              <dd className="font-semibold text-green-600">
+              <dd className={`font-semibold ${
+                result.status === 'completed' ? 'text-green-600' : 
+                result.status === 'failed' ? 'text-red-600' : 'text-yellow-600'
+              }`}>
                 {result.status.toUpperCase()}
               </dd>
             </div>
@@ -170,18 +184,49 @@ function ResultPage() {
         </div>
       </div>
 
-      {/* Visualization Section */}
-      <div className="card-neumorphic mb-8">
-        <h2 className="text-2xl font-bold mb-4">3D Visualization</h2>
-        <div className="h-96 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">
-          <div className="text-center">
-            <p className="text-xl mb-2">3D Visualization Coming Soon</p>
-            <p className="text-sm">
-              Interactive 3D results will be displayed here
-            </p>
+      {/* 3D Visualization Section */}
+      {hasVisualizationData ? (
+        <div className="mb-8">
+          <ResultVisualization 
+            simulationId={id!}
+            onError={handleVisualizationError}
+          />
+          {visualizationError && (
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center">
+                <div className="text-red-500 mr-2">⚠️</div>
+                <div>
+                  <h4 className="text-red-800 font-medium">Visualization Error</h4>
+                  <p className="text-red-700 text-sm mt-1">{visualizationError}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="card-neumorphic mb-8">
+          <h2 className="text-2xl font-bold mb-4">3D Visualization</h2>
+          <div className="h-96 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">
+            <div className="text-center">
+              {!isCompleted ? (
+                <>
+                  <p className="text-xl mb-2">Simulation Not Complete</p>
+                  <p className="text-sm">
+                    3D visualization will be available once the simulation completes successfully
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-xl mb-2">No Visualization Data Available</p>
+                  <p className="text-sm">
+                    The simulation completed but no result files are available for visualization
+                  </p>
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Result Files List */}
       {result.result_files && result.result_files.length > 0 && (

@@ -2,13 +2,15 @@
 Simulation management endpoints with enhanced job tracking
 """
 
+import gzip
+import json
 import logging
 from pathlib import Path
 from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, BackgroundTasks, Query, status
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from ...dependencies import get_job_store, get_job_launcher
 from ...jobs.launcher import JobLauncher
@@ -19,6 +21,7 @@ from ...models import (
     SimulationCreateResponseDTO,
     SimulationStatusDTO,
     SimulationResultDTO,
+    VTUDataDTO,
     JobStatus
 )
 
@@ -121,14 +124,28 @@ async def get_simulation_result(
     for filename in job.result_files:
         result_files.append(f"/api/v1/simulations/{job_id}/download/{filename}")
     
+    # Get JSON result paths from metadata
+    result_json = None
+    result_json_compressed = None
+    
+    if job.metadata:
+        if 'result_json' in job.metadata:
+            result_json = f"/api/v1/simulations/{job_id}/result-data"
+        if 'result_json_gzip' in job.metadata:
+            result_json_compressed = f"/api/v1/simulations/{job_id}/result-data/compressed"
+    
     return SimulationResultDTO(
         id=job.id,
         status=job.status,
         result_files=result_files,
-        output_directory=job.output_dir,
-        vtk_file=f"/api/v1/simulations/{job_id}/download/vtk" if job.vtk_file_path else None,
+        vtk_file=f"/api/v1/simulations/{job_id}/download/{job.vtk_file_path.name}" if job.vtk_file_path else None,
         log_file=f"/api/v1/simulations/{job_id}/logs" if job.log_file_path else None,
-        sif_file=f"/api/v1/simulations/{job_id}/download/sif" if job.sif_file_path else None
+        result_json=result_json,
+        result_json_compressed=result_json_compressed,
+        error_message=job.error_message,
+        created_at=job.created_at,
+        completed_at=job.completed_at or job.created_at,
+        execution_time=(job.completed_at - job.started_at).total_seconds() if job.completed_at and job.started_at else 0.0
     )
 
 
@@ -309,4 +326,185 @@ async def get_mesh_quality_metrics(
     return JSONResponse(
         content=response_data,
         status_code=status.HTTP_200_OK
+    )
+
+
+@router.get("/{job_id}/result-data", response_model=VTUDataDTO)
+async def get_simulation_result_data(
+    job_id: UUID,
+    job_store: JobStore = Depends(get_job_store)
+) -> VTUDataDTO:
+    """
+    Get simulation result data in JSON format for visualization
+    
+    Returns the complete mesh and result data as JSON, suitable for 3D visualization.
+    Only available for completed jobs with converted VTU data.
+    """
+    job = await job_store.get(job_id)
+    
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job {job_id} not found"
+        )
+    
+    if job.status != JobStatus.COMPLETED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Job is not completed (status: {job.status})"
+        )
+    
+    # Check if JSON result data exists
+    if not job.metadata or 'result_json' not in job.metadata:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Result data not available. VTU file may not have been converted to JSON."
+        )
+    
+    # Construct path to JSON file
+    json_filename = job.metadata['result_json']
+    json_path = job.workspace_dir / json_filename
+    
+    if not json_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Result JSON file not found: {json_filename}"
+        )
+    
+    try:
+        # Read and return JSON data
+        with open(json_path, 'r', encoding='utf-8') as f:
+            result_data = json.load(f)
+        
+        # Validate the structure matches our DTO
+        return VTUDataDTO(**result_data)
+        
+    except Exception as e:
+        logger.error(f"Failed to read result JSON for job {job_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to read result data: {str(e)}"
+        )
+
+
+@router.get("/{job_id}/result-data/compressed")
+async def get_simulation_result_data_compressed(
+    job_id: UUID,
+    job_store: JobStore = Depends(get_job_store)
+) -> StreamingResponse:
+    """
+    Get simulation result data as compressed stream for efficient transfer
+    
+    Returns gzip-compressed JSON data with appropriate headers.
+    Recommended for large result datasets.
+    """
+    job = await job_store.get(job_id)
+    
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job {job_id} not found"
+        )
+    
+    if job.status != JobStatus.COMPLETED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Job is not completed (status: {job.status})"
+        )
+    
+    # Check if compressed JSON result data exists
+    if not job.metadata or 'result_json_gzip' not in job.metadata:
+        # Fallback to uncompressed version if compressed not available
+        if 'result_json' in job.metadata:
+            return await _stream_uncompressed_json_as_gzip(job, job_id)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Compressed result data not available"
+            )
+    
+    # Use pre-compressed file
+    gzip_filename = job.metadata['result_json_gzip']
+    gzip_path = job.workspace_dir / gzip_filename
+    
+    if not gzip_path.exists():
+        # Fallback to uncompressed version
+        if 'result_json' in job.metadata:
+            return await _stream_uncompressed_json_as_gzip(job, job_id)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Compressed result file not found: {gzip_filename}"
+            )
+    
+    try:
+        def generate_compressed_stream():
+            """Generator for streaming compressed data"""
+            with open(gzip_path, 'rb') as f:
+                while True:
+                    chunk = f.read(8192)  # 8KB chunks
+                    if not chunk:
+                        break
+                    yield chunk
+        
+        return StreamingResponse(
+            generate_compressed_stream(),
+            media_type="application/json",
+            headers={
+                "Content-Encoding": "gzip",
+                "Content-Type": "application/json",
+                "Cache-Control": "public, max-age=3600",  # Cache for 1 hour
+                "Content-Disposition": f"inline; filename=result_{job_id}.json.gz"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to stream compressed result for job {job_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to stream compressed data: {str(e)}"
+        )
+
+
+async def _stream_uncompressed_json_as_gzip(job: SimulationJob, job_id: UUID) -> StreamingResponse:
+    """
+    Helper function to compress and stream uncompressed JSON on-the-fly
+    """
+    json_filename = job.metadata['result_json']
+    json_path = job.workspace_dir / json_filename
+    
+    if not json_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Result JSON file not found: {json_filename}"
+        )
+    
+    def generate_compressed_json():
+        """Generator for compressing JSON on-the-fly"""
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                # Read the entire file and compress it
+                json_content = f.read()
+                compressed_data = gzip.compress(json_content.encode('utf-8'))
+                
+                # Yield in chunks for streaming
+                chunk_size = 8192
+                for i in range(0, len(compressed_data), chunk_size):
+                    yield compressed_data[i:i + chunk_size]
+                    
+        except Exception as e:
+            logger.error(f"Error in on-the-fly compression: {e}")
+            # Return error as compressed JSON
+            error_json = json.dumps({"error": f"Compression failed: {str(e)}"})
+            yield gzip.compress(error_json.encode('utf-8'))
+    
+    return StreamingResponse(
+        generate_compressed_json(),
+        media_type="application/json",
+        headers={
+            "Content-Encoding": "gzip",
+            "Content-Type": "application/json",
+            "Cache-Control": "public, max-age=3600",
+            "Content-Disposition": f"inline; filename=result_{job_id}.json.gz"
+        }
     ) 

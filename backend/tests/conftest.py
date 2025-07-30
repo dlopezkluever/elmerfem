@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 
 from app.config.settings import Settings
 from app.jobs.store import InMemoryJobStore
-from app.main import create_app
+from app.main import app
 from app.models import SimulationJob, SimulationParamsDTO, SimulationType
 
 
@@ -42,8 +42,8 @@ def app(test_settings, monkeypatch):
     monkeypatch.setattr("app.config.settings.settings", test_settings)
     monkeypatch.setattr("app.main.settings", test_settings)
     
-    # Create app
-    return create_app()
+    # Return app instance
+    return app
 
 
 @pytest.fixture

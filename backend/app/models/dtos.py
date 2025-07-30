@@ -129,10 +129,22 @@ class SimulationResultDTO(BaseModel):
     result_files: List[str] = Field(default_factory=list)
     vtk_file: Optional[str] = None
     log_file: Optional[str] = None
+    result_json: Optional[str] = Field(None, description="Path to JSON visualization data")
+    result_json_compressed: Optional[str] = Field(None, description="Path to compressed JSON data")
     error_message: Optional[str] = None
     created_at: datetime
     completed_at: datetime
     execution_time: float = Field(..., description="Execution time in seconds")
+
+
+class VTUDataDTO(BaseModel):
+    """VTU result data for visualization"""
+    metadata: Dict[str, Any] = Field(..., description="Mesh metadata including counts and timestamps")
+    points: List[List[float]] = Field(..., description="Mesh vertex coordinates")
+    cells: Dict[str, List[List[int]]] = Field(..., description="Cell connectivity by type")
+    point_data: Dict[str, List] = Field(default_factory=dict, description="Data defined at vertices")
+    cell_data: Dict[str, Any] = Field(default_factory=dict, description="Data defined at cells")
+    field_data: Dict[str, Any] = Field(default_factory=dict, description="Field definitions and IDs")
 
 
 class SimulationCreateResponseDTO(BaseModel):
