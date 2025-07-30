@@ -16,7 +16,6 @@ import {
 export function ResultVisualization({ simulationId, className = '', onError }: VisualizationProps) {
   const { data, loading, error, refetch, statistics } = useSimulationResult(simulationId);
   const [selectedField, setSelectedField] = useState<ViewMode>(ViewMode.TEMPERATURE);
-  const [isEducationalExpanded, setIsEducationalExpanded] = useState(false);
 
   // Handle errors by calling the optional onError callback
   React.useEffect(() => {
@@ -114,64 +113,64 @@ export function ResultVisualization({ simulationId, className = '', onError }: V
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Main Visualization Container */}
-      <div className="card-neumorphic">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4 lg:mb-0">3D Visualization</h2>
-          
-          {/* Field Selection Controls */}
-          <ViewControls 
-            selectedField={selectedField}
-            onFieldChange={setSelectedField}
-            availableFields={availableFields}
-          />
+      {/* 3D Visualization and Key Findings Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* 3D Visualization - Takes most space */}
+        <div className="lg:col-span-3">
+          <div className="card-neumorphic">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-700 mb-4 lg:mb-0">3D Visualization</h2>
+              
+              {/* Field Selection Controls */}
+              <ViewControls 
+                selectedField={selectedField}
+                onFieldChange={setSelectedField}
+                availableFields={availableFields}
+              />
+            </div>
+
+            {/* 3D Plot */}
+            <div className="h-[600px] bg-neumorphic-bg shadow-neumorphic-inset rounded-xl p-4">
+              <Plot
+                data={plotlyData}
+                layout={{
+                  autosize: true,
+                  margin: { l: 0, r: 0, t: 0, b: 0 },
+                  scene: {
+                    xaxis: { title: 'X (m)', gridcolor: '#E0E0E0' },
+                    yaxis: { title: 'Y (m)', gridcolor: '#E0E0E0' },
+                    zaxis: { title: 'Z (m)', gridcolor: '#E0E0E0' },
+                    bgcolor: '#F0F0F0',
+                    camera: {
+                      eye: { x: 1.5, y: 1.5, z: 1.5 }
+                    }
+                  },
+                  paper_bgcolor: '#F0F0F0',
+                  plot_bgcolor: '#F0F0F0',
+                }}
+                style={{ width: '100%', height: '100%' }}
+                config={{
+                  displayModeBar: true,
+                  displaylogo: false,
+                  modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+                  responsive: true
+                }}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* 3D Plot */}
-        <div className="h-[600px] bg-neumorphic-bg shadow-neumorphic-inset rounded-xl p-4">
-          <Plot
-            data={plotlyData}
-            layout={{
-              autosize: true,
-              margin: { l: 0, r: 0, t: 0, b: 0 },
-              scene: {
-                xaxis: { title: 'X (m)', gridcolor: '#E0E0E0' },
-                yaxis: { title: 'Y (m)', gridcolor: '#E0E0E0' },
-                zaxis: { title: 'Z (m)', gridcolor: '#E0E0E0' },
-                bgcolor: '#F0F0F0',
-                camera: {
-                  eye: { x: 1.5, y: 1.5, z: 1.5 }
-                }
-              },
-              paper_bgcolor: '#F0F0F0',
-              plot_bgcolor: '#F0F0F0',
-            }}
-            style={{ width: '100%', height: '100%' }}
-            config={{
-              displayModeBar: true,
-              displaylogo: false,
-              modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
-              responsive: true
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Educational Content Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Key Findings Sidebar */}
+        {/* Key Findings - Right side */}
         <div className="lg:col-span-1">
           <EducationalPanel 
             statistics={statistics}
             selectedField={selectedField}
-            isExpanded={isEducationalExpanded}
-            onToggleExpanded={setIsEducationalExpanded}
           />
         </div>
+      </div>
 
-        {/* Additional Heat Transfer Information */}
-        <div className="lg:col-span-2">
-          <div className="card-neumorphic h-full">
+      {/* Additional Information - Full width below */}
+      <div className="card-neumorphic h-full">
             <h3 className="text-lg font-semibold text-gray-700 mb-6">
               Additional Information Regarding Heat Transfer FEA
             </h3>
@@ -469,8 +468,6 @@ export function ResultVisualization({ simulationId, className = '', onError }: V
                 </div>
               </div>
             </div>
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -512,11 +509,9 @@ function ViewControls({ selectedField, onFieldChange, availableFields }: ViewCon
 interface EducationalPanelProps {
   statistics: any;
   selectedField: ViewMode;
-  isExpanded: boolean;
-  onToggleExpanded: (expanded: boolean) => void;
 }
 
-function EducationalPanel({ statistics, selectedField, isExpanded, onToggleExpanded }: EducationalPanelProps) {
+function EducationalPanel({ statistics, selectedField }: EducationalPanelProps) {
   const content = EDUCATIONAL_CONTENT[selectedField];
 
   // Safety check - if content is not found, return a fallback
@@ -531,14 +526,8 @@ function EducationalPanel({ statistics, selectedField, isExpanded, onToggleExpan
 
   return (
     <div className="card-neumorphic h-full">
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-700">Key Findings</h3>
-        <button
-          onClick={() => onToggleExpanded(!isExpanded)}
-          className="btn-neumorphic px-3 py-1 text-sm"
-        >
-          {isExpanded ? 'Collapse' : 'Expand'}
-        </button>
       </div>
 
        {/* Statistics */}
@@ -632,7 +621,7 @@ function EducationalPanel({ statistics, selectedField, isExpanded, onToggleExpan
        )}
 
       {/* Educational Content */}
-      <div className={`space-y-3 ${isExpanded ? '' : 'max-h-40 overflow-hidden'}`}>
+      <div className="space-y-3">
         <div>
           <h4 className="font-medium text-gray-700 text-sm mb-2">{content.title}</h4>
           <p className="text-xs text-gray-600 leading-relaxed">{content.description}</p>
