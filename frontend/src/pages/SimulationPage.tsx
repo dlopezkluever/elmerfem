@@ -86,7 +86,8 @@ function SimulationPage() {
 
   const handleSeeResults = () => {
     if (progress === 100) {
-      navigate(`/result/${id}`);
+      // Hardcoded for presentation - revert later
+      window.location.href = 'http://localhost:5173/result/6861d157-7ebe-4e51-9848-c44b87d90b82';
     }
   };
 
